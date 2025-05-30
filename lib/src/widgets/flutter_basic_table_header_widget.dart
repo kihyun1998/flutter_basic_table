@@ -41,9 +41,9 @@ class BasicTableHeader extends StatelessWidget {
       width: totalWidth,
       height: config.headerHeight,
       decoration: BoxDecoration(
-        color: Colors.grey[200],
+        color: Colors.white,
         border: const Border(
-          bottom: BorderSide(color: Colors.grey, width: 1),
+          top: BorderSide(color: Colors.black, width: 0.5),
         ),
       ),
       child: Row(
@@ -81,7 +81,7 @@ class _HeaderCell extends StatelessWidget {
       height: config.headerHeight,
       decoration: const BoxDecoration(
         border: Border(
-          right: BorderSide(color: Colors.grey, width: 0.5),
+          top: BorderSide(color: Colors.grey, width: 2), // 각 헤더 셀 상단에 굵은 구분선
         ),
       ),
       child: Material(

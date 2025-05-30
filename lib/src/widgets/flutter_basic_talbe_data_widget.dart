@@ -66,15 +66,15 @@ class _DataRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Color backgroundColor =
-        row.index % 2 == 0 ? Colors.white : Colors.grey[50]!;
+    // 모든 행을 같은 색상으로 통일
+    const Color backgroundColor = Colors.white;
 
     return Container(
       height: config.rowHeight,
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: backgroundColor,
-        border: const Border(
-          bottom: BorderSide(color: Colors.grey, width: 0.3),
+        border: Border(
+          top: BorderSide(color: Colors.grey, width: 0.3),
         ),
       ),
       child: Row(
@@ -109,14 +109,10 @@ class _DataCell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return SizedBox(
       width: width,
       height: config.rowHeight,
-      decoration: const BoxDecoration(
-        border: Border(
-          right: BorderSide(color: Colors.grey, width: 0.3),
-        ),
-      ),
+      // 세로 구분선 제거 - decoration 완전히 제거
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
         child: Align(
