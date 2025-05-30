@@ -27,6 +27,9 @@ class BasicTable extends StatefulWidget {
   final void Function(int index)? onRowSecondaryTap;
   final Duration doubleClickTime;
 
+  // 헤더 reorder 콜백
+  final void Function(int oldIndex, int newIndex)? onColumnReorder;
+
   const BasicTable({
     super.key,
     required this.columns,
@@ -39,6 +42,7 @@ class BasicTable extends StatefulWidget {
     this.onRowDoubleTap,
     this.onRowSecondaryTap,
     this.doubleClickTime = const Duration(milliseconds: 300),
+    this.onColumnReorder,
   })  : assert(columns.length > 0, 'columns cannot be empty'),
         assert(data.length > 0, 'data cannot be empty');
 
@@ -48,6 +52,7 @@ class BasicTable extends StatefulWidget {
 
 class _BasicTableState extends State<BasicTable> {
   late List<BasicTableRow> _rows;
+  late List<BasicTableColumn> _reorderedColumns; // reorder된 컬럼 순서 관리
 
   // 호버 상태 관리
   bool _isHovered = false;
@@ -55,17 +60,45 @@ class _BasicTableState extends State<BasicTable> {
   @override
   void initState() {
     super.initState();
+    _reorderedColumns = List.from(widget.columns); // 초기 컬럼 순서
     _initializeTableData();
   }
 
   void _initializeTableData() {
-    // 행 데이터 초기화 - 외부에서 전달받은 데이터만 사용
+    // 행 데이터 초기화 - 외부에서 전달받은 데이터와 현재 컬럼 순서에 맞춰 재정렬
     _rows = widget.data.asMap().entries.map((entry) {
       return BasicTableRow(
         index: entry.key,
-        cells: entry.value,
+        cells: List.from(entry.value), // 원본 데이터 복사
       );
     }).toList();
+  }
+
+  /// 컬럼 순서가 바뀔 때 호출되는 함수
+  void _handleColumnReorder(int oldIndex, int newIndex) {
+    setState(() {
+      // newIndex 보정 (Flutter ReorderableListView 특성)
+      if (newIndex > oldIndex) {
+        newIndex -= 1;
+      }
+
+      // 컬럼 순서 변경
+      final BasicTableColumn movedColumn = _reorderedColumns.removeAt(oldIndex);
+      _reorderedColumns.insert(newIndex, movedColumn);
+
+      // 모든 행의 데이터도 같은 순서로 재정렬
+      for (final row in _rows) {
+        if (oldIndex < row.cells.length && newIndex < row.cells.length) {
+          final String movedCell = row.cells.removeAt(oldIndex);
+          row.cells.insert(newIndex, movedCell);
+        }
+      }
+    });
+
+    // 외부 콜백 호출
+    widget.onColumnReorder?.call(oldIndex, newIndex);
+
+    debugPrint('Column reordered: $oldIndex -> $newIndex');
   }
 
   /// 헤더 체크박스의 상태를 계산합니다
@@ -111,7 +144,7 @@ class _BasicTableState extends State<BasicTable> {
 
         // 테이블의 최소 너비 계산 (체크박스 컬럼 포함)
         final double minTableWidth = checkboxWidth +
-            widget.columns.fold(0.0, (sum, col) => sum + col.minWidth);
+            _reorderedColumns.fold(0.0, (sum, col) => sum + col.minWidth);
 
         // 실제 콘텐츠 너비: 최소 너비와 사용 가능한 너비 중 큰 값
         final double contentWidth = max(minTableWidth, availableWidth);
@@ -157,7 +190,7 @@ class _BasicTableState extends State<BasicTable> {
                           children: [
                             // 테이블 헤더
                             BasicTableHeader(
-                              columns: widget.columns,
+                              columns: _reorderedColumns, // reordered 컬럼 사용
                               totalWidth: contentWidth,
                               availableWidth: availableWidth,
                               config: widget.config,
@@ -165,13 +198,14 @@ class _BasicTableState extends State<BasicTable> {
                               headerCheckboxState: _getHeaderCheckboxState(),
                               onHeaderCheckboxChanged:
                                   _handleHeaderCheckboxChanged,
+                              onColumnReorder: _handleColumnReorder,
                             ),
 
                             // 테이블 데이터
                             Expanded(
                               child: BasicTableData(
                                 rows: _rows,
-                                columns: widget.columns,
+                                columns: _reorderedColumns, // reordered 컬럼 사용
                                 availableWidth: availableWidth,
                                 config: widget.config,
                                 verticalController: verticalScrollController,
@@ -316,6 +350,7 @@ class _BasicTableState extends State<BasicTable> {
     if (oldWidget.columns != widget.columns ||
         oldWidget.data != widget.data ||
         oldWidget.config != widget.config) {
+      _reorderedColumns = List.from(widget.columns); // 컬럼이 변경되면 순서 리셋
       _initializeTableData();
     }
   }

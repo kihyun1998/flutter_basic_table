@@ -11,6 +11,7 @@ class BasicTableHeader extends StatelessWidget {
   final double checkboxWidth;
   final bool? headerCheckboxState;
   final VoidCallback? onHeaderCheckboxChanged;
+  final void Function(int oldIndex, int newIndex)? onColumnReorder;
 
   const BasicTableHeader({
     super.key,
@@ -21,6 +22,7 @@ class BasicTableHeader extends StatelessWidget {
     required this.checkboxWidth,
     this.headerCheckboxState,
     this.onHeaderCheckboxChanged,
+    this.onColumnReorder,
   });
 
   /// 각 컬럼의 실제 렌더링 너비를 계산합니다.
@@ -56,7 +58,7 @@ class BasicTableHeader extends StatelessWidget {
       ),
       child: Row(
         children: [
-          // 체크박스 컬럼
+          // 체크박스 컬럼 (reorder 대상에서 제외)
           if (config.showCheckboxColumn)
             _CheckboxHeaderCell(
               width: checkboxWidth,
@@ -65,19 +67,92 @@ class BasicTableHeader extends StatelessWidget {
               onChanged: onHeaderCheckboxChanged,
             ),
 
-          // 일반 컬럼들
-          ...List.generate(columns.length, (index) {
-            final column = columns[index];
-            final width = columnWidths[index];
-
-            return _HeaderCell(
-              column: column,
-              width: width,
-              config: config,
-            );
-          }),
+          // Reorderable 헤더 컬럼들
+          Expanded(
+            child: config.enableHeaderReorder && onColumnReorder != null
+                ? _ReorderableHeaderRow(
+                    columns: columns,
+                    columnWidths: columnWidths,
+                    config: config,
+                    onReorder: onColumnReorder!,
+                  )
+                : _StaticHeaderRow(
+                    columns: columns,
+                    columnWidths: columnWidths,
+                    config: config,
+                  ),
+          ),
         ],
       ),
+    );
+  }
+}
+
+/// Reorderable 헤더 행 위젯
+class _ReorderableHeaderRow extends StatelessWidget {
+  final List<BasicTableColumn> columns;
+  final List<double> columnWidths;
+  final BasicTableConfig config;
+  final void Function(int oldIndex, int newIndex) onReorder;
+
+  const _ReorderableHeaderRow({
+    required this.columns,
+    required this.columnWidths,
+    required this.config,
+    required this.onReorder,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ReorderableListView(
+      scrollDirection: Axis.horizontal,
+      buildDefaultDragHandles: false, // 기본 드래그 핸들 비활성화
+      onReorder: onReorder,
+      children: List.generate(columns.length, (index) {
+        final column = columns[index];
+        final width = columnWidths[index];
+
+        return ReorderableDragStartListener(
+          key: ValueKey('header_$index'), // 각 아이템에 고유 key 필요
+          index: index,
+          child: _HeaderCell(
+            column: column,
+            width: width,
+            config: config,
+            showDragHandle: true, // 드래그 핸들 표시
+          ),
+        );
+      }),
+    );
+  }
+}
+
+/// 정적 헤더 행 위젯 (reorder 비활성화)
+class _StaticHeaderRow extends StatelessWidget {
+  final List<BasicTableColumn> columns;
+  final List<double> columnWidths;
+  final BasicTableConfig config;
+
+  const _StaticHeaderRow({
+    required this.columns,
+    required this.columnWidths,
+    required this.config,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: List.generate(columns.length, (index) {
+        final column = columns[index];
+        final width = columnWidths[index];
+
+        return _HeaderCell(
+          column: column,
+          width: width,
+          config: config,
+          showDragHandle: false, // 드래그 핸들 숨김
+        );
+      }),
     );
   }
 }
@@ -129,11 +204,13 @@ class _HeaderCell extends StatelessWidget {
   final BasicTableColumn column;
   final double width;
   final BasicTableConfig config;
+  final bool showDragHandle;
 
   const _HeaderCell({
     required this.column,
     required this.width,
     required this.config,
+    this.showDragHandle = false,
   });
 
   @override
@@ -156,6 +233,18 @@ class _HeaderCell extends StatelessWidget {
                 const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
             child: Row(
               children: [
+                // 드래그 핸들 (reorder 활성화시에만 표시)
+                if (showDragHandle)
+                  Container(
+                    margin: const EdgeInsets.only(right: 8.0),
+                    child: Icon(
+                      Icons.drag_handle,
+                      size: 16,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+
+                // 컬럼 이름
                 Expanded(
                   child: Text(
                     column.name,
@@ -166,6 +255,8 @@ class _HeaderCell extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
+
+                // 정렬 아이콘 (정렬 활성화시에만 표시)
                 if (config.enableHeaderSorting)
                   const Icon(
                     Icons.sort,

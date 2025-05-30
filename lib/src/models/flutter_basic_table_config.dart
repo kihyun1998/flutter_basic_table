@@ -5,6 +5,7 @@ class BasicTableConfig {
   final bool showHorizontalScrollbar;
   final bool showVerticalScrollbar;
   final bool enableHeaderSorting;
+  final bool enableHeaderReorder;
 
   // 스크롤바 관련 옵션들
   final bool scrollbarHoverOnly;
@@ -22,6 +23,7 @@ class BasicTableConfig {
     this.showHorizontalScrollbar = true,
     this.showVerticalScrollbar = true,
     this.enableHeaderSorting = false,
+    this.enableHeaderReorder = false, // 기본값 false
     this.scrollbarHoverOnly = true,
     this.scrollbarOpacity = 0.8,
     this.scrollbarAnimationDuration = const Duration(milliseconds: 200),
@@ -36,6 +38,7 @@ class BasicTableConfig {
     bool? showHorizontalScrollbar,
     bool? showVerticalScrollbar,
     bool? enableHeaderSorting,
+    bool? enableHeaderReorder,
     bool? scrollbarHoverOnly,
     double? scrollbarOpacity,
     Duration? scrollbarAnimationDuration,
@@ -51,6 +54,7 @@ class BasicTableConfig {
       showVerticalScrollbar:
           showVerticalScrollbar ?? this.showVerticalScrollbar,
       enableHeaderSorting: enableHeaderSorting ?? this.enableHeaderSorting,
+      enableHeaderReorder: enableHeaderReorder ?? this.enableHeaderReorder,
       scrollbarHoverOnly: scrollbarHoverOnly ?? this.scrollbarHoverOnly,
       scrollbarOpacity: scrollbarOpacity ?? this.scrollbarOpacity,
       scrollbarAnimationDuration:
