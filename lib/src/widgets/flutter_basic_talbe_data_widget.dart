@@ -8,7 +8,7 @@ class BasicTableData extends StatelessWidget {
   final List<BasicTableRow> rows;
   final List<BasicTableColumn> columns;
   final double availableWidth;
-  final BasicTableThemeData theme; // ✅ config → theme으로 변경
+  final BasicTableThemeData theme;
   final ScrollController verticalController;
   final double checkboxWidth;
   final Set<int> selectedRows;
@@ -23,7 +23,7 @@ class BasicTableData extends StatelessWidget {
     required this.rows,
     required this.columns,
     required this.availableWidth,
-    required this.theme, // ✅ theme 파라미터로 변경
+    required this.theme,
     required this.verticalController,
     required this.checkboxWidth,
     required this.selectedRows,
@@ -64,7 +64,7 @@ class BasicTableData extends StatelessWidget {
         return _DataRow(
           row: row,
           columnWidths: columnWidths,
-          theme: theme, // ✅ theme 전달
+          theme: theme,
           checkboxWidth: checkboxWidth,
           isSelected: isSelected,
           onSelectionChanged: onRowSelectionChanged,
@@ -78,11 +78,11 @@ class BasicTableData extends StatelessWidget {
   }
 }
 
-/// 개별 데이터 행 위젯
-class _DataRow extends StatelessWidget {
+/// 개별 데이터 행 위젯 - ✅ hover 효과 & dataRowTheme.border 적용!
+class _DataRow extends StatefulWidget {
   final BasicTableRow row;
   final List<double> columnWidths;
-  final BasicTableThemeData theme; // ✅ config → theme으로 변경
+  final BasicTableThemeData theme;
   final double checkboxWidth;
   final bool isSelected;
   final void Function(int index, bool selected)? onSelectionChanged;
@@ -94,7 +94,7 @@ class _DataRow extends StatelessWidget {
   const _DataRow({
     required this.row,
     required this.columnWidths,
-    required this.theme, // ✅ theme 파라미터
+    required this.theme,
     required this.checkboxWidth,
     required this.isSelected,
     this.onSelectionChanged,
@@ -105,65 +105,86 @@ class _DataRow extends StatelessWidget {
   });
 
   @override
+  State<_DataRow> createState() => _DataRowState();
+}
+
+class _DataRowState extends State<_DataRow> {
+  bool _isHovered = false; // ✅ hover 상태 추가!
+
+  @override
   Widget build(BuildContext context) {
-    // 선택 상태에 따른 배경색 변경
-    final Color backgroundColor = isSelected
-        ? theme.selectionTheme.selectedRowColor ??
-            Colors.blue.withOpacity(0.1) // ✅ 테마에서 선택된 행 색상 가져오기
-        : theme.dataRowTheme.backgroundColor ?? Colors.white; // ✅ 테마에서 배경색 가져오기
+    // ✅ 우선순위: 선택됨 > hover > 기본
+    Color backgroundColor;
+    if (widget.isSelected) {
+      backgroundColor = widget.theme.selectionTheme.selectedRowColor ??
+          Colors.blue.withOpacity(0.1);
+    } else if (_isHovered) {
+      backgroundColor = widget.theme.selectionTheme.hoverRowColor ??
+          Colors.grey.withOpacity(0.05); // ✅ hover 색상 적용!
+    } else {
+      backgroundColor =
+          widget.theme.dataRowTheme.backgroundColor ?? Colors.white;
+    }
 
-    return Container(
-      height: theme.dataRowTheme.height, // ✅ 테마에서 높이 가져오기
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        border: Border(
-          top:
-              theme.borderTheme.rowBorder ?? BorderSide.none, // ✅ 테마에서 테두리 가져오기
+    return MouseRegion(
+      // ✅ hover 효과 구현!
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: Container(
+        height: widget.theme.dataRowTheme.height,
+        decoration: BoxDecoration(
+          color: backgroundColor,
+          border: Border(
+            top: widget.theme.dataRowTheme.border ??
+                BorderSide.none, // ✅ dataRowTheme.border 사용!
+          ),
         ),
-      ),
-      child: CustomInkWell(
-        onTap: () {
-          // 체크박스가 있으면 선택/해제, 없으면 일반 행 클릭
-          if (theme.checkboxTheme.enabled && onSelectionChanged != null) {
-            // ✅ 테마에서 체크박스 활성화 확인
-            onSelectionChanged!(row.index, !isSelected);
-          }
-          onRowTap?.call(row.index);
-        },
-        onDoubleTap:
-            onRowDoubleTap != null ? () => onRowDoubleTap!(row.index) : null,
-        onSecondaryTap: onRowSecondaryTap != null
-            ? () => onRowSecondaryTap!(row.index)
-            : null,
-        doubleClickTime: doubleClickTime,
-        child: Row(
-          children: [
-            // 체크박스 셀
-            if (theme.checkboxTheme.enabled) // ✅ 테마에서 체크박스 활성화 확인
-              _CheckboxCell(
-                width: checkboxWidth,
-                theme: theme, // ✅ theme 전달
-                isSelected: isSelected,
-                onChanged: (selected) {
-                  onSelectionChanged?.call(row.index, selected);
-                },
-              ),
+        child: CustomInkWell(
+          onTap: () {
+            // 체크박스가 있으면 선택/해제, 없으면 일반 행 클릭
+            if (widget.theme.checkboxTheme.enabled &&
+                widget.onSelectionChanged != null) {
+              widget.onSelectionChanged!(widget.row.index, !widget.isSelected);
+            }
+            widget.onRowTap?.call(widget.row.index);
+          },
+          onDoubleTap: widget.onRowDoubleTap != null
+              ? () => widget.onRowDoubleTap!(widget.row.index)
+              : null,
+          onSecondaryTap: widget.onRowSecondaryTap != null
+              ? () => widget.onRowSecondaryTap!(widget.row.index)
+              : null,
+          doubleClickTime: widget.doubleClickTime,
+          child: Row(
+            children: [
+              // 체크박스 셀
+              if (widget.theme.checkboxTheme.enabled)
+                _CheckboxCell(
+                  width: widget.checkboxWidth,
+                  theme: widget.theme,
+                  isSelected: widget.isSelected,
+                  onChanged: (selected) {
+                    widget.onSelectionChanged?.call(widget.row.index, selected);
+                  },
+                ),
 
-            // 데이터 셀들
-            ...List.generate(row.cells.length, (cellIndex) {
-              final cellData =
-                  cellIndex < row.cells.length ? row.cells[cellIndex] : '';
-              final cellWidth = cellIndex < columnWidths.length
-                  ? columnWidths[cellIndex]
-                  : 100.0;
+              // 데이터 셀들
+              ...List.generate(widget.row.cells.length, (cellIndex) {
+                final cellData = cellIndex < widget.row.cells.length
+                    ? widget.row.cells[cellIndex]
+                    : '';
+                final cellWidth = cellIndex < widget.columnWidths.length
+                    ? widget.columnWidths[cellIndex]
+                    : 100.0;
 
-              return _DataCell(
-                data: cellData,
-                width: cellWidth,
-                theme: theme, // ✅ theme 전달
-              );
-            }),
-          ],
+                return _DataCell(
+                  data: cellData,
+                  width: cellWidth,
+                  theme: widget.theme,
+                );
+              }),
+            ],
+          ),
         ),
       ),
     );
@@ -173,13 +194,13 @@ class _DataRow extends StatelessWidget {
 /// 체크박스 셀 위젯
 class _CheckboxCell extends StatelessWidget {
   final double width;
-  final BasicTableThemeData theme; // ✅ config → theme으로 변경
+  final BasicTableThemeData theme;
   final bool isSelected;
   final void Function(bool selected)? onChanged;
 
   const _CheckboxCell({
     required this.width,
-    required this.theme, // ✅ theme 파라미터
+    required this.theme,
     required this.isSelected,
     this.onChanged,
   });
@@ -194,11 +215,10 @@ class _CheckboxCell extends StatelessWidget {
       },
       child: Container(
         width: width,
-        height: theme.dataRowTheme.height, // ✅ 테마에서 높이 가져오기
+        height: theme.dataRowTheme.height,
         color: Colors.transparent, // 클릭 영역 확보
         child: Padding(
-          padding:
-              theme.checkboxTheme.padding ?? EdgeInsets.zero, // ✅ 테마에서 패딩 가져오기
+          padding: theme.checkboxTheme.padding ?? EdgeInsets.zero,
           child: Center(
             child: Checkbox(
               value: isSelected,
@@ -206,8 +226,8 @@ class _CheckboxCell extends StatelessWidget {
                   ? (value) => onChanged!(value ?? false)
                   : null,
               materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              activeColor: theme.checkboxTheme.activeColor, // ✅ 테마에서 색상 가져오기
-              checkColor: theme.checkboxTheme.checkColor, // ✅ 테마에서 체크 색상 가져오기
+              activeColor: theme.checkboxTheme.activeColor,
+              checkColor: theme.checkboxTheme.checkColor,
             ),
           ),
         ),
@@ -216,32 +236,38 @@ class _CheckboxCell extends StatelessWidget {
   }
 }
 
-/// 개별 데이터 셀 위젯
+/// 개별 데이터 셀 위젯 - ✅ cellBorder 구현 예정
 class _DataCell extends StatelessWidget {
   final String data;
   final double width;
-  final BasicTableThemeData theme; // ✅ config → theme으로 변경
+  final BasicTableThemeData theme;
 
   const _DataCell({
     required this.data,
     required this.width,
-    required this.theme, // ✅ theme 파라미터
+    required this.theme,
   });
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
+    return Container(
+      // ✅ SizedBox → Container로 변경 (cellBorder 준비)
       width: width,
-      height: theme.dataRowTheme.height, // ✅ 테마에서 높이 가져오기
-      // 세로 구분선 제거 - decoration 완전히 제거
+      height: theme.dataRowTheme.height,
+      // ✅ cellBorder 구현 준비
+      decoration: BoxDecoration(
+        border: Border(
+          right: theme.borderTheme.cellBorder ??
+              BorderSide.none, // ✅ cellBorder 적용!
+        ),
+      ),
       child: Padding(
-        padding:
-            theme.dataRowTheme.padding ?? EdgeInsets.zero, // ✅ 테마에서 패딩 가져오기
+        padding: theme.dataRowTheme.padding ?? EdgeInsets.zero,
         child: Align(
           alignment: Alignment.centerLeft,
           child: Text(
             data,
-            style: theme.dataRowTheme.textStyle, // ✅ 테마에서 텍스트 스타일 가져오기
+            style: theme.dataRowTheme.textStyle,
             overflow: TextOverflow.ellipsis,
             maxLines: 1,
           ),

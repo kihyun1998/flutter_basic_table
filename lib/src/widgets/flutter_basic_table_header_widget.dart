@@ -58,7 +58,8 @@ class BasicTableHeader extends StatelessWidget {
       decoration: BoxDecoration(
         color: theme.headerTheme.backgroundColor,
         border: Border(
-          top: theme.borderTheme.tableBorder ?? BorderSide.none,
+          top: theme.headerTheme.border ??
+              BorderSide.none, // ✅ headerTheme.border 사용!
         ),
       ),
       child: Row(
@@ -198,10 +199,15 @@ class _CheckboxHeaderCell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
+    return Container(
       width: width,
       height: theme.headerTheme.height,
-      // ✅ decoration 완전히 제거 - 부모의 border 사용
+      // ✅ cellBorder 적용
+      decoration: BoxDecoration(
+        border: Border(
+          right: theme.borderTheme.cellBorder ?? BorderSide.none,
+        ),
+      ),
       child: Padding(
         padding: theme.checkboxTheme.padding ?? EdgeInsets.zero,
         child: Center(
@@ -275,10 +281,15 @@ class _HeaderCell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
+    return Container(
       width: width,
       height: theme.headerTheme.height,
-      // ✅ decoration 완전히 제거 - 부모의 border 사용
+      // ✅ cellBorder 적용
+      decoration: BoxDecoration(
+        border: Border(
+          right: theme.borderTheme.cellBorder ?? BorderSide.none,
+        ),
+      ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
