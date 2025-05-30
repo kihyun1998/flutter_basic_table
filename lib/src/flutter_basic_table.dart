@@ -27,8 +27,14 @@ class BasicTable extends StatefulWidget {
   final void Function(int index)? onRowSecondaryTap;
   final Duration doubleClickTime;
 
-  // 헤더 reorder 콜백
+  // 헤더 reorder 콜백 추가!
   final void Function(int oldIndex, int newIndex)? onColumnReorder;
+
+  // 헤더 정렬 콜백 추가!
+  final void Function(int columnIndex, ColumnSortState sortState)? onColumnSort;
+
+  // 현재 정렬 상태 (외부에서 관리)
+  final Map<int, ColumnSortState>? columnSortStates;
 
   const BasicTable({
     super.key,
@@ -43,6 +49,8 @@ class BasicTable extends StatefulWidget {
     this.onRowSecondaryTap,
     this.doubleClickTime = const Duration(milliseconds: 300),
     this.onColumnReorder,
+    this.onColumnSort,
+    this.columnSortStates,
   })  : assert(columns.length > 0, 'columns cannot be empty'),
         assert(data.length > 0, 'data cannot be empty');
 
@@ -51,8 +59,7 @@ class BasicTable extends StatefulWidget {
 }
 
 class _BasicTableState extends State<BasicTable> {
-  late List<BasicTableRow> _rows;
-  late List<BasicTableColumn> _reorderedColumns; // reorder된 컬럼 순서 관리
+  // ✅ _rows 상태 제거! 외부 데이터를 직접 사용
 
   // 호버 상태 관리
   bool _isHovered = false;
@@ -60,45 +67,35 @@ class _BasicTableState extends State<BasicTable> {
   @override
   void initState() {
     super.initState();
-    _reorderedColumns = List.from(widget.columns); // 초기 컬럼 순서
-    _initializeTableData();
+    // ✅ _initializeTableData() 제거
   }
 
-  void _initializeTableData() {
-    // 행 데이터 초기화 - 외부에서 전달받은 데이터와 현재 컬럼 순서에 맞춰 재정렬
-    _rows = widget.data.asMap().entries.map((entry) {
+  // ✅ _initializeTableData() 함수 제거
+
+  /// 외부 데이터를 BasicTableRow 형태로 변환하는 헬퍼 함수
+  List<BasicTableRow> get _currentRows {
+    return widget.data.asMap().entries.map((entry) {
       return BasicTableRow(
         index: entry.key,
-        cells: List.from(entry.value), // 원본 데이터 복사
+        cells: List.from(entry.value),
       );
     }).toList();
   }
 
-  /// 컬럼 순서가 바뀔 때 호출되는 함수
+  /// 컬럼 순서가 바뀔 때 호출되는 함수 - 외부 콜백만 호출
   void _handleColumnReorder(int oldIndex, int newIndex) {
-    setState(() {
-      // newIndex 보정 (Flutter ReorderableListView 특성)
-      if (newIndex > oldIndex) {
-        newIndex -= 1;
-      }
-
-      // 컬럼 순서 변경
-      final BasicTableColumn movedColumn = _reorderedColumns.removeAt(oldIndex);
-      _reorderedColumns.insert(newIndex, movedColumn);
-
-      // 모든 행의 데이터도 같은 순서로 재정렬
-      for (final row in _rows) {
-        if (oldIndex < row.cells.length && newIndex < row.cells.length) {
-          final String movedCell = row.cells.removeAt(oldIndex);
-          row.cells.insert(newIndex, movedCell);
-        }
-      }
-    });
-
-    // 외부 콜백 호출
+    // 외부 콜백 호출 (외부에서 데이터 관리)
     widget.onColumnReorder?.call(oldIndex, newIndex);
 
-    debugPrint('Column reordered: $oldIndex -> $newIndex');
+    debugPrint('Column reorder requested: $oldIndex -> $newIndex');
+  }
+
+  /// 컬럼 정렬이 변경될 때 호출되는 함수
+  void _handleColumnSort(int columnIndex, ColumnSortState sortState) {
+    // 외부 콜백 호출
+    widget.onColumnSort?.call(columnIndex, sortState);
+
+    debugPrint('Column sort requested: column $columnIndex -> $sortState');
   }
 
   /// 헤더 체크박스의 상태를 계산합니다
@@ -108,7 +105,7 @@ class _BasicTableState extends State<BasicTable> {
     }
 
     final selectedCount = widget.selectedRows!.length;
-    final totalCount = _rows.length;
+    final totalCount = _currentRows.length; // ✅ _currentRows 사용
 
     if (selectedCount == 0) {
       return false; // 아무것도 선택안됨
@@ -132,6 +129,9 @@ class _BasicTableState extends State<BasicTable> {
 
   @override
   Widget build(BuildContext context) {
+    // ✅ 매번 build 시 최신 데이터 사용
+    final currentRows = _currentRows;
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final double availableHeight = constraints.maxHeight;
@@ -144,13 +144,14 @@ class _BasicTableState extends State<BasicTable> {
 
         // 테이블의 최소 너비 계산 (체크박스 컬럼 포함)
         final double minTableWidth = checkboxWidth +
-            _reorderedColumns.fold(0.0, (sum, col) => sum + col.minWidth);
+            widget.columns.fold(0.0, (sum, col) => sum + col.minWidth);
 
         // 실제 콘텐츠 너비: 최소 너비와 사용 가능한 너비 중 큰 값
         final double contentWidth = max(minTableWidth, availableWidth);
 
         // 테이블 데이터 높이 계산
-        final double tableDataHeight = widget.config.rowHeight * _rows.length;
+        final double tableDataHeight =
+            widget.config.rowHeight * currentRows.length; // ✅ currentRows 사용
 
         // 스크롤바를 위한 전체 콘텐츠 높이
         final double totalContentHeight =
@@ -190,7 +191,7 @@ class _BasicTableState extends State<BasicTable> {
                           children: [
                             // 테이블 헤더
                             BasicTableHeader(
-                              columns: _reorderedColumns, // reordered 컬럼 사용
+                              columns: widget.columns,
                               totalWidth: contentWidth,
                               availableWidth: availableWidth,
                               config: widget.config,
@@ -199,13 +200,15 @@ class _BasicTableState extends State<BasicTable> {
                               onHeaderCheckboxChanged:
                                   _handleHeaderCheckboxChanged,
                               onColumnReorder: _handleColumnReorder,
+                              onColumnSort: _handleColumnSort,
+                              columnSortStates: widget.columnSortStates,
                             ),
 
                             // 테이블 데이터
                             Expanded(
                               child: BasicTableData(
-                                rows: _rows,
-                                columns: _reorderedColumns, // reordered 컬럼 사용
+                                rows: currentRows, // ✅ currentRows 사용
+                                columns: widget.columns,
                                 availableWidth: availableWidth,
                                 config: widget.config,
                                 verticalController: verticalScrollController,
@@ -271,7 +274,7 @@ class _BasicTableState extends State<BasicTable> {
                                   controller: verticalScrollbarController,
                                   scrollDirection: Axis.vertical,
                                   child: SizedBox(
-                                    height: tableDataHeight, // 헤더 제외한 데이터 높이만
+                                    height: tableDataHeight,
                                     width: widget.config.scrollbarWidth,
                                   ),
                                 ),
@@ -286,7 +289,7 @@ class _BasicTableState extends State<BasicTable> {
                         needsHorizontalScroll)
                       Positioned(
                         left: 0,
-                        right: 0, // 전체 너비 사용 (세로 스크롤바까지 덮음)
+                        right: 0,
                         bottom: 0,
                         child: AnimatedOpacity(
                           opacity: widget.config.scrollbarHoverOnly
@@ -344,14 +347,5 @@ class _BasicTableState extends State<BasicTable> {
     );
   }
 
-  @override
-  void didUpdateWidget(BasicTable oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.columns != widget.columns ||
-        oldWidget.data != widget.data ||
-        oldWidget.config != widget.config) {
-      _reorderedColumns = List.from(widget.columns); // 컬럼이 변경되면 순서 리셋
-      _initializeTableData();
-    }
-  }
+  // ✅ didUpdateWidget 제거 - 더 이상 필요없음
 }

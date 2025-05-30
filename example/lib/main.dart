@@ -29,8 +29,21 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // 원본 데이터 백업 (정렬 해제시 복원용)
+    originalTableData = tableData.map((row) => List<String>.from(row)).toList();
+  }
+
   // 외부에서 정의된 선택 상태 - 체크박스 기능의 핵심!
   Set<int> selectedRows = {};
+
+  // 정렬 상태 관리
+  Map<int, ColumnSortState> columnSortStates = {};
+
+  // 원본 데이터 백업 (정렬 해제시 복원용)
+  late List<List<String>> originalTableData;
 
   // 외부에서 컬럼 정의 - minWidth도 모두 직접 설정
   List<BasicTableColumn> tableColumns = [
@@ -71,7 +84,7 @@ class _HomeScreenState extends State<HomeScreen> {
     ['25', '황수정', 'hwang@company.com', 'HR팀', '대기', '2024-12-15'],
   ];
 
-  // 외부에서 테이블 설정 정의 - 체크박스 + 헤더 reorder 기능 활성화!
+  // 외부에서 테이블 설정 정의 - 체크박스 + 헤더 reorder + 정렬 기능 활성화!
   BasicTableConfig get tableConfig => const BasicTableConfig(
         // 체크박스 기능 활성화!
         showCheckboxColumn: true,
@@ -79,6 +92,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
         // 헤더 reorder 기능 활성화! 🆕
         enableHeaderReorder: true,
+
+        // 헤더 정렬 기능 활성화! 🆕
+        enableHeaderSorting: true,
+
+        // 드래그 핸들 숨김 (쓸모없는 아이콘 제거) 🆕
+        showDragHandles: false,
 
         // 스크롤바 설정 커스터마이징
         scrollbarHoverOnly: true,
@@ -91,7 +110,6 @@ class _HomeScreenState extends State<HomeScreen> {
         rowHeight: 45.0,
         showHorizontalScrollbar: true,
         showVerticalScrollbar: true,
-        enableHeaderSorting: true,
       );
 
   // 외부에서 정의된 개별 행 선택/해제 콜백
@@ -164,7 +182,55 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // 🆕 헤더 컬럼 순서 변경 콜백
+  // 🆕 헤더 컬럼 정렬 콜백
+  void onColumnSort(int columnIndex, ColumnSortState sortState) {
+    setState(() {
+      // 다른 컬럼의 정렬 상태 초기화 (한 번에 하나의 컬럼만 정렬)
+      columnSortStates.clear();
+
+      if (sortState != ColumnSortState.none) {
+        columnSortStates[columnIndex] = sortState;
+
+        // 정렬 수행
+        _sortTableData(columnIndex, sortState);
+      } else {
+        // 원래 상태로 복원
+        tableData =
+            originalTableData.map((row) => List<String>.from(row)).toList();
+      }
+    });
+
+    debugPrint('Column sort: column $columnIndex -> $sortState');
+  }
+
+  /// 테이블 데이터를 정렬합니다
+  void _sortTableData(int columnIndex, ColumnSortState sortState) {
+    if (columnIndex >= tableColumns.length) return;
+
+    tableData.sort((a, b) {
+      if (columnIndex >= a.length || columnIndex >= b.length) return 0;
+
+      final String valueA = a[columnIndex];
+      final String valueB = b[columnIndex];
+
+      // 숫자인지 확인해서 숫자면 숫자로 정렬, 아니면 문자열로 정렬
+      final numA = int.tryParse(valueA);
+      final numB = int.tryParse(valueB);
+
+      int comparison;
+      if (numA != null && numB != null) {
+        // 둘 다 숫자면 숫자로 비교
+        comparison = numA.compareTo(numB);
+      } else {
+        // 문자열로 비교
+        comparison = valueA.compareTo(valueB);
+      }
+
+      // 내림차순이면 결과 반전
+      return sortState == ColumnSortState.descending ? -comparison : comparison;
+    });
+  }
+
   void onColumnReorder(int oldIndex, int newIndex) {
     setState(() {
       // newIndex 보정
@@ -172,7 +238,7 @@ class _HomeScreenState extends State<HomeScreen> {
         newIndex -= 1;
       }
 
-      // 컬럼 순서 변경
+      // 🔥 중요: tableColumns도 함께 변경해야 UI 표시가 정확해짐!
       final BasicTableColumn movedColumn = tableColumns.removeAt(oldIndex);
       tableColumns.insert(newIndex, movedColumn);
 
@@ -187,7 +253,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     debugPrint('Column order changed: $oldIndex -> $newIndex');
 
-    // 현재 컬럼 순서 출력
+    // 현재 컬럼 순서 출력 (이제 정확함!)
     final columnNames = tableColumns.map((col) => col.name).join(', ');
     debugPrint('New column order: $columnNames');
   }
@@ -196,7 +262,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Custom Table Demo - Header Reorder'),
+        title: const Text('Custom Table Demo - Header Reorder + Sort'),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
       ),
       body: Column(
@@ -259,7 +325,7 @@ class _HomeScreenState extends State<HomeScreen> {
               child: BasicTable(
                 columns: tableColumns, // 외부에서 정의된 컬럼
                 data: tableData, // 외부에서 정의된 데이터
-                config: tableConfig, // 외부에서 정의된 설정 (체크박스 + reorder 포함)
+                config: tableConfig, // 외부에서 정의된 설정 (체크박스 + reorder + 정렬 포함)
                 selectedRows: selectedRows, // 외부에서 관리되는 선택 상태
                 onRowSelectionChanged: onRowSelectionChanged,
                 onSelectAllChanged: onSelectAllChanged,
@@ -268,6 +334,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 onRowSecondaryTap: onRowSecondaryTap,
                 doubleClickTime: const Duration(milliseconds: 250),
                 onColumnReorder: onColumnReorder, // 🆕 헤더 reorder 콜백
+                onColumnSort: onColumnSort, // 🆕 헤더 정렬 콜백
+                columnSortStates: columnSortStates, // 🆕 정렬 상태
               ),
             ),
           ),
@@ -281,11 +349,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '헤더 Reorder + 체크박스 + 클릭 기능:',
+                    '헤더 Reorder + 정렬 + 체크박스 + 클릭 기능:',
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                   ),
                   SizedBox(height: 8),
-                  Text('🔄 헤더 드래그 핸들(≡)을 잡고 드래그해서 컬럼 순서 변경'),
+                  Text('🔄 헤더를 드래그해서 컬럼 순서 변경 (드래그 핸들 숨김)'),
+                  Text('⬆️⬇️ 헤더 클릭으로 정렬: 오름차순 → 내림차순 → 원래상태'),
+                  Text('🔢 숫자 컬럼은 숫자로 정렬, 문자 컬럼은 문자로 정렬'),
                   Text('✅ 체크박스는 reorder 대상에서 제외됨'),
                   Text('✅ 헤더 순서가 바뀌면 모든 데이터도 함께 재정렬'),
                   Text('✅ 더블클릭 지원 (250ms 내)'),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_basic_table/src/enum/column_sort_state.dart';
 
 import '../../flutter_basic_table.dart';
 
@@ -12,6 +13,9 @@ class BasicTableHeader extends StatelessWidget {
   final bool? headerCheckboxState;
   final VoidCallback? onHeaderCheckboxChanged;
   final void Function(int oldIndex, int newIndex)? onColumnReorder;
+  final void Function(int columnIndex, ColumnSortState sortState)?
+      onColumnSort; // 정렬 콜백 추가!
+  final Map<int, ColumnSortState>? columnSortStates; // 각 컬럼의 정렬 상태
 
   const BasicTableHeader({
     super.key,
@@ -23,6 +27,8 @@ class BasicTableHeader extends StatelessWidget {
     this.headerCheckboxState,
     this.onHeaderCheckboxChanged,
     this.onColumnReorder,
+    this.onColumnSort, // 추가!
+    this.columnSortStates, // 추가!
   });
 
   /// 각 컬럼의 실제 렌더링 너비를 계산합니다.
@@ -75,11 +81,15 @@ class BasicTableHeader extends StatelessWidget {
                     columnWidths: columnWidths,
                     config: config,
                     onReorder: onColumnReorder!,
+                    onColumnSort: onColumnSort,
+                    columnSortStates: columnSortStates,
                   )
                 : _StaticHeaderRow(
                     columns: columns,
                     columnWidths: columnWidths,
                     config: config,
+                    onColumnSort: onColumnSort,
+                    columnSortStates: columnSortStates,
                   ),
           ),
         ],
@@ -94,12 +104,16 @@ class _ReorderableHeaderRow extends StatelessWidget {
   final List<double> columnWidths;
   final BasicTableConfig config;
   final void Function(int oldIndex, int newIndex) onReorder;
+  final void Function(int columnIndex, ColumnSortState sortState)? onColumnSort;
+  final Map<int, ColumnSortState>? columnSortStates;
 
   const _ReorderableHeaderRow({
     required this.columns,
     required this.columnWidths,
     required this.config,
     required this.onReorder,
+    this.onColumnSort,
+    this.columnSortStates,
   });
 
   @override
@@ -111,6 +125,7 @@ class _ReorderableHeaderRow extends StatelessWidget {
       children: List.generate(columns.length, (index) {
         final column = columns[index];
         final width = columnWidths[index];
+        final sortState = columnSortStates?[index] ?? ColumnSortState.none;
 
         return ReorderableDragStartListener(
           key: ValueKey('header_$index'), // 각 아이템에 고유 key 필요
@@ -119,7 +134,10 @@ class _ReorderableHeaderRow extends StatelessWidget {
             column: column,
             width: width,
             config: config,
-            showDragHandle: true, // 드래그 핸들 표시
+            columnIndex: index,
+            sortState: sortState,
+            onSort: onColumnSort,
+            showDragHandle: config.showDragHandles, // 설정에 따라 드래그 핸들 표시
           ),
         );
       }),
@@ -132,11 +150,15 @@ class _StaticHeaderRow extends StatelessWidget {
   final List<BasicTableColumn> columns;
   final List<double> columnWidths;
   final BasicTableConfig config;
+  final void Function(int columnIndex, ColumnSortState sortState)? onColumnSort;
+  final Map<int, ColumnSortState>? columnSortStates;
 
   const _StaticHeaderRow({
     required this.columns,
     required this.columnWidths,
     required this.config,
+    this.onColumnSort,
+    this.columnSortStates,
   });
 
   @override
@@ -145,11 +167,15 @@ class _StaticHeaderRow extends StatelessWidget {
       children: List.generate(columns.length, (index) {
         final column = columns[index];
         final width = columnWidths[index];
+        final sortState = columnSortStates?[index] ?? ColumnSortState.none;
 
         return _HeaderCell(
           column: column,
           width: width,
           config: config,
+          columnIndex: index,
+          sortState: sortState,
+          onSort: onColumnSort,
           showDragHandle: false, // 드래그 핸들 숨김
         );
       }),
@@ -204,14 +230,54 @@ class _HeaderCell extends StatelessWidget {
   final BasicTableColumn column;
   final double width;
   final BasicTableConfig config;
+  final int columnIndex;
+  final ColumnSortState sortState;
+  final void Function(int columnIndex, ColumnSortState sortState)? onSort;
   final bool showDragHandle;
 
   const _HeaderCell({
     required this.column,
     required this.width,
     required this.config,
+    required this.columnIndex,
+    this.sortState = ColumnSortState.none,
+    this.onSort,
     this.showDragHandle = false,
   });
+
+  /// 다음 정렬 상태를 계산합니다 (none → asc → desc → none)
+  ColumnSortState _getNextSortState() {
+    switch (sortState) {
+      case ColumnSortState.none:
+        return ColumnSortState.ascending;
+      case ColumnSortState.ascending:
+        return ColumnSortState.descending;
+      case ColumnSortState.descending:
+        return ColumnSortState.none;
+    }
+  }
+
+  /// 정렬 상태에 따른 아이콘을 반환합니다
+  Widget? _getSortIcon() {
+    if (!config.enableHeaderSorting) return null;
+
+    switch (sortState) {
+      case ColumnSortState.none:
+        return null; // 아이콘 없음
+      case ColumnSortState.ascending:
+        return const Icon(
+          Icons.keyboard_arrow_up,
+          size: 18,
+          color: Colors.blue,
+        );
+      case ColumnSortState.descending:
+        return const Icon(
+          Icons.keyboard_arrow_down,
+          size: 18,
+          color: Colors.blue,
+        );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -226,15 +292,14 @@ class _HeaderCell extends StatelessWidget {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap:
-              config.enableHeaderSorting ? () => _onHeaderTap(context) : null,
+          onTap: () => _onHeaderTap(),
           child: Padding(
             padding:
                 const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
             child: Row(
               children: [
                 // 드래그 핸들 (reorder 활성화시에만 표시)
-                if (showDragHandle)
+                if (showDragHandle && config.enableHeaderReorder)
                   Container(
                     margin: const EdgeInsets.only(right: 8.0),
                     child: Icon(
@@ -257,12 +322,7 @@ class _HeaderCell extends StatelessWidget {
                 ),
 
                 // 정렬 아이콘 (정렬 활성화시에만 표시)
-                if (config.enableHeaderSorting)
-                  const Icon(
-                    Icons.sort,
-                    size: 16,
-                    color: Colors.grey,
-                  ),
+                if (_getSortIcon() != null) _getSortIcon()!,
               ],
             ),
           ),
@@ -271,8 +331,12 @@ class _HeaderCell extends StatelessWidget {
     );
   }
 
-  void _onHeaderTap(BuildContext context) {
-    // TODO: 정렬 기능 구현
-    debugPrint('Header tapped: ${column.name}');
+  void _onHeaderTap() {
+    if (config.enableHeaderSorting && onSort != null) {
+      final nextState = _getNextSortState();
+      onSort!(columnIndex, nextState);
+      debugPrint(
+          'Header tapped: ${column.name}, sort: $sortState -> $nextState');
+    }
   }
 }
