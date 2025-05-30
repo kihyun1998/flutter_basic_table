@@ -257,7 +257,7 @@ class _HeaderCell extends StatelessWidget {
     }
   }
 
-  /// 정렬 상태에 따른 아이콘을 반환합니다
+  /// 정렬 상태에 따른 아이콘을 반환합니다 - ✅ 커스터마이징 가능!
   Widget? _getSortIcon() {
     if (!theme.headerTheme.enableSorting) return null;
 
@@ -266,14 +266,16 @@ class _HeaderCell extends StatelessWidget {
         return null; // 아이콘 없음
       case ColumnSortState.ascending:
         return Icon(
-          Icons.keyboard_arrow_up,
-          size: 18,
+          theme.headerTheme.ascendingIcon ??
+              Icons.keyboard_arrow_up, // ✅ 커스터마이징 가능!
+          size: theme.headerTheme.sortIconSize ?? 18.0, // ✅ 크기도 커스터마이징!
           color: theme.headerTheme.sortIconColor,
         );
       case ColumnSortState.descending:
         return Icon(
-          Icons.keyboard_arrow_down,
-          size: 18,
+          theme.headerTheme.descendingIcon ??
+              Icons.keyboard_arrow_down, // ✅ 커스터마이징 가능!
+          size: theme.headerTheme.sortIconSize ?? 18.0, // ✅ 크기도 커스터마이징!
           color: theme.headerTheme.sortIconColor,
         );
     }
@@ -294,6 +296,9 @@ class _HeaderCell extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: () => _onHeaderTap(),
+          // ✅ 헤더 클릭 효과 색상 커스터마이징!
+          splashColor: theme.headerTheme.splashColor,
+          highlightColor: theme.headerTheme.highlightColor,
           child: Padding(
             padding: theme.headerTheme.padding ?? EdgeInsets.zero,
             child: Row(

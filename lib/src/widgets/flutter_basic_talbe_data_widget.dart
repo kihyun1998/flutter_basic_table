@@ -155,6 +155,9 @@ class _DataRowState extends State<_DataRow> {
               ? () => widget.onRowSecondaryTap!(widget.row.index)
               : null,
           doubleClickTime: widget.doubleClickTime,
+          // ✅ 클릭 효과 색상 커스터마이징!
+          splashColor: widget.theme.dataRowTheme.splashColor,
+          highlightColor: widget.theme.dataRowTheme.highlightColor,
           child: Row(
             children: [
               // 체크박스 셀

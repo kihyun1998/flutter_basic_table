@@ -74,7 +74,7 @@ class BasicTableThemeData {
   }
 }
 
-/// 헤더 셀의 테마
+/// 헤더 셀의 테마 - ✅ 정렬 아이콘 커스터마이징 + 클릭 효과 추가!
 class BasicTableHeaderCellTheme {
   final double height;
   final Color? backgroundColor;
@@ -86,6 +86,15 @@ class BasicTableHeaderCellTheme {
   final bool enableSorting;
   final bool showDragHandles;
 
+  // ✅ 정렬 아이콘 커스터마이징 옵션 추가!
+  final IconData? ascendingIcon;
+  final IconData? descendingIcon;
+  final double? sortIconSize;
+
+  // ✅ 클릭 효과 색상 추가! (일관성을 위해)
+  final Color? splashColor;
+  final Color? highlightColor;
+
   const BasicTableHeaderCellTheme({
     required this.height,
     this.backgroundColor,
@@ -96,6 +105,11 @@ class BasicTableHeaderCellTheme {
     required this.enableReorder,
     required this.enableSorting,
     required this.showDragHandles,
+    this.ascendingIcon, // ✅ 추가
+    this.descendingIcon, // ✅ 추가
+    this.sortIconSize, // ✅ 추가
+    this.splashColor, // ✅ 추가
+    this.highlightColor, // ✅ 추가
   });
 
   factory BasicTableHeaderCellTheme.defaultTheme() {
@@ -113,6 +127,11 @@ class BasicTableHeaderCellTheme {
       enableReorder: false,
       enableSorting: false,
       showDragHandles: true,
+      ascendingIcon: Icons.keyboard_arrow_up, // ✅ 기본값
+      descendingIcon: Icons.keyboard_arrow_down, // ✅ 기본값
+      sortIconSize: 18.0, // ✅ 기본값
+      splashColor: null, // ✅ 기본값 (Material 기본값 사용)
+      highlightColor: null, // ✅ 기본값 (Material 기본값 사용)
     );
   }
 
@@ -126,6 +145,11 @@ class BasicTableHeaderCellTheme {
     bool? enableReorder,
     bool? enableSorting,
     bool? showDragHandles,
+    IconData? ascendingIcon, // ✅ 추가
+    IconData? descendingIcon, // ✅ 추가
+    double? sortIconSize, // ✅ 추가
+    Color? splashColor, // ✅ 추가
+    Color? highlightColor, // ✅ 추가
   }) {
     return BasicTableHeaderCellTheme(
       height: height ?? this.height,
@@ -137,6 +161,11 @@ class BasicTableHeaderCellTheme {
       enableReorder: enableReorder ?? this.enableReorder,
       enableSorting: enableSorting ?? this.enableSorting,
       showDragHandles: showDragHandles ?? this.showDragHandles,
+      ascendingIcon: ascendingIcon ?? this.ascendingIcon, // ✅ 추가
+      descendingIcon: descendingIcon ?? this.descendingIcon, // ✅ 추가
+      sortIconSize: sortIconSize ?? this.sortIconSize, // ✅ 추가
+      splashColor: splashColor ?? this.splashColor, // ✅ 추가
+      highlightColor: highlightColor ?? this.highlightColor, // ✅ 추가
     );
   }
 
@@ -152,7 +181,12 @@ class BasicTableHeaderCellTheme {
         other.sortIconColor == sortIconColor &&
         other.enableReorder == enableReorder &&
         other.enableSorting == enableSorting &&
-        other.showDragHandles == showDragHandles;
+        other.showDragHandles == showDragHandles &&
+        other.ascendingIcon == ascendingIcon && // ✅ 추가
+        other.descendingIcon == descendingIcon && // ✅ 추가
+        other.sortIconSize == sortIconSize && // ✅ 추가
+        other.splashColor == splashColor && // ✅ 추가
+        other.highlightColor == highlightColor; // ✅ 추가
   }
 
   @override
@@ -167,11 +201,16 @@ class BasicTableHeaderCellTheme {
       enableReorder,
       enableSorting,
       showDragHandles,
+      ascendingIcon, // ✅ 추가
+      descendingIcon, // ✅ 추가
+      sortIconSize, // ✅ 추가
+      splashColor, // ✅ 추가
+      highlightColor, // ✅ 추가
     );
   }
 }
 
-/// 데이터 행의 테마
+/// 데이터 행의 테마 - ✅ 클릭 효과 색상 추가!
 class BasicTableDataRowTheme {
   final double height;
   final Color? backgroundColor;
@@ -179,12 +218,18 @@ class BasicTableDataRowTheme {
   final EdgeInsets? padding;
   final BorderSide? border;
 
+  // ✅ 클릭 효과 색상 추가!
+  final Color? splashColor;
+  final Color? highlightColor;
+
   const BasicTableDataRowTheme({
     required this.height,
     this.backgroundColor,
     this.textStyle,
     this.padding,
     this.border,
+    this.splashColor, // ✅ 추가
+    this.highlightColor, // ✅ 추가
   });
 
   factory BasicTableDataRowTheme.defaultTheme() {
@@ -194,6 +239,8 @@ class BasicTableDataRowTheme {
       textStyle: TextStyle(fontSize: 13, color: Colors.black),
       padding: EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
       border: BorderSide(color: Colors.grey, width: 0.3),
+      splashColor: null, // ✅ 기본값 (Material 기본값 사용)
+      highlightColor: null, // ✅ 기본값 (Material 기본값 사용)
     );
   }
 
@@ -203,6 +250,8 @@ class BasicTableDataRowTheme {
     TextStyle? textStyle,
     EdgeInsets? padding,
     BorderSide? border,
+    Color? splashColor, // ✅ 추가
+    Color? highlightColor, // ✅ 추가
   }) {
     return BasicTableDataRowTheme(
       height: height ?? this.height,
@@ -210,6 +259,8 @@ class BasicTableDataRowTheme {
       textStyle: textStyle ?? this.textStyle,
       padding: padding ?? this.padding,
       border: border ?? this.border,
+      splashColor: splashColor ?? this.splashColor, // ✅ 추가
+      highlightColor: highlightColor ?? this.highlightColor, // ✅ 추가
     );
   }
 
@@ -221,12 +272,22 @@ class BasicTableDataRowTheme {
         other.backgroundColor == backgroundColor &&
         other.textStyle == textStyle &&
         other.padding == padding &&
-        other.border == border;
+        other.border == border &&
+        other.splashColor == splashColor && // ✅ 추가
+        other.highlightColor == highlightColor; // ✅ 추가
   }
 
   @override
   int get hashCode {
-    return Object.hash(height, backgroundColor, textStyle, padding, border);
+    return Object.hash(
+      height,
+      backgroundColor,
+      textStyle,
+      padding,
+      border,
+      splashColor, // ✅ 추가
+      highlightColor, // ✅ 추가
+    );
   }
 }
 

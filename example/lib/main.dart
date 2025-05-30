@@ -1,4 +1,4 @@
-// example/lib/main.dart
+// example/lib/main.dart - 깔끔한 모노톤 스타일
 import 'package:flutter/material.dart';
 import 'package:flutter_basic_table/flutter_basic_table.dart';
 
@@ -14,7 +14,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Custom Table Demo',
       theme: ThemeData(
-        primarySwatch: Colors.blue,
+        primarySwatch: Colors.grey, // ✅ 파란색 → 회색으로 변경
         useMaterial3: true,
       ),
       home: const HomeScreen(),
@@ -85,67 +85,84 @@ class _HomeScreenState extends State<HomeScreen> {
     ['25', '황수정', 'hwang@company.com', 'HR팀', '대기', '2024-12-15'],
   ];
 
-  // ✅ 외부에서 테이블 테마 정의 - config 대신 theme 사용!
+  // ✅ 깔끔한 모노톤 스타일 테마 정의!
   BasicTableThemeData get tableTheme => BasicTableThemeData(
-        // 헤더 테마 - 체크박스 + 헤더 reorder + 정렬 기능 활성화!
+        // 헤더 테마 - 깔끔한 흰색/회색 스타일
         headerTheme: BasicTableHeaderCellTheme(
           height: 50.0,
-          backgroundColor: Colors.blue[50], // 연한 파란색 배경
+          backgroundColor: Colors.grey[100], // ✅ 연한 회색 배경
           textStyle: const TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 14,
-            color: Colors.black87,
+            color: Colors.black87, // ✅ 진한 검정색 텍스트
           ),
           padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
-          border: const BorderSide(color: Colors.blue, width: 2.0),
-          sortIconColor: Colors.blue,
-          enableReorder: true, // 헤더 reorder 기능 활성화!
-          enableSorting: true, // 헤더 정렬 기능 활성화!
-          showDragHandles: false, // 드래그 핸들 숨김 (쓸모없는 아이콘 제거)
+          border:
+              const BorderSide(color: Colors.black87, width: 1.0), // ✅ 검정색 테두리
+          sortIconColor: Colors.black54, // ✅ 회색 정렬 아이콘
+          enableReorder: true,
+          enableSorting: true,
+          showDragHandles: false,
+
+          // 정렬 아이콘 설정
+          ascendingIcon: Icons.arrow_upward,
+          descendingIcon: Icons.arrow_downward,
+          sortIconSize: 18.0,
+
+          // 헤더 클릭 효과 - 은은한 회색
+          splashColor: Colors.grey.withOpacity(0.1),
+          highlightColor: Colors.grey.withOpacity(0.05),
         ),
 
-        // 데이터 행 테마
-        dataRowTheme: const BasicTableDataRowTheme(
+        // 데이터 행 테마 - 깨끗한 흰색 스타일
+        dataRowTheme: BasicTableDataRowTheme(
           height: 45.0,
-          backgroundColor: Colors.white,
-          textStyle: TextStyle(fontSize: 13, color: Colors.black),
-          padding: EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
-          border: BorderSide(color: Colors.grey, width: 0.3),
+          backgroundColor: Colors.white, // ✅ 깨끗한 흰색 배경
+          textStyle: const TextStyle(
+              fontSize: 13, color: Colors.black87), // ✅ 진한 검정색 텍스트
+          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+          border:
+              BorderSide(color: Colors.grey[300]!, width: 0.5), // ✅ 연한 회색 테두리
+
+          // 행 클릭 효과 - 은은한 회색
+          splashColor: Colors.grey.withOpacity(0.08),
+          highlightColor: Colors.grey.withOpacity(0.04),
         ),
 
-        // 체크박스 테마 - 체크박스 기능 활성화!
+        // 체크박스 테마 - 모노톤 스타일
         checkboxTheme: const BasicTableCheckboxCellTheme(
-          enabled: true, // 체크박스 기능 활성화!
+          enabled: true,
           columnWidth: 60.0,
           padding: EdgeInsets.all(8.0),
-          activeColor: Colors.blue,
-          checkColor: Colors.white,
+          activeColor: Colors.black87, // ✅ 체크됐을 때 검정색
+          checkColor: Colors.white, // ✅ 체크 마크는 흰색
         ),
 
-        // 선택 상태 테마
+        // 선택 상태 테마 - 은은한 회색
         selectionTheme: BasicTableSelectionTheme(
-          selectedRowColor: Colors.blue.withOpacity(0.1), // 선택된 행은 연한 파란색
-          hoverRowColor: Colors.grey.withOpacity(0.05),
+          selectedRowColor: Colors.grey.withOpacity(0.15), // ✅ 선택된 행은 연한 회색
+          hoverRowColor: Colors.grey.withOpacity(0.08), // ✅ hover는 더 연한 회색
         ),
 
-        // 스크롤바 테마 - 스크롤바 설정 커스터마이징
+        // 스크롤바 테마 - 검정/회색 스타일
         scrollbarTheme: BasicTableScrollbarTheme(
           showHorizontal: true,
           showVertical: true,
           hoverOnly: true,
-          opacity: 0.9,
+          opacity: 0.7,
           animationDuration: const Duration(milliseconds: 250),
-          width: 14.0,
-          color: Colors.black.withOpacity(0.5),
-          trackColor: Colors.black.withOpacity(0.1),
+          width: 12.0,
+          color: Colors.black54, // ✅ 회색 스크롤바
+          trackColor: Colors.grey.withOpacity(0.2), // ✅ 연한 회색 트랙
         ),
 
-        // 테두리 테마
-        borderTheme: const BasicTableBorderTheme(
-          tableBorder: BorderSide(color: Colors.black, width: 0.5),
-          headerBorder: BorderSide(color: Colors.blue, width: 2.0),
-          rowBorder: BorderSide(color: Colors.grey, width: 0.3),
-          cellBorder: BorderSide.none,
+        // 테두리 테마 - 깔끔한 검정/회색
+        borderTheme: BasicTableBorderTheme(
+          tableBorder: const BorderSide(color: Colors.black54, width: 0.5),
+          headerBorder: const BorderSide(color: Colors.black87, width: 1.0),
+          rowBorder: BorderSide(color: Colors.grey[300]!, width: 0.5),
+          cellBorder: BorderSide(
+              color: Colors.grey[200]!, width: 0.3), // ✅ 매우 연한 회색 셀 구분선
         ),
       );
 
@@ -299,14 +316,18 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Custom Table Demo - Theme Based'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        title: const Text('Custom Table Demo - Monochrome Style'),
+        backgroundColor: Colors.grey[200], // ✅ 연한 회색 앱바
+        foregroundColor: Colors.black87, // ✅ 검정색 텍스트
       ),
+      backgroundColor: Colors.grey[50], // ✅ 매우 연한 회색 배경
       body: Column(
         children: [
           // 선택 상태 + 컬럼 순서 표시 카드
           Card(
             margin: const EdgeInsets.all(8.0),
+            color: Colors.white, // ✅ 흰색 카드
+            elevation: 1, // ✅ 은은한 그림자
             child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
@@ -318,7 +339,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       Text(
                         '선택된 행: ${selectedRows.length}개',
                         style: const TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.w500),
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.black87), // ✅ 검정색 텍스트
                       ),
                       if (selectedRows.isNotEmpty)
                         ElevatedButton(
@@ -338,6 +361,10 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                             );
                           },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.black87, // ✅ 검정색 버튼
+                            foregroundColor: Colors.white, // ✅ 흰색 텍스트
+                          ),
                           child: const Text('선택 항목 보기'),
                         ),
                     ],
@@ -347,7 +374,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     '컬럼 순서: ${tableColumns.map((col) => col.name).join(' → ')}',
                     style: TextStyle(
                       fontSize: 14,
-                      color: Colors.grey[600],
+                      color: Colors.grey[600], // ✅ 회색 텍스트
                     ),
                   ),
                 ],
@@ -355,53 +382,58 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
 
-          // ✅ 커스텀 테이블이 들어갈 확장된 영역 - theme 방식으로 변경!
+          // ✅ 커스텀 테이블이 들어갈 확장된 영역
           Expanded(
             child: Card(
               margin: const EdgeInsets.all(8.0),
+              color: Colors.white, // ✅ 흰색 카드
+              elevation: 1, // ✅ 은은한 그림자
               child: BasicTable(
-                columns: tableColumns, // 외부에서 정의된 컬럼
-                data: tableData, // 외부에서 정의된 데이터
-                theme:
-                    tableTheme, // ✅ config → theme으로 변경! (체크박스 + reorder + 정렬 포함)
-                selectedRows: selectedRows, // 외부에서 관리되는 선택 상태
+                columns: tableColumns,
+                data: tableData,
+                theme: tableTheme, // ✅ 깔끔한 모노톤 테마!
+                selectedRows: selectedRows,
                 onRowSelectionChanged: onRowSelectionChanged,
                 onSelectAllChanged: onSelectAllChanged,
                 onRowTap: onRowTap,
                 onRowDoubleTap: onRowDoubleTap,
                 onRowSecondaryTap: onRowSecondaryTap,
                 doubleClickTime: const Duration(milliseconds: 250),
-                onColumnReorder: onColumnReorder, // 🆕 헤더 reorder 콜백
-                onColumnSort: onColumnSort, // 🆕 헤더 정렬 콜백
-                columnSortStates: columnSortStates, // 🆕 정렬 상태
+                onColumnReorder: onColumnReorder,
+                onColumnSort: onColumnSort,
+                columnSortStates: columnSortStates,
               ),
             ),
           ),
 
           // 설명 카드
-          const Card(
-            margin: EdgeInsets.all(8.0),
+          Card(
+            margin: const EdgeInsets.all(8.0),
+            color: Colors.white, // ✅ 흰색 카드
+            elevation: 1, // ✅ 은은한 그림자
             child: Padding(
-              padding: EdgeInsets.all(16.0),
+              padding: const EdgeInsets.all(16.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    '✅ Theme 기반 스타일링 + 모든 기능:',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  const Text(
+                    '✅ 깔끔한 모노톤 스타일 테이블:',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                      color: Colors.black87, // ✅ 검정색 제목
+                    ),
                   ),
-                  SizedBox(height: 8),
-                  Text('🎨 모든 스타일이 Theme으로 커스터마이징 가능'),
-                  Text('🔄 헤더를 드래그해서 컬럼 순서 변경 (드래그 핸들 숨김)'),
-                  Text('⬆️⬇️ 헤더 클릭으로 정렬: 오름차순 → 내림차순 → 원래상태'),
-                  Text('🔢 숫자 컬럼은 숫자로 정렬, 문자 컬럼은 문자로 정렬'),
-                  Text('✅ 체크박스는 reorder 대상에서 제외됨'),
-                  Text('✅ 헤더 순서가 바뀌면 모든 데이터도 함께 재정렬'),
-                  Text('✅ 더블클릭 지원 (250ms 내)'),
-                  Text('✅ 우클릭 지원'),
-                  Text('✅ 선택된 행은 테마로 정의된 색상으로 표시'),
-                  Text('✅ 모든 이벤트가 외부에서 완전히 제어됨'),
-                  Text('✅ 색상, 폰트, 패딩, 테두리 등 모든 스타일 커스터마이징'),
+                  const SizedBox(height: 8),
+                  Text('🎨 흰색, 검정색, 회색만 사용한 깔끔한 디자인', style: _descStyle),
+                  Text('🔄 헤더를 드래그해서 컬럼 순서 변경', style: _descStyle),
+                  Text('⬆️⬇️ 헤더 클릭으로 정렬: 오름차순 → 내림차순 → 원래상태',
+                      style: _descStyle),
+                  Text('🔢 숫자 컬럼은 숫자로 정렬, 문자 컬럼은 문자로 정렬', style: _descStyle),
+                  Text('✅ 체크박스로 다중 선택 지원', style: _descStyle),
+                  Text('✅ 더블클릭 & 우클릭 지원', style: _descStyle),
+                  Text('✅ hover 효과 & 클릭 효과 모두 은은한 회색', style: _descStyle),
+                  Text('✅ 모든 이벤트가 외부에서 완전히 제어됨', style: _descStyle),
                 ],
               ),
             ),
@@ -410,4 +442,11 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
+
+  // ✅ 설명 텍스트 스타일 (회색)
+  TextStyle get _descStyle => TextStyle(
+        fontSize: 13,
+        color: Colors.grey[700],
+        height: 1.4,
+      );
 }
