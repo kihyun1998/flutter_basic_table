@@ -6,11 +6,15 @@ class BasicTableConfig {
   final bool showVerticalScrollbar;
   final bool enableHeaderSorting;
 
-  // 스크롤바 관련 새 옵션들
+  // 스크롤바 관련 옵션들
   final bool scrollbarHoverOnly;
   final double scrollbarOpacity;
   final Duration scrollbarAnimationDuration;
   final double scrollbarWidth;
+
+  // 체크박스 관련 옵션들
+  final bool showCheckboxColumn;
+  final double checkboxColumnWidth;
 
   const BasicTableConfig({
     this.headerHeight = 48.0,
@@ -22,6 +26,8 @@ class BasicTableConfig {
     this.scrollbarOpacity = 0.8,
     this.scrollbarAnimationDuration = const Duration(milliseconds: 200),
     this.scrollbarWidth = 16.0,
+    this.showCheckboxColumn = false,
+    this.checkboxColumnWidth = 60.0,
   });
 
   BasicTableConfig copyWith({
@@ -34,6 +40,8 @@ class BasicTableConfig {
     double? scrollbarOpacity,
     Duration? scrollbarAnimationDuration,
     double? scrollbarWidth,
+    bool? showCheckboxColumn,
+    double? checkboxColumnWidth,
   }) {
     return BasicTableConfig(
       headerHeight: headerHeight ?? this.headerHeight,
@@ -48,6 +56,8 @@ class BasicTableConfig {
       scrollbarAnimationDuration:
           scrollbarAnimationDuration ?? this.scrollbarAnimationDuration,
       scrollbarWidth: scrollbarWidth ?? this.scrollbarWidth,
+      showCheckboxColumn: showCheckboxColumn ?? this.showCheckboxColumn,
+      checkboxColumnWidth: checkboxColumnWidth ?? this.checkboxColumnWidth,
     );
   }
 }

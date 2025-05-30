@@ -21,8 +21,16 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  // 외부에서 정의된 선택 상태 - 체크박스 기능의 핵심!
+  Set<int> selectedRows = {};
 
   // 외부에서 컬럼 정의 - minWidth도 모두 직접 설정
   List<BasicTableColumn> get tableColumns => [
@@ -63,13 +71,17 @@ class HomeScreen extends StatelessWidget {
         ['25', '황수정', 'hwang@company.com', 'HR팀', '대기', '2024-12-15'],
       ];
 
-  // 외부에서 테이블 설정 정의
+  // 외부에서 테이블 설정 정의 - 체크박스 기능 활성화
   BasicTableConfig get tableConfig => const BasicTableConfig(
+        // 체크박스 기능 활성화!
+        showCheckboxColumn: true,
+        checkboxColumnWidth: 60.0,
+
         // 스크롤바 설정 커스터마이징
-        scrollbarHoverOnly: true, // 호버시에만 표시
-        scrollbarOpacity: 0.9, // 불투명도 90%
-        scrollbarAnimationDuration: Duration(milliseconds: 250), // 애니메이션 속도
-        scrollbarWidth: 14.0, // 스크롤바 두께
+        scrollbarHoverOnly: true,
+        scrollbarOpacity: 0.9,
+        scrollbarAnimationDuration: Duration(milliseconds: 250),
+        scrollbarWidth: 14.0,
 
         // 기존 테이블 설정
         headerHeight: 50.0,
@@ -79,26 +91,83 @@ class HomeScreen extends StatelessWidget {
         enableHeaderSorting: true,
       );
 
+  // 외부에서 정의된 개별 행 선택/해제 콜백
+  void onRowSelectionChanged(int index, bool selected) {
+    setState(() {
+      if (selected) {
+        selectedRows.add(index);
+      } else {
+        selectedRows.remove(index);
+      }
+    });
+
+    // 선택 상태 변경 로그
+    debugPrint(
+        'Row $index ${selected ? 'selected' : 'deselected'}. Total selected: ${selectedRows.length}');
+  }
+
+  // 외부에서 정의된 전체 선택/해제 콜백
+  void onSelectAllChanged(bool selectAll) {
+    setState(() {
+      if (selectAll) {
+        // 전체 선택: 모든 행의 인덱스를 추가
+        selectedRows =
+            Set.from(List.generate(tableData.length, (index) => index));
+      } else {
+        // 전체 해제: 모든 선택 제거
+        selectedRows.clear();
+      }
+    });
+
+    // 전체 선택 상태 변경 로그
+    debugPrint(
+        '${selectAll ? 'Select all' : 'Deselect all'}. Total selected: ${selectedRows.length}');
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Custom Table Demo - 외부 데이터 정의'),
+        title: const Text('Custom Table Demo - 체크박스 기능'),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
       ),
       body: Column(
         children: [
-          // 고정된 상단 카드
-          const Card(
-            margin: EdgeInsets.all(8.0),
-            child: SizedBox(
-              height: 100,
-              child: Center(
-                child: Text(
-                  'Fixed Top Card (100px height)\n모든 데이터가 외부에서 정의됩니다!',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-                  textAlign: TextAlign.center,
-                ),
+          // 선택 상태 표시 카드
+          Card(
+            margin: const EdgeInsets.all(8.0),
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    '선택된 행: ${selectedRows.length}개',
+                    style: const TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.w500),
+                  ),
+                  if (selectedRows.isNotEmpty)
+                    ElevatedButton(
+                      onPressed: () {
+                        // 선택된 행들에 대한 작업 예시
+                        showDialog(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: const Text('선택된 항목'),
+                            content: Text(
+                                '선택된 행들의 인덱스:\n${selectedRows.toList()..sort()}'),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context),
+                                child: const Text('확인'),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                      child: const Text('선택 항목 보기'),
+                    ),
+                ],
               ),
             ),
           ),
@@ -110,7 +179,11 @@ class HomeScreen extends StatelessWidget {
               child: BasicTable(
                 columns: tableColumns, // 외부에서 정의된 컬럼
                 data: tableData, // 외부에서 정의된 데이터
-                config: tableConfig, // 외부에서 정의된 설정
+                config: tableConfig, // 외부에서 정의된 설정 (체크박스 포함)
+                selectedRows: selectedRows, // 외부에서 관리되는 선택 상태
+                onRowSelectionChanged:
+                    onRowSelectionChanged, // 외부에서 정의된 개별 선택 콜백
+                onSelectAllChanged: onSelectAllChanged, // 외부에서 정의된 전체 선택 콜백
               ),
             ),
           ),
@@ -124,15 +197,16 @@ class HomeScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '개선된 기능:',
+                    '체크박스 기능 (개선된 UX):',
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                   ),
                   SizedBox(height: 8),
-                  Text('✅ 모든 컬럼이 외부에서 정의됩니다'),
-                  Text('✅ 모든 데이터가 외부에서 정의됩니다'),
-                  Text('✅ minWidth 등 모든 설정이 외부에서 제어됩니다'),
-                  Text('✅ 완전히 외부 의존적인 순수 위젯입니다'),
-                  Text('✅ 재사용성이 극대화되었습니다'),
+                  Text('✅ 행 전체가 클릭 가능한 영역입니다'),
+                  Text('✅ 행의 어느 부분을 클릭해도 선택/해제됩니다'),
+                  Text('✅ 선택된 행은 연한 파란색 배경으로 표시됩니다'),
+                  Text('✅ 헤더에 전체 선택/해제 체크박스가 있습니다'),
+                  Text('✅ 선택 상태가 외부에서 완전히 관리됩니다'),
+                  Text('✅ 일부 선택시 헤더 체크박스가 중간 상태로 표시됩니다'),
                 ],
               ),
             ),

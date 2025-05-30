@@ -16,11 +16,19 @@ class BasicTable extends StatefulWidget {
   final List<List<String>> data;
   final BasicTableConfig config;
 
+  // 체크박스 관련 외부 정의 필드들
+  final Set<int>? selectedRows;
+  final void Function(int index, bool selected)? onRowSelectionChanged;
+  final void Function(bool selectAll)? onSelectAllChanged;
+
   const BasicTable({
     super.key,
     required this.columns,
     required this.data,
     this.config = const BasicTableConfig(),
+    this.selectedRows,
+    this.onRowSelectionChanged,
+    this.onSelectAllChanged,
   })  : assert(columns.length > 0, 'columns cannot be empty'),
         assert(data.length > 0, 'data cannot be empty');
 
@@ -50,6 +58,35 @@ class _BasicTableState extends State<BasicTable> {
     }).toList();
   }
 
+  /// 헤더 체크박스의 상태를 계산합니다
+  bool? _getHeaderCheckboxState() {
+    if (!widget.config.showCheckboxColumn || widget.selectedRows == null) {
+      return false;
+    }
+
+    final selectedCount = widget.selectedRows!.length;
+    final totalCount = _rows.length;
+
+    if (selectedCount == 0) {
+      return false; // 아무것도 선택안됨
+    } else if (selectedCount == totalCount) {
+      return true; // 모든 행이 선택됨
+    } else {
+      return null; // 일부 행이 선택됨 (indeterminate)
+    }
+  }
+
+  /// 헤더 체크박스 클릭 처리
+  void _handleHeaderCheckboxChanged() {
+    if (widget.onSelectAllChanged == null) return;
+
+    final selectedCount = widget.selectedRows?.length ?? 0;
+
+    // 뭔가 선택되어 있으면 전체 해제, 아니면 전체 선택
+    final shouldSelectAll = selectedCount == 0;
+    widget.onSelectAllChanged!(shouldSelectAll);
+  }
+
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
@@ -57,8 +94,13 @@ class _BasicTableState extends State<BasicTable> {
         final double availableHeight = constraints.maxHeight;
         final double availableWidth = constraints.maxWidth;
 
-        // 테이블의 최소 너비 계산
-        final double minTableWidth =
+        // 체크박스 컬럼 너비 계산
+        final double checkboxWidth = widget.config.showCheckboxColumn
+            ? widget.config.checkboxColumnWidth
+            : 0.0;
+
+        // 테이블의 최소 너비 계산 (체크박스 컬럼 포함)
+        final double minTableWidth = checkboxWidth +
             widget.columns.fold(0.0, (sum, col) => sum + col.minWidth);
 
         // 실제 콘텐츠 너비: 최소 너비와 사용 가능한 너비 중 큰 값
@@ -109,6 +151,10 @@ class _BasicTableState extends State<BasicTable> {
                               totalWidth: contentWidth,
                               availableWidth: availableWidth,
                               config: widget.config,
+                              checkboxWidth: checkboxWidth,
+                              headerCheckboxState: _getHeaderCheckboxState(),
+                              onHeaderCheckboxChanged:
+                                  _handleHeaderCheckboxChanged,
                             ),
 
                             // 테이블 데이터
@@ -119,6 +165,10 @@ class _BasicTableState extends State<BasicTable> {
                                 availableWidth: availableWidth,
                                 config: widget.config,
                                 verticalController: verticalScrollController,
+                                checkboxWidth: checkboxWidth,
+                                selectedRows: widget.selectedRows ?? {},
+                                onRowSelectionChanged:
+                                    widget.onRowSelectionChanged,
                               ),
                             ),
                           ],
