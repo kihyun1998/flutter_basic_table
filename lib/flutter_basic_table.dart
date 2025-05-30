@@ -1,5 +1,6 @@
-/// A Calculator.
-class Calculator {
-  /// Returns [value] plus 1.
-  int addOne(int value) => value + 1;
-}
+library;
+
+export 'src/flutter_basic_table.dart';
+export 'src/models/flutter_basic_table_column.dart';
+export 'src/models/flutter_basic_table_config.dart';
+export 'src/models/flutter_basic_table_row.dart';
