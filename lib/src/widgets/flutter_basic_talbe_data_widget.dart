@@ -1,14 +1,14 @@
+// lib/src/widgets/flutter_basic_talbe_data_widget.dart
 import 'package:flutter/material.dart';
 
 import '../../flutter_basic_table.dart';
-import '../widgets/custom_inkwell_widget.dart'; // CustomInkWell import 추가
 
 /// 테이블 데이터를 렌더링하는 위젯
 class BasicTableData extends StatelessWidget {
   final List<BasicTableRow> rows;
   final List<BasicTableColumn> columns;
   final double availableWidth;
-  final BasicTableConfig config;
+  final BasicTableThemeData theme; // ✅ config → theme으로 변경
   final ScrollController verticalController;
   final double checkboxWidth;
   final Set<int> selectedRows;
@@ -23,7 +23,7 @@ class BasicTableData extends StatelessWidget {
     required this.rows,
     required this.columns,
     required this.availableWidth,
-    required this.config,
+    required this.theme, // ✅ theme 파라미터로 변경
     required this.verticalController,
     required this.checkboxWidth,
     required this.selectedRows,
@@ -64,7 +64,7 @@ class BasicTableData extends StatelessWidget {
         return _DataRow(
           row: row,
           columnWidths: columnWidths,
-          config: config,
+          theme: theme, // ✅ theme 전달
           checkboxWidth: checkboxWidth,
           isSelected: isSelected,
           onSelectionChanged: onRowSelectionChanged,
@@ -82,7 +82,7 @@ class BasicTableData extends StatelessWidget {
 class _DataRow extends StatelessWidget {
   final BasicTableRow row;
   final List<double> columnWidths;
-  final BasicTableConfig config;
+  final BasicTableThemeData theme; // ✅ config → theme으로 변경
   final double checkboxWidth;
   final bool isSelected;
   final void Function(int index, bool selected)? onSelectionChanged;
@@ -94,7 +94,7 @@ class _DataRow extends StatelessWidget {
   const _DataRow({
     required this.row,
     required this.columnWidths,
-    required this.config,
+    required this.theme, // ✅ theme 파라미터
     required this.checkboxWidth,
     required this.isSelected,
     this.onSelectionChanged,
@@ -108,21 +108,24 @@ class _DataRow extends StatelessWidget {
   Widget build(BuildContext context) {
     // 선택 상태에 따른 배경색 변경
     final Color backgroundColor = isSelected
-        ? Colors.blue.withOpacity(0.1) // 선택된 행은 연한 파란색
-        : Colors.white;
+        ? theme.selectionTheme.selectedRowColor ??
+            Colors.blue.withOpacity(0.1) // ✅ 테마에서 선택된 행 색상 가져오기
+        : theme.dataRowTheme.backgroundColor ?? Colors.white; // ✅ 테마에서 배경색 가져오기
 
     return Container(
-      height: config.rowHeight,
+      height: theme.dataRowTheme.height, // ✅ 테마에서 높이 가져오기
       decoration: BoxDecoration(
         color: backgroundColor,
-        border: const Border(
-          top: BorderSide(color: Colors.grey, width: 0.3),
+        border: Border(
+          top:
+              theme.borderTheme.rowBorder ?? BorderSide.none, // ✅ 테마에서 테두리 가져오기
         ),
       ),
       child: CustomInkWell(
         onTap: () {
           // 체크박스가 있으면 선택/해제, 없으면 일반 행 클릭
-          if (config.showCheckboxColumn && onSelectionChanged != null) {
+          if (theme.checkboxTheme.enabled && onSelectionChanged != null) {
+            // ✅ 테마에서 체크박스 활성화 확인
             onSelectionChanged!(row.index, !isSelected);
           }
           onRowTap?.call(row.index);
@@ -136,10 +139,10 @@ class _DataRow extends StatelessWidget {
         child: Row(
           children: [
             // 체크박스 셀
-            if (config.showCheckboxColumn)
+            if (theme.checkboxTheme.enabled) // ✅ 테마에서 체크박스 활성화 확인
               _CheckboxCell(
                 width: checkboxWidth,
-                config: config,
+                theme: theme, // ✅ theme 전달
                 isSelected: isSelected,
                 onChanged: (selected) {
                   onSelectionChanged?.call(row.index, selected);
@@ -157,7 +160,7 @@ class _DataRow extends StatelessWidget {
               return _DataCell(
                 data: cellData,
                 width: cellWidth,
-                config: config,
+                theme: theme, // ✅ theme 전달
               );
             }),
           ],
@@ -170,13 +173,13 @@ class _DataRow extends StatelessWidget {
 /// 체크박스 셀 위젯
 class _CheckboxCell extends StatelessWidget {
   final double width;
-  final BasicTableConfig config;
+  final BasicTableThemeData theme; // ✅ config → theme으로 변경
   final bool isSelected;
   final void Function(bool selected)? onChanged;
 
   const _CheckboxCell({
     required this.width,
-    required this.config,
+    required this.theme, // ✅ theme 파라미터
     required this.isSelected,
     this.onChanged,
   });
@@ -191,15 +194,21 @@ class _CheckboxCell extends StatelessWidget {
       },
       child: Container(
         width: width,
-        height: config.rowHeight,
+        height: theme.dataRowTheme.height, // ✅ 테마에서 높이 가져오기
         color: Colors.transparent, // 클릭 영역 확보
-        child: Center(
-          child: Checkbox(
-            value: isSelected,
-            onChanged: onChanged != null
-                ? (value) => onChanged!(value ?? false)
-                : null,
-            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        child: Padding(
+          padding:
+              theme.checkboxTheme.padding ?? EdgeInsets.zero, // ✅ 테마에서 패딩 가져오기
+          child: Center(
+            child: Checkbox(
+              value: isSelected,
+              onChanged: onChanged != null
+                  ? (value) => onChanged!(value ?? false)
+                  : null,
+              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              activeColor: theme.checkboxTheme.activeColor, // ✅ 테마에서 색상 가져오기
+              checkColor: theme.checkboxTheme.checkColor, // ✅ 테마에서 체크 색상 가져오기
+            ),
           ),
         ),
       ),
@@ -211,27 +220,28 @@ class _CheckboxCell extends StatelessWidget {
 class _DataCell extends StatelessWidget {
   final String data;
   final double width;
-  final BasicTableConfig config;
+  final BasicTableThemeData theme; // ✅ config → theme으로 변경
 
   const _DataCell({
     required this.data,
     required this.width,
-    required this.config,
+    required this.theme, // ✅ theme 파라미터
   });
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
       width: width,
-      height: config.rowHeight,
+      height: theme.dataRowTheme.height, // ✅ 테마에서 높이 가져오기
       // 세로 구분선 제거 - decoration 완전히 제거
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+        padding:
+            theme.dataRowTheme.padding ?? EdgeInsets.zero, // ✅ 테마에서 패딩 가져오기
         child: Align(
           alignment: Alignment.centerLeft,
           child: Text(
             data,
-            style: const TextStyle(fontSize: 13),
+            style: theme.dataRowTheme.textStyle, // ✅ 테마에서 텍스트 스타일 가져오기
             overflow: TextOverflow.ellipsis,
             maxLines: 1,
           ),

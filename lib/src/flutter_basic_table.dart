@@ -1,3 +1,4 @@
+// lib/src/flutter_basic_table.dart
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -14,7 +15,7 @@ import 'widgets/synced_scroll_controll_widget.dart';
 class BasicTable extends StatefulWidget {
   final List<BasicTableColumn> columns;
   final List<List<String>> data;
-  final BasicTableConfig config;
+  final BasicTableThemeData? theme; // ✅ config → theme으로 변경
 
   // 체크박스 관련 외부 정의 필드들
   final Set<int>? selectedRows;
@@ -40,7 +41,7 @@ class BasicTable extends StatefulWidget {
     super.key,
     required this.columns,
     required this.data,
-    this.config = const BasicTableConfig(),
+    this.theme, // ✅ theme 파라미터로 변경
     this.selectedRows,
     this.onRowSelectionChanged,
     this.onSelectAllChanged,
@@ -59,18 +60,17 @@ class BasicTable extends StatefulWidget {
 }
 
 class _BasicTableState extends State<BasicTable> {
-  // ✅ _rows 상태 제거! 외부 데이터를 직접 사용
-
   // 호버 상태 관리
   bool _isHovered = false;
+
+  /// 현재 사용할 테마 (제공된 테마 또는 기본 테마)
+  BasicTableThemeData get _currentTheme =>
+      widget.theme ?? BasicTableThemeData.defaultTheme();
 
   @override
   void initState() {
     super.initState();
-    // ✅ _initializeTableData() 제거
   }
-
-  // ✅ _initializeTableData() 함수 제거
 
   /// 외부 데이터를 BasicTableRow 형태로 변환하는 헬퍼 함수
   List<BasicTableRow> get _currentRows {
@@ -100,12 +100,12 @@ class _BasicTableState extends State<BasicTable> {
 
   /// 헤더 체크박스의 상태를 계산합니다
   bool? _getHeaderCheckboxState() {
-    if (!widget.config.showCheckboxColumn || widget.selectedRows == null) {
+    if (!_currentTheme.checkboxTheme.enabled || widget.selectedRows == null) {
       return false;
     }
 
     final selectedCount = widget.selectedRows!.length;
-    final totalCount = _currentRows.length; // ✅ _currentRows 사용
+    final totalCount = _currentRows.length;
 
     if (selectedCount == 0) {
       return false; // 아무것도 선택안됨
@@ -129,8 +129,8 @@ class _BasicTableState extends State<BasicTable> {
 
   @override
   Widget build(BuildContext context) {
-    // ✅ 매번 build 시 최신 데이터 사용
     final currentRows = _currentRows;
+    final theme = _currentTheme;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -138,9 +138,8 @@ class _BasicTableState extends State<BasicTable> {
         final double availableWidth = constraints.maxWidth;
 
         // 체크박스 컬럼 너비 계산
-        final double checkboxWidth = widget.config.showCheckboxColumn
-            ? widget.config.checkboxColumnWidth
-            : 0.0;
+        final double checkboxWidth =
+            theme.checkboxTheme.enabled ? theme.checkboxTheme.columnWidth : 0.0;
 
         // 테이블의 최소 너비 계산 (체크박스 컬럼 포함)
         final double minTableWidth = checkboxWidth +
@@ -151,11 +150,11 @@ class _BasicTableState extends State<BasicTable> {
 
         // 테이블 데이터 높이 계산
         final double tableDataHeight =
-            widget.config.rowHeight * currentRows.length; // ✅ currentRows 사용
+            theme.dataRowTheme.height * currentRows.length;
 
         // 스크롤바를 위한 전체 콘텐츠 높이
         final double totalContentHeight =
-            widget.config.headerHeight + tableDataHeight;
+            theme.headerTheme.height + tableDataHeight;
 
         return SyncedScrollControllers(
           builder: (
@@ -194,7 +193,7 @@ class _BasicTableState extends State<BasicTable> {
                               columns: widget.columns,
                               totalWidth: contentWidth,
                               availableWidth: availableWidth,
-                              config: widget.config,
+                              theme: theme,
                               checkboxWidth: checkboxWidth,
                               headerCheckboxState: _getHeaderCheckboxState(),
                               onHeaderCheckboxChanged:
@@ -207,10 +206,10 @@ class _BasicTableState extends State<BasicTable> {
                             // 테이블 데이터
                             Expanded(
                               child: BasicTableData(
-                                rows: currentRows, // ✅ currentRows 사용
+                                rows: currentRows,
                                 columns: widget.columns,
                                 availableWidth: availableWidth,
-                                config: widget.config,
+                                theme: theme,
                                 verticalController: verticalScrollController,
                                 checkboxWidth: checkboxWidth,
                                 selectedRows: widget.selectedRows ?? {},
@@ -228,42 +227,42 @@ class _BasicTableState extends State<BasicTable> {
                     ),
 
                     // 세로 스크롤바 (우측 오버레이) - 헤더 밑에서 시작
-                    if (widget.config.showVerticalScrollbar &&
+                    if (theme.scrollbarTheme.showVertical &&
                         needsVerticalScroll)
                       Positioned(
-                        top: widget.config.headerHeight, // 헤더 높이만큼 아래서 시작
+                        top: theme.headerTheme.height,
                         right: 0,
-                        bottom: (widget.config.showHorizontalScrollbar &&
+                        bottom: (theme.scrollbarTheme.showHorizontal &&
                                 needsHorizontalScroll)
-                            ? widget.config.scrollbarWidth
+                            ? theme.scrollbarTheme.width
                             : 0,
                         child: AnimatedOpacity(
-                          opacity: widget.config.scrollbarHoverOnly
+                          opacity: theme.scrollbarTheme.hoverOnly
                               ? (_isHovered
-                                  ? widget.config.scrollbarOpacity
+                                  ? theme.scrollbarTheme.opacity
                                   : 0.0)
-                              : widget.config.scrollbarOpacity,
-                          duration: widget.config.scrollbarAnimationDuration,
+                              : theme.scrollbarTheme.opacity,
+                          duration: theme.scrollbarTheme.animationDuration,
                           child: Container(
-                            width: widget.config.scrollbarWidth,
+                            width: theme.scrollbarTheme.width,
                             decoration: BoxDecoration(
-                              color: Colors.black.withOpacity(0.1),
+                              color: theme.scrollbarTheme.trackColor,
                               borderRadius: BorderRadius.circular(
-                                  widget.config.scrollbarWidth / 2),
+                                  theme.scrollbarTheme.width / 2),
                             ),
                             child: Theme(
                               data: Theme.of(context).copyWith(
                                 scrollbarTheme: ScrollbarThemeData(
                                   thumbColor: WidgetStateProperty.all(
-                                    Colors.black.withOpacity(0.5),
+                                    theme.scrollbarTheme.color,
                                   ),
                                   trackColor: WidgetStateProperty.all(
                                     Colors.transparent,
                                   ),
                                   radius: Radius.circular(
-                                      widget.config.scrollbarWidth / 2),
+                                      theme.scrollbarTheme.width / 2),
                                   thickness: WidgetStateProperty.all(
-                                      widget.config.scrollbarWidth - 4),
+                                      theme.scrollbarTheme.width - 4),
                                 ),
                               ),
                               child: Scrollbar(
@@ -275,7 +274,7 @@ class _BasicTableState extends State<BasicTable> {
                                   scrollDirection: Axis.vertical,
                                   child: SizedBox(
                                     height: tableDataHeight,
-                                    width: widget.config.scrollbarWidth,
+                                    width: theme.scrollbarTheme.width,
                                   ),
                                 ),
                               ),
@@ -285,39 +284,39 @@ class _BasicTableState extends State<BasicTable> {
                       ),
 
                     // 가로 스크롤바 (하단 오버레이) - 전체 너비 사용
-                    if (widget.config.showHorizontalScrollbar &&
+                    if (theme.scrollbarTheme.showHorizontal &&
                         needsHorizontalScroll)
                       Positioned(
                         left: 0,
                         right: 0,
                         bottom: 0,
                         child: AnimatedOpacity(
-                          opacity: widget.config.scrollbarHoverOnly
+                          opacity: theme.scrollbarTheme.hoverOnly
                               ? (_isHovered
-                                  ? widget.config.scrollbarOpacity
+                                  ? theme.scrollbarTheme.opacity
                                   : 0.0)
-                              : widget.config.scrollbarOpacity,
-                          duration: widget.config.scrollbarAnimationDuration,
+                              : theme.scrollbarTheme.opacity,
+                          duration: theme.scrollbarTheme.animationDuration,
                           child: Container(
-                            height: widget.config.scrollbarWidth,
+                            height: theme.scrollbarTheme.width,
                             decoration: BoxDecoration(
-                              color: Colors.black.withOpacity(0.1),
+                              color: theme.scrollbarTheme.trackColor,
                               borderRadius: BorderRadius.circular(
-                                  widget.config.scrollbarWidth / 2),
+                                  theme.scrollbarTheme.width / 2),
                             ),
                             child: Theme(
                               data: Theme.of(context).copyWith(
                                 scrollbarTheme: ScrollbarThemeData(
                                   thumbColor: WidgetStateProperty.all(
-                                    Colors.black.withOpacity(0.5),
+                                    theme.scrollbarTheme.color,
                                   ),
                                   trackColor: WidgetStateProperty.all(
                                     Colors.transparent,
                                   ),
                                   radius: Radius.circular(
-                                      widget.config.scrollbarWidth / 2),
+                                      theme.scrollbarTheme.width / 2),
                                   thickness: WidgetStateProperty.all(
-                                      widget.config.scrollbarWidth - 4),
+                                      theme.scrollbarTheme.width - 4),
                                 ),
                               ),
                               child: Scrollbar(
@@ -329,7 +328,7 @@ class _BasicTableState extends State<BasicTable> {
                                   scrollDirection: Axis.horizontal,
                                   child: SizedBox(
                                     width: contentWidth,
-                                    height: widget.config.scrollbarWidth,
+                                    height: theme.scrollbarTheme.width,
                                   ),
                                 ),
                               ),
@@ -346,6 +345,4 @@ class _BasicTableState extends State<BasicTable> {
       },
     );
   }
-
-  // ✅ didUpdateWidget 제거 - 더 이상 필요없음
 }

@@ -1,5 +1,5 @@
+// lib/src/widgets/flutter_basic_table_header_widget.dart
 import 'package:flutter/material.dart';
-import 'package:flutter_basic_table/src/enum/column_sort_state.dart';
 
 import '../../flutter_basic_table.dart';
 
@@ -8,27 +8,26 @@ class BasicTableHeader extends StatelessWidget {
   final List<BasicTableColumn> columns;
   final double totalWidth;
   final double availableWidth;
-  final BasicTableConfig config;
+  final BasicTableThemeData theme;
   final double checkboxWidth;
   final bool? headerCheckboxState;
   final VoidCallback? onHeaderCheckboxChanged;
   final void Function(int oldIndex, int newIndex)? onColumnReorder;
-  final void Function(int columnIndex, ColumnSortState sortState)?
-      onColumnSort; // 정렬 콜백 추가!
-  final Map<int, ColumnSortState>? columnSortStates; // 각 컬럼의 정렬 상태
+  final void Function(int columnIndex, ColumnSortState sortState)? onColumnSort;
+  final Map<int, ColumnSortState>? columnSortStates;
 
   const BasicTableHeader({
     super.key,
     required this.columns,
     required this.totalWidth,
     required this.availableWidth,
-    required this.config,
+    required this.theme,
     required this.checkboxWidth,
     this.headerCheckboxState,
     this.onHeaderCheckboxChanged,
     this.onColumnReorder,
-    this.onColumnSort, // 추가!
-    this.columnSortStates, // 추가!
+    this.onColumnSort,
+    this.columnSortStates,
   });
 
   /// 각 컬럼의 실제 렌더링 너비를 계산합니다.
@@ -55,31 +54,32 @@ class BasicTableHeader extends StatelessWidget {
 
     return Container(
       width: totalWidth,
-      height: config.headerHeight,
+      height: theme.headerTheme.height, // ✅ 테마에서 높이 가져오기
       decoration: BoxDecoration(
-        color: Colors.white,
-        border: const Border(
-          top: BorderSide(color: Colors.black, width: 0.5),
+        color: theme.headerTheme.backgroundColor, // ✅ 테마에서 배경색 가져오기
+        border: Border(
+          top: theme.borderTheme.tableBorder ??
+              BorderSide.none, // ✅ 테마에서 테두리 가져오기
         ),
       ),
       child: Row(
         children: [
           // 체크박스 컬럼 (reorder 대상에서 제외)
-          if (config.showCheckboxColumn)
+          if (theme.checkboxTheme.enabled)
             _CheckboxHeaderCell(
               width: checkboxWidth,
-              config: config,
+              theme: theme,
               checkboxState: headerCheckboxState,
               onChanged: onHeaderCheckboxChanged,
             ),
 
           // Reorderable 헤더 컬럼들
           Expanded(
-            child: config.enableHeaderReorder && onColumnReorder != null
+            child: theme.headerTheme.enableReorder && onColumnReorder != null
                 ? _ReorderableHeaderRow(
                     columns: columns,
                     columnWidths: columnWidths,
-                    config: config,
+                    theme: theme,
                     onReorder: onColumnReorder!,
                     onColumnSort: onColumnSort,
                     columnSortStates: columnSortStates,
@@ -87,7 +87,7 @@ class BasicTableHeader extends StatelessWidget {
                 : _StaticHeaderRow(
                     columns: columns,
                     columnWidths: columnWidths,
-                    config: config,
+                    theme: theme, // ✅ theme 전달
                     onColumnSort: onColumnSort,
                     columnSortStates: columnSortStates,
                   ),
@@ -102,7 +102,7 @@ class BasicTableHeader extends StatelessWidget {
 class _ReorderableHeaderRow extends StatelessWidget {
   final List<BasicTableColumn> columns;
   final List<double> columnWidths;
-  final BasicTableConfig config;
+  final BasicTableThemeData theme; // ✅ config → theme으로 변경
   final void Function(int oldIndex, int newIndex) onReorder;
   final void Function(int columnIndex, ColumnSortState sortState)? onColumnSort;
   final Map<int, ColumnSortState>? columnSortStates;
@@ -110,7 +110,7 @@ class _ReorderableHeaderRow extends StatelessWidget {
   const _ReorderableHeaderRow({
     required this.columns,
     required this.columnWidths,
-    required this.config,
+    required this.theme, // ✅ theme 파라미터
     required this.onReorder,
     this.onColumnSort,
     this.columnSortStates,
@@ -133,11 +133,12 @@ class _ReorderableHeaderRow extends StatelessWidget {
           child: _HeaderCell(
             column: column,
             width: width,
-            config: config,
+            theme: theme, // ✅ theme 전달
             columnIndex: index,
             sortState: sortState,
             onSort: onColumnSort,
-            showDragHandle: config.showDragHandles, // 설정에 따라 드래그 핸들 표시
+            showDragHandle:
+                theme.headerTheme.showDragHandles, // ✅ 테마에서 드래그 핸들 설정
           ),
         );
       }),
@@ -149,14 +150,14 @@ class _ReorderableHeaderRow extends StatelessWidget {
 class _StaticHeaderRow extends StatelessWidget {
   final List<BasicTableColumn> columns;
   final List<double> columnWidths;
-  final BasicTableConfig config;
+  final BasicTableThemeData theme; // ✅ config → theme으로 변경
   final void Function(int columnIndex, ColumnSortState sortState)? onColumnSort;
   final Map<int, ColumnSortState>? columnSortStates;
 
   const _StaticHeaderRow({
     required this.columns,
     required this.columnWidths,
-    required this.config,
+    required this.theme, // ✅ theme 파라미터
     this.onColumnSort,
     this.columnSortStates,
   });
@@ -172,7 +173,7 @@ class _StaticHeaderRow extends StatelessWidget {
         return _HeaderCell(
           column: column,
           width: width,
-          config: config,
+          theme: theme, // ✅ theme 전달
           columnIndex: index,
           sortState: sortState,
           onSort: onColumnSort,
@@ -186,13 +187,13 @@ class _StaticHeaderRow extends StatelessWidget {
 /// 체크박스 헤더 셀 위젯
 class _CheckboxHeaderCell extends StatelessWidget {
   final double width;
-  final BasicTableConfig config;
+  final BasicTableThemeData theme;
   final bool? checkboxState;
   final VoidCallback? onChanged;
 
   const _CheckboxHeaderCell({
     required this.width,
-    required this.config,
+    required this.theme,
     this.checkboxState,
     this.onChanged,
   });
@@ -201,23 +202,22 @@ class _CheckboxHeaderCell extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: width,
-      height: config.headerHeight,
-      decoration: const BoxDecoration(
+      height: theme.headerTheme.height,
+      decoration: BoxDecoration(
         border: Border(
-          top: BorderSide(color: Colors.grey, width: 2),
+          top: theme.borderTheme.headerBorder ?? BorderSide.none,
         ),
       ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onChanged,
-          child: Center(
-            child: Checkbox(
-              value: checkboxState,
-              tristate: true,
-              onChanged: onChanged != null ? (_) => onChanged!() : null,
-              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            ),
+      child: Padding(
+        padding: theme.checkboxTheme.padding ?? EdgeInsets.zero,
+        child: Center(
+          child: Checkbox(
+            value: checkboxState,
+            tristate: true,
+            onChanged: onChanged != null ? (_) => onChanged!() : null,
+            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            activeColor: theme.checkboxTheme.activeColor, // ✅ 테마에서 색상 가져오기
+            checkColor: theme.checkboxTheme.checkColor, // ✅ 테마에서 체크 색상 가져오기
           ),
         ),
       ),
@@ -229,7 +229,7 @@ class _CheckboxHeaderCell extends StatelessWidget {
 class _HeaderCell extends StatelessWidget {
   final BasicTableColumn column;
   final double width;
-  final BasicTableConfig config;
+  final BasicTableThemeData theme; // ✅ config → theme으로 변경
   final int columnIndex;
   final ColumnSortState sortState;
   final void Function(int columnIndex, ColumnSortState sortState)? onSort;
@@ -238,7 +238,7 @@ class _HeaderCell extends StatelessWidget {
   const _HeaderCell({
     required this.column,
     required this.width,
-    required this.config,
+    required this.theme, // ✅ theme 파라미터
     required this.columnIndex,
     this.sortState = ColumnSortState.none,
     this.onSort,
@@ -259,22 +259,22 @@ class _HeaderCell extends StatelessWidget {
 
   /// 정렬 상태에 따른 아이콘을 반환합니다
   Widget? _getSortIcon() {
-    if (!config.enableHeaderSorting) return null;
+    if (!theme.headerTheme.enableSorting) return null; // ✅ 테마에서 정렬 설정 확인
 
     switch (sortState) {
       case ColumnSortState.none:
         return null; // 아이콘 없음
       case ColumnSortState.ascending:
-        return const Icon(
+        return Icon(
           Icons.keyboard_arrow_up,
           size: 18,
-          color: Colors.blue,
+          color: theme.headerTheme.sortIconColor, // ✅ 테마에서 정렬 아이콘 색상 가져오기
         );
       case ColumnSortState.descending:
-        return const Icon(
+        return Icon(
           Icons.keyboard_arrow_down,
           size: 18,
-          color: Colors.blue,
+          color: theme.headerTheme.sortIconColor, // ✅ 테마에서 정렬 아이콘 색상 가져오기
         );
     }
   }
@@ -283,10 +283,11 @@ class _HeaderCell extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: width,
-      height: config.headerHeight,
-      decoration: const BoxDecoration(
+      height: theme.headerTheme.height, // ✅ 테마에서 높이 가져오기
+      decoration: BoxDecoration(
         border: Border(
-          top: BorderSide(color: Colors.grey, width: 2), // 각 헤더 셀 상단에 굵은 구분선
+          top: theme.borderTheme.headerBorder ??
+              BorderSide.none, // ✅ 테마에서 테두리 가져오기
         ),
       ),
       child: Material(
@@ -295,11 +296,12 @@ class _HeaderCell extends StatelessWidget {
           onTap: () => _onHeaderTap(),
           child: Padding(
             padding:
-                const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+                theme.headerTheme.padding ?? EdgeInsets.zero, // ✅ 테마에서 패딩 가져오기
             child: Row(
               children: [
                 // 드래그 핸들 (reorder 활성화시에만 표시)
-                if (showDragHandle && config.enableHeaderReorder)
+                if (showDragHandle &&
+                    theme.headerTheme.enableReorder) // ✅ 테마에서 reorder 설정 확인
                   Container(
                     margin: const EdgeInsets.only(right: 8.0),
                     child: Icon(
@@ -313,10 +315,7 @@ class _HeaderCell extends StatelessWidget {
                 Expanded(
                   child: Text(
                     column.name,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                    ),
+                    style: theme.headerTheme.textStyle, // ✅ 테마에서 텍스트 스타일 가져오기
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
@@ -332,7 +331,8 @@ class _HeaderCell extends StatelessWidget {
   }
 
   void _onHeaderTap() {
-    if (config.enableHeaderSorting && onSort != null) {
+    if (theme.headerTheme.enableSorting && onSort != null) {
+      // ✅ 테마에서 정렬 설정 확인
       final nextState = _getNextSortState();
       onSort!(columnIndex, nextState);
       debugPrint(

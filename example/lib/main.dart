@@ -1,3 +1,4 @@
+// example/lib/main.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_basic_table/flutter_basic_table.dart';
 
@@ -84,32 +85,68 @@ class _HomeScreenState extends State<HomeScreen> {
     ['25', '황수정', 'hwang@company.com', 'HR팀', '대기', '2024-12-15'],
   ];
 
-  // 외부에서 테이블 설정 정의 - 체크박스 + 헤더 reorder + 정렬 기능 활성화!
-  BasicTableConfig get tableConfig => const BasicTableConfig(
-        // 체크박스 기능 활성화!
-        showCheckboxColumn: true,
-        checkboxColumnWidth: 60.0,
+  // ✅ 외부에서 테이블 테마 정의 - config 대신 theme 사용!
+  BasicTableThemeData get tableTheme => BasicTableThemeData(
+        // 헤더 테마 - 체크박스 + 헤더 reorder + 정렬 기능 활성화!
+        headerTheme: BasicTableHeaderCellTheme(
+          height: 50.0,
+          backgroundColor: Colors.blue[50], // 연한 파란색 배경
+          textStyle: const TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 14,
+            color: Colors.black87,
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+          border: const BorderSide(color: Colors.blue, width: 2.0),
+          sortIconColor: Colors.blue,
+          enableReorder: true, // 헤더 reorder 기능 활성화!
+          enableSorting: true, // 헤더 정렬 기능 활성화!
+          showDragHandles: false, // 드래그 핸들 숨김 (쓸모없는 아이콘 제거)
+        ),
 
-        // 헤더 reorder 기능 활성화! 🆕
-        enableHeaderReorder: true,
+        // 데이터 행 테마
+        dataRowTheme: const BasicTableDataRowTheme(
+          height: 45.0,
+          backgroundColor: Colors.white,
+          textStyle: TextStyle(fontSize: 13, color: Colors.black),
+          padding: EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+          border: BorderSide(color: Colors.grey, width: 0.3),
+        ),
 
-        // 헤더 정렬 기능 활성화! 🆕
-        enableHeaderSorting: true,
+        // 체크박스 테마 - 체크박스 기능 활성화!
+        checkboxTheme: const BasicTableCheckboxCellTheme(
+          enabled: true, // 체크박스 기능 활성화!
+          columnWidth: 60.0,
+          padding: EdgeInsets.all(8.0),
+          activeColor: Colors.blue,
+          checkColor: Colors.white,
+        ),
 
-        // 드래그 핸들 숨김 (쓸모없는 아이콘 제거) 🆕
-        showDragHandles: false,
+        // 선택 상태 테마
+        selectionTheme: BasicTableSelectionTheme(
+          selectedRowColor: Colors.blue.withOpacity(0.1), // 선택된 행은 연한 파란색
+          hoverRowColor: Colors.grey.withOpacity(0.05),
+        ),
 
-        // 스크롤바 설정 커스터마이징
-        scrollbarHoverOnly: true,
-        scrollbarOpacity: 0.9,
-        scrollbarAnimationDuration: Duration(milliseconds: 250),
-        scrollbarWidth: 14.0,
+        // 스크롤바 테마 - 스크롤바 설정 커스터마이징
+        scrollbarTheme: BasicTableScrollbarTheme(
+          showHorizontal: true,
+          showVertical: true,
+          hoverOnly: true,
+          opacity: 0.9,
+          animationDuration: const Duration(milliseconds: 250),
+          width: 14.0,
+          color: Colors.black.withOpacity(0.5),
+          trackColor: Colors.black.withOpacity(0.1),
+        ),
 
-        // 기존 테이블 설정
-        headerHeight: 50.0,
-        rowHeight: 45.0,
-        showHorizontalScrollbar: true,
-        showVerticalScrollbar: true,
+        // 테두리 테마
+        borderTheme: const BasicTableBorderTheme(
+          tableBorder: BorderSide(color: Colors.black, width: 0.5),
+          headerBorder: BorderSide(color: Colors.blue, width: 2.0),
+          rowBorder: BorderSide(color: Colors.grey, width: 0.3),
+          cellBorder: BorderSide.none,
+        ),
       );
 
   // 외부에서 정의된 개별 행 선택/해제 콜백
@@ -262,7 +299,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Custom Table Demo - Header Reorder + Sort'),
+        title: const Text('Custom Table Demo - Theme Based'),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
       ),
       body: Column(
@@ -318,14 +355,15 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
 
-          // 커스텀 테이블이 들어갈 확장된 영역
+          // ✅ 커스텀 테이블이 들어갈 확장된 영역 - theme 방식으로 변경!
           Expanded(
             child: Card(
               margin: const EdgeInsets.all(8.0),
               child: BasicTable(
                 columns: tableColumns, // 외부에서 정의된 컬럼
                 data: tableData, // 외부에서 정의된 데이터
-                config: tableConfig, // 외부에서 정의된 설정 (체크박스 + reorder + 정렬 포함)
+                theme:
+                    tableTheme, // ✅ config → theme으로 변경! (체크박스 + reorder + 정렬 포함)
                 selectedRows: selectedRows, // 외부에서 관리되는 선택 상태
                 onRowSelectionChanged: onRowSelectionChanged,
                 onSelectAllChanged: onSelectAllChanged,
@@ -349,10 +387,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '헤더 Reorder + 정렬 + 체크박스 + 클릭 기능:',
+                    '✅ Theme 기반 스타일링 + 모든 기능:',
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                   ),
                   SizedBox(height: 8),
+                  Text('🎨 모든 스타일이 Theme으로 커스터마이징 가능'),
                   Text('🔄 헤더를 드래그해서 컬럼 순서 변경 (드래그 핸들 숨김)'),
                   Text('⬆️⬇️ 헤더 클릭으로 정렬: 오름차순 → 내림차순 → 원래상태'),
                   Text('🔢 숫자 컬럼은 숫자로 정렬, 문자 컬럼은 문자로 정렬'),
@@ -360,8 +399,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   Text('✅ 헤더 순서가 바뀌면 모든 데이터도 함께 재정렬'),
                   Text('✅ 더블클릭 지원 (250ms 내)'),
                   Text('✅ 우클릭 지원'),
-                  Text('✅ 선택된 행은 연한 파란색 배경으로 표시'),
+                  Text('✅ 선택된 행은 테마로 정의된 색상으로 표시'),
                   Text('✅ 모든 이벤트가 외부에서 완전히 제어됨'),
+                  Text('✅ 색상, 폰트, 패딩, 테두리 등 모든 스타일 커스터마이징'),
                 ],
               ),
             ),
