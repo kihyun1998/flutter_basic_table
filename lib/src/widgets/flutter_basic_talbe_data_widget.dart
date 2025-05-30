@@ -1,6 +1,5 @@
 // lib/src/widgets/flutter_basic_talbe_data_widget.dart
 import 'package:flutter/material.dart';
-import 'package:flutter_basic_table/src/enum/tooltip_position.dart';
 import 'package:flutter_basic_table/src/widgets/tooltip_able_text_widget.dart';
 
 import '../../flutter_basic_table.dart';
@@ -270,7 +269,7 @@ class _DataCell extends StatelessWidget {
         padding: theme.dataRowTheme.padding ?? EdgeInsets.zero,
         child: Align(
           alignment: Alignment.centerLeft,
-          child: OverflowableText(
+          child: TooltipAbleText(
             text: data,
             style: theme.dataRowTheme.textStyle,
             tooltipTheme: theme.tooltipTheme,

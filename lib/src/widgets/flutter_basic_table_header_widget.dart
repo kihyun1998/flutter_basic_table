@@ -1,6 +1,5 @@
 // lib/src/widgets/flutter_basic_table_header_widget.dart
 import 'package:flutter/material.dart';
-import 'package:flutter_basic_table/src/enum/tooltip_position.dart';
 import 'package:flutter_basic_table/src/widgets/tooltip_able_text_widget.dart';
 
 import '../../flutter_basic_table.dart';
@@ -318,7 +317,7 @@ class _HeaderCell extends StatelessWidget {
 
                 // 컬럼 이름 - ✅ OverflowableText로 교체!
                 Expanded(
-                  child: OverflowableText(
+                  child: TooltipAbleText(
                     text: column.name,
                     style: theme.headerTheme.textStyle,
                     tooltipTheme: theme.tooltipTheme,

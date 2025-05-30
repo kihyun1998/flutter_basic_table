@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_basic_table/flutter_basic_table.dart';
-import 'package:flutter_basic_table/src/enum/tooltip_position.dart';
 import 'package:flutter_basic_table/src/widgets/custom_tooltip.dart';
 
 /// OverflowableText - 텍스트 overflow 감지 후 조건부 tooltip 적용
-class OverflowableText extends StatelessWidget {
+class TooltipAbleText extends StatelessWidget {
   final String text;
   final TextStyle? style;
   final int? maxLines;
@@ -13,7 +12,7 @@ class OverflowableText extends StatelessWidget {
   final BasicTableTooltipTheme? tooltipTheme;
   final TooltipPosition? tooltipPosition;
 
-  const OverflowableText({
+  const TooltipAbleText({
     super.key,
     required this.text,
     this.style,
