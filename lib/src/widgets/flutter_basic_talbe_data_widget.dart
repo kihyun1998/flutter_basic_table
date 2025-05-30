@@ -1,5 +1,7 @@
 // lib/src/widgets/flutter_basic_talbe_data_widget.dart
 import 'package:flutter/material.dart';
+import 'package:flutter_basic_table/src/enum/tooltip_position.dart';
+import 'package:flutter_basic_table/src/widgets/tooltip_able_text_widget.dart';
 
 import '../../flutter_basic_table.dart';
 
@@ -268,9 +270,11 @@ class _DataCell extends StatelessWidget {
         padding: theme.dataRowTheme.padding ?? EdgeInsets.zero,
         child: Align(
           alignment: Alignment.centerLeft,
-          child: Text(
-            data,
+          child: OverflowableText(
+            text: data,
             style: theme.dataRowTheme.textStyle,
+            tooltipTheme: theme.tooltipTheme,
+            tooltipPosition: TooltipPosition.top, // 데이터는 위쪽에 tooltip
             overflow: TextOverflow.ellipsis,
             maxLines: 1,
           ),

@@ -164,6 +164,28 @@ class _HomeScreenState extends State<HomeScreen> {
           cellBorder: BorderSide(
               color: Colors.grey[200]!, width: 0.3), // ✅ 매우 연한 회색 셀 구분선
         ),
+
+        // ✅ Tooltip 테마 - 모노톤 스타일!
+        tooltipTheme: BasicTableTooltipTheme(
+          backgroundColor: Colors.black87, // 진한 검정 배경
+          textColor: Colors.white, // 흰색 텍스트
+          fontSize: 12.0,
+          fontWeight: FontWeight.normal,
+          padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0),
+          margin: const EdgeInsets.all(4.0),
+          borderRadius: BorderRadius.circular(4.0),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black38, // 은은한 그림자
+              blurRadius: 6.0,
+              offset: const Offset(0, 2),
+            ),
+          ],
+          verticalOffset: 20.0,
+          waitDuration: const Duration(milliseconds: 300), // 빠른 반응
+          showDuration: const Duration(milliseconds: 2000), // 2초간 표시
+          preferredPosition: TooltipPosition.auto,
+        ),
       );
 
   // 외부에서 정의된 개별 행 선택/해제 콜백
@@ -316,7 +338,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Custom Table Demo - Monochrome Style'),
+        title: const Text('Custom Table Demo - Monochrome + Smart Tooltip'),
         backgroundColor: Colors.grey[200], // ✅ 연한 회색 앱바
         foregroundColor: Colors.black87, // ✅ 검정색 텍스트
       ),
@@ -417,7 +439,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    '✅ 깔끔한 모노톤 스타일 테이블:',
+                    '✅ 깔끔한 모노톤 스타일 + 스마트 Tooltip:',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
@@ -433,6 +455,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   Text('✅ 체크박스로 다중 선택 지원', style: _descStyle),
                   Text('✅ 더블클릭 & 우클릭 지원', style: _descStyle),
                   Text('✅ hover 효과 & 클릭 효과 모두 은은한 회색', style: _descStyle),
+                  Text('📝 텍스트 overflow시 자동 tooltip 표시 (300ms 후)',
+                      style: _descStyle), // ✅ 추가
+                  Text('🎯 헤더는 아래쪽, 데이터는 위쪽에 tooltip 표시',
+                      style: _descStyle), // ✅ 추가
                   Text('✅ 모든 이벤트가 외부에서 완전히 제어됨', style: _descStyle),
                 ],
               ),

@@ -3,6 +3,7 @@ library;
 
 // Enums
 export 'src/enum/column_sort_state.dart';
+export 'src/enum/tooltip_position.dart';
 // Core widgets
 export 'src/flutter_basic_table.dart';
 // Models
