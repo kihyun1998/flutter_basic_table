@@ -21,6 +21,12 @@ class BasicTable extends StatefulWidget {
   final void Function(int index, bool selected)? onRowSelectionChanged;
   final void Function(bool selectAll)? onSelectAllChanged;
 
+  // 행 클릭 관련 외부 정의 필드들
+  final void Function(int index)? onRowTap;
+  final void Function(int index)? onRowDoubleTap;
+  final void Function(int index)? onRowSecondaryTap;
+  final Duration doubleClickTime;
+
   const BasicTable({
     super.key,
     required this.columns,
@@ -29,6 +35,10 @@ class BasicTable extends StatefulWidget {
     this.selectedRows,
     this.onRowSelectionChanged,
     this.onSelectAllChanged,
+    this.onRowTap,
+    this.onRowDoubleTap,
+    this.onRowSecondaryTap,
+    this.doubleClickTime = const Duration(milliseconds: 300),
   })  : assert(columns.length > 0, 'columns cannot be empty'),
         assert(data.length > 0, 'data cannot be empty');
 
@@ -169,6 +179,10 @@ class _BasicTableState extends State<BasicTable> {
                                 selectedRows: widget.selectedRows ?? {},
                                 onRowSelectionChanged:
                                     widget.onRowSelectionChanged,
+                                onRowTap: widget.onRowTap,
+                                onRowDoubleTap: widget.onRowDoubleTap,
+                                onRowSecondaryTap: widget.onRowSecondaryTap,
+                                doubleClickTime: widget.doubleClickTime,
                               ),
                             ),
                           ],

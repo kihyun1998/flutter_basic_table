@@ -124,6 +124,47 @@ class _HomeScreenState extends State<HomeScreen> {
         '${selectAll ? 'Select all' : 'Deselect all'}. Total selected: ${selectedRows.length}');
   }
 
+  // 외부에서 정의된 행 클릭 콜백
+  void onRowTap(int index) {
+    debugPrint('Row $index tapped');
+  }
+
+  // 외부에서 정의된 행 더블클릭 콜백
+  void onRowDoubleTap(int index) {
+    debugPrint('Row $index double-tapped');
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('더블클릭!'),
+        content: Text('$index번 행을 더블클릭했습니다.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('확인'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // 외부에서 정의된 행 우클릭 콜백
+  void onRowSecondaryTap(int index) {
+    debugPrint('Row $index right-clicked');
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('우클릭!'),
+        content: Text('$index번 행을 우클릭했습니다.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('확인'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -184,6 +225,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 onRowSelectionChanged:
                     onRowSelectionChanged, // 외부에서 정의된 개별 선택 콜백
                 onSelectAllChanged: onSelectAllChanged, // 외부에서 정의된 전체 선택 콜백
+                onRowTap: onRowTap, // 외부에서 정의된 행 클릭 콜백
+                onRowDoubleTap: onRowDoubleTap, // 외부에서 정의된 행 더블클릭 콜백
+                onRowSecondaryTap: onRowSecondaryTap, // 외부에서 정의된 행 우클릭 콜백
+                doubleClickTime:
+                    const Duration(milliseconds: 250), // 커스텀 더블클릭 시간
               ),
             ),
           ),
@@ -197,16 +243,17 @@ class _HomeScreenState extends State<HomeScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '체크박스 기능 (개선된 UX):',
+                    '체크박스 + 클릭 기능 (완전 개선된 UX):',
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                   ),
                   SizedBox(height: 8),
                   Text('✅ 행 전체가 클릭 가능한 영역입니다'),
-                  Text('✅ 행의 어느 부분을 클릭해도 선택/해제됩니다'),
+                  Text('✅ 체크박스 클릭시 마우스 포인터가 정상 동작합니다'),
+                  Text('✅ 더블클릭 지원 (250ms 내)'),
+                  Text('✅ 우클릭 지원 (컨텍스트 메뉴 등에 활용)'),
+                  Text('✅ 더블클릭 활성화 시에도 일반 클릭이 지연되지 않습니다'),
                   Text('✅ 선택된 행은 연한 파란색 배경으로 표시됩니다'),
-                  Text('✅ 헤더에 전체 선택/해제 체크박스가 있습니다'),
-                  Text('✅ 선택 상태가 외부에서 완전히 관리됩니다'),
-                  Text('✅ 일부 선택시 헤더 체크박스가 중간 상태로 표시됩니다'),
+                  Text('✅ 모든 이벤트가 외부에서 완전히 제어됩니다'),
                 ],
               ),
             ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../flutter_basic_table.dart';
+import '../widgets/custom_inkwell_widget.dart'; // CustomInkWell import 추가
 
 /// 테이블 데이터를 렌더링하는 위젯
 class BasicTableData extends StatelessWidget {
@@ -12,6 +13,10 @@ class BasicTableData extends StatelessWidget {
   final double checkboxWidth;
   final Set<int> selectedRows;
   final void Function(int index, bool selected)? onRowSelectionChanged;
+  final void Function(int index)? onRowTap;
+  final void Function(int index)? onRowDoubleTap;
+  final void Function(int index)? onRowSecondaryTap;
+  final Duration doubleClickTime;
 
   const BasicTableData({
     super.key,
@@ -23,6 +28,10 @@ class BasicTableData extends StatelessWidget {
     required this.checkboxWidth,
     required this.selectedRows,
     this.onRowSelectionChanged,
+    this.onRowTap,
+    this.onRowDoubleTap,
+    this.onRowSecondaryTap,
+    this.doubleClickTime = const Duration(milliseconds: 300),
   });
 
   /// 각 컬럼의 실제 렌더링 너비를 계산합니다.
@@ -59,6 +68,10 @@ class BasicTableData extends StatelessWidget {
           checkboxWidth: checkboxWidth,
           isSelected: isSelected,
           onSelectionChanged: onRowSelectionChanged,
+          onRowTap: onRowTap,
+          onRowDoubleTap: onRowDoubleTap,
+          onRowSecondaryTap: onRowSecondaryTap,
+          doubleClickTime: doubleClickTime,
         );
       },
     );
@@ -73,6 +86,10 @@ class _DataRow extends StatelessWidget {
   final double checkboxWidth;
   final bool isSelected;
   final void Function(int index, bool selected)? onSelectionChanged;
+  final void Function(int index)? onRowTap;
+  final void Function(int index)? onRowDoubleTap;
+  final void Function(int index)? onRowSecondaryTap;
+  final Duration doubleClickTime;
 
   const _DataRow({
     required this.row,
@@ -81,6 +98,10 @@ class _DataRow extends StatelessWidget {
     required this.checkboxWidth,
     required this.isSelected,
     this.onSelectionChanged,
+    this.onRowTap,
+    this.onRowDoubleTap,
+    this.onRowSecondaryTap,
+    this.doubleClickTime = const Duration(milliseconds: 300),
   });
 
   @override
@@ -98,42 +119,48 @@ class _DataRow extends StatelessWidget {
           top: BorderSide(color: Colors.grey, width: 0.3),
         ),
       ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          // 행 전체가 클릭 가능!
-          onTap: config.showCheckboxColumn && onSelectionChanged != null
-              ? () => onSelectionChanged!(row.index, !isSelected)
-              : null,
-          child: Row(
-            children: [
-              // 체크박스 셀
-              if (config.showCheckboxColumn)
-                _CheckboxCell(
-                  width: checkboxWidth,
-                  config: config,
-                  isSelected: isSelected,
-                  onChanged: (selected) {
-                    onSelectionChanged?.call(row.index, selected);
-                  },
-                ),
+      child: CustomInkWell(
+        onTap: () {
+          // 체크박스가 있으면 선택/해제, 없으면 일반 행 클릭
+          if (config.showCheckboxColumn && onSelectionChanged != null) {
+            onSelectionChanged!(row.index, !isSelected);
+          }
+          onRowTap?.call(row.index);
+        },
+        onDoubleTap:
+            onRowDoubleTap != null ? () => onRowDoubleTap!(row.index) : null,
+        onSecondaryTap: onRowSecondaryTap != null
+            ? () => onRowSecondaryTap!(row.index)
+            : null,
+        doubleClickTime: doubleClickTime,
+        child: Row(
+          children: [
+            // 체크박스 셀
+            if (config.showCheckboxColumn)
+              _CheckboxCell(
+                width: checkboxWidth,
+                config: config,
+                isSelected: isSelected,
+                onChanged: (selected) {
+                  onSelectionChanged?.call(row.index, selected);
+                },
+              ),
 
-              // 데이터 셀들
-              ...List.generate(row.cells.length, (cellIndex) {
-                final cellData =
-                    cellIndex < row.cells.length ? row.cells[cellIndex] : '';
-                final cellWidth = cellIndex < columnWidths.length
-                    ? columnWidths[cellIndex]
-                    : 100.0;
+            // 데이터 셀들
+            ...List.generate(row.cells.length, (cellIndex) {
+              final cellData =
+                  cellIndex < row.cells.length ? row.cells[cellIndex] : '';
+              final cellWidth = cellIndex < columnWidths.length
+                  ? columnWidths[cellIndex]
+                  : 100.0;
 
-                return _DataCell(
-                  data: cellData,
-                  width: cellWidth,
-                  config: config,
-                );
-              }),
-            ],
-          ),
+              return _DataCell(
+                data: cellData,
+                width: cellWidth,
+                config: config,
+              );
+            }),
+          ],
         ),
       ),
     );
@@ -156,14 +183,24 @@ class _CheckboxCell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: width,
-      height: config.rowHeight,
-      child: Center(
-        child: Checkbox(
-          value: isSelected,
-          onChanged: null, // 체크박스 직접 클릭 비활성화 - 행 클릭으로만 동작
-          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+    return GestureDetector(
+      // 체크박스 영역에서 이벤트 전파 차단
+      onTap: () {
+        // 체크박스 클릭 시 부모의 CustomInkWell 이벤트 차단
+        onChanged?.call(!isSelected);
+      },
+      child: Container(
+        width: width,
+        height: config.rowHeight,
+        color: Colors.transparent, // 클릭 영역 확보
+        child: Center(
+          child: Checkbox(
+            value: isSelected,
+            onChanged: onChanged != null
+                ? (value) => onChanged!(value ?? false)
+                : null,
+            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
         ),
       ),
     );
