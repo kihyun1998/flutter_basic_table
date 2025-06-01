@@ -1,3 +1,4 @@
+// example/lib/main.dart - 새로운 BasicTableCell API 사용
 import 'package:flutter/material.dart';
 import 'package:flutter_basic_table/flutter_basic_table.dart';
 
@@ -32,7 +33,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    // 원본 데이터 백업 (정렬 해제시 복원용)
+    // ✅ 원본 데이터와 컬럼 순서 모두 백업!
     originalTableRows = tableRows
         .map((row) => BasicTableRow(
               index: row.index,
@@ -53,6 +54,16 @@ class _HomeScreenState extends State<HomeScreen> {
                   .toList(),
             ))
         .toList();
+
+    // ✅ 원본 컬럼 순서도 백업!
+    originalTableColumns = tableColumns
+        .map((col) => BasicTableColumn(
+              name: col.name,
+              minWidth: col.minWidth,
+              maxWidth: col.maxWidth,
+              isResizable: col.isResizable,
+            ))
+        .toList();
   }
 
   // 외부에서 정의된 선택 상태 - 체크박스 기능의 핵심!
@@ -63,6 +74,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // 원본 데이터 백업 (정렬 해제시 복원용) - ✅ BasicTableRow로 변경!
   late List<BasicTableRow> originalTableRows;
+
+  // ✅ 원본 컬럼 순서도 백업!
+  late List<BasicTableColumn> originalTableColumns;
 
   // 외부에서 컬럼 정의 - minWidth도 모두 직접 설정
   List<BasicTableColumn> tableColumns = [
@@ -354,7 +368,7 @@ class _HomeScreenState extends State<HomeScreen> {
         // ✅ 새로운 방식으로 정렬 수행!
         _sortTableData(columnIndex, sortState);
       } else {
-        // 원래 상태로 복원
+        // ✅ 원래 상태로 완전히 복원 (데이터 + 컬럼 순서 모두)
         tableRows = originalTableRows
             .map((row) => BasicTableRow(
                   index: row.index,
@@ -373,6 +387,16 @@ class _HomeScreenState extends State<HomeScreen> {
                             onSecondaryTap: cell.onSecondaryTap,
                           ))
                       .toList(),
+                ))
+            .toList();
+
+        // ✅ 컬럼 순서도 원래대로 복원!
+        tableColumns = originalTableColumns
+            .map((col) => BasicTableColumn(
+                  name: col.name,
+                  minWidth: col.minWidth,
+                  maxWidth: col.maxWidth,
+                  isResizable: col.isResizable,
                 ))
             .toList();
       }
@@ -423,6 +447,15 @@ class _HomeScreenState extends State<HomeScreen> {
       // ✅ 모든 행의 데이터도 새로운 방식으로 재정렬!
       tableRows =
           tableRows.map((row) => row.reorderCells(oldIndex, newIndex)).toList();
+
+      // ✅ 원본 데이터도 함께 업데이트 (정렬 해제시 현재 컬럼 순서 유지)
+      final BasicTableColumn movedOriginalColumn =
+          originalTableColumns.removeAt(oldIndex);
+      originalTableColumns.insert(newIndex, movedOriginalColumn);
+
+      originalTableRows = originalTableRows
+          .map((row) => row.reorderCells(oldIndex, newIndex))
+          .toList();
     });
 
     debugPrint('Column order changed: $oldIndex -> $newIndex');
