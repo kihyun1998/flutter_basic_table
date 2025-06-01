@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_basic_table/flutter_basic_table.dart';
+import 'package:flutter_basic_table/src/theme/flutter_basic_table_tooltip_theme.dart';
 
 /// CustomTooltip 위젯 - Flutter Tooltip의 편한 wrapper
 class CustomTooltip extends StatelessWidget {
