@@ -7,7 +7,7 @@ export 'src/enum/tooltip_position.dart';
 
 /// Core widgets
 export 'src/flutter_basic_table.dart';
-export 'src/models//flutter_basic_table_cell.dart';
+export 'src/models/flutter_basic_table_cell.dart';
 
 /// Models
 export 'src/models/flutter_basic_table_column.dart';

@@ -1,4 +1,3 @@
-// lib/src/models/flutter_basic_table_row.dart
 import 'package:flutter/material.dart';
 
 import 'flutter_basic_table_cell.dart';
