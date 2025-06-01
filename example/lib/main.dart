@@ -1,4 +1,3 @@
-// example/lib/main.dart - 깔끔한 모노톤 스타일
 import 'package:flutter/material.dart';
 import 'package:flutter_basic_table/flutter_basic_table.dart';
 
@@ -14,7 +13,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Custom Table Demo',
       theme: ThemeData(
-        primarySwatch: Colors.grey, // ✅ 파란색 → 회색으로 변경
+        primarySwatch: Colors.grey,
         useMaterial3: true,
       ),
       home: const HomeScreen(),
@@ -34,7 +33,26 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     // 원본 데이터 백업 (정렬 해제시 복원용)
-    originalTableData = tableData.map((row) => List<String>.from(row)).toList();
+    originalTableRows = tableRows
+        .map((row) => BasicTableRow(
+              index: row.index,
+              cells: row.cells
+                  .map((cell) => BasicTableCell(
+                        data: cell.data,
+                        widget: cell.widget,
+                        style: cell.style,
+                        backgroundColor: cell.backgroundColor,
+                        alignment: cell.alignment,
+                        padding: cell.padding,
+                        tooltip: cell.tooltip,
+                        enabled: cell.enabled,
+                        onTap: cell.onTap,
+                        onDoubleTap: cell.onDoubleTap,
+                        onSecondaryTap: cell.onSecondaryTap,
+                      ))
+                  .toList(),
+            ))
+        .toList();
   }
 
   // 외부에서 정의된 선택 상태 - 체크박스 기능의 핵심!
@@ -43,8 +61,8 @@ class _HomeScreenState extends State<HomeScreen> {
   // 정렬 상태 관리
   Map<int, ColumnSortState> columnSortStates = {};
 
-  // 원본 데이터 백업 (정렬 해제시 복원용)
-  late List<List<String>> originalTableData;
+  // 원본 데이터 백업 (정렬 해제시 복원용) - ✅ BasicTableRow로 변경!
+  late List<BasicTableRow> originalTableRows;
 
   // 외부에서 컬럼 정의 - minWidth도 모두 직접 설정
   List<BasicTableColumn> tableColumns = [
@@ -56,33 +74,109 @@ class _HomeScreenState extends State<HomeScreen> {
     const BasicTableColumn(name: '가입일', minWidth: 130.0),
   ];
 
-  // 외부에서 테이블 데이터 정의
-  List<List<String>> tableData = [
-    ['1', '김철수', 'kim@company.com', '개발팀', '활성', '2023-01-15'],
-    ['2', '이영희', 'lee@company.com', '디자인팀', '활성', '2023-02-20'],
-    ['3', '박민수', 'park@company.com', '마케팅팀', '비활성', '2023-03-10'],
-    ['4', '정수진', 'jung@company.com', '영업팀', '대기', '2023-04-05'],
-    ['5', '최동혁', 'choi@company.com', 'HR팀', '활성', '2023-05-12'],
-    ['6', '송지은', 'song@company.com', '개발팀', '활성', '2023-06-18'],
-    ['7', '윤상호', 'yoon@company.com', '디자인팀', '비활성', '2023-07-22'],
-    ['8', '한미영', 'han@company.com', '마케팅팀', '활성', '2023-08-14'],
-    ['9', '조현우', 'jo@company.com', '영업팀', '대기', '2023-09-09'],
-    ['10', '강예린', 'kang@company.com', 'HR팀', '활성', '2023-10-30'],
-    ['11', '임태윤', 'lim@company.com', '개발팀', '활성', '2023-11-11'],
-    ['12', '신보라', 'shin@company.com', '디자인팀', '활성', '2023-12-01'],
-    ['13', '홍길동', 'hong@company.com', '마케팅팀', '비활성', '2024-01-15'],
-    ['14', '백지훈', 'baek@company.com', '영업팀', '활성', '2024-02-20'],
-    ['15', '오세영', 'oh@company.com', 'HR팀', '대기', '2024-03-10'],
-    ['16', '노아름', 'no@company.com', '개발팀', '활성', '2024-04-05'],
-    ['17', '서준호', 'seo@company.com', '디자인팀', '활성', '2024-05-12'],
-    ['18', '유진아', 'yu@company.com', '마케팅팀', '비활성', '2024-06-18'],
-    ['19', '문성민', 'moon@company.com', '영업팀', '활성', '2024-07-22'],
-    ['20', '양하늘', 'yang@company.com', 'HR팀', '대기', '2024-08-14'],
-    ['21', '배소미', 'bae@company.com', '개발팀', '활성', '2024-09-09'],
-    ['22', '권도영', 'kwon@company.com', '디자인팀', '활성', '2024-10-30'],
-    ['23', '안지혜', 'ahn@company.com', '마케팅팀', '비활성', '2024-11-11'],
-    ['24', '남궁민', 'namgung@company.com', '영업팀', '활성', '2024-12-01'],
-    ['25', '황수정', 'hwang@company.com', 'HR팀', '대기', '2024-12-15'],
+  // ✅ 새로운 BasicTableRow 방식의 테이블 데이터!
+  List<BasicTableRow> tableRows = [
+    BasicTableRow(
+      index: 0,
+      cells: [
+        BasicTableCell.text('1'),
+        BasicTableCell.text('김철수',
+            style: const TextStyle(
+                fontWeight: FontWeight.bold, color: Colors.blue)),
+        BasicTableCell.text('kim@company.com'),
+        BasicTableCell.text('개발팀',
+            backgroundColor: Colors.blue.withOpacity(0.1)),
+        BasicTableCell.text('활성',
+            style: const TextStyle(
+                color: Colors.green, fontWeight: FontWeight.bold)),
+        BasicTableCell.text('2023-01-15'),
+      ],
+    ),
+    BasicTableRow(
+      index: 1,
+      cells: [
+        BasicTableCell.text('2'),
+        BasicTableCell.text('이영희'),
+        BasicTableCell.text('lee@company.com'),
+        BasicTableCell.text('디자인팀',
+            backgroundColor: Colors.purple.withOpacity(0.1)),
+        BasicTableCell.widget(
+          const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.check_circle, color: Colors.green, size: 16),
+              SizedBox(width: 4),
+              Text('활성', style: TextStyle(color: Colors.green)),
+            ],
+          ),
+          onTap: () => debugPrint('위젯 셀 클릭!'),
+        ),
+        BasicTableCell.text('2023-02-20'),
+      ],
+    ),
+    BasicTableRow(
+      index: 2,
+      cells: [
+        BasicTableCell.text('3'),
+        BasicTableCell.text('박민수'),
+        BasicTableCell.text('park@company.com'),
+        BasicTableCell.text('마케팅팀',
+            backgroundColor: Colors.orange.withOpacity(0.1)),
+        BasicTableCell.text('비활성', style: const TextStyle(color: Colors.red)),
+        BasicTableCell.text('2023-03-10'),
+      ],
+    ),
+    BasicTableRow(
+      index: 3,
+      cells: [
+        BasicTableCell.text('4'),
+        BasicTableCell.text('정수진'),
+        BasicTableCell.text('jung@company.com'),
+        BasicTableCell.text('영업팀',
+            backgroundColor: Colors.green.withOpacity(0.1)),
+        BasicTableCell.text('대기', style: const TextStyle(color: Colors.orange)),
+        BasicTableCell.text('2023-04-05'),
+      ],
+    ),
+    BasicTableRow(
+      index: 4,
+      cells: [
+        BasicTableCell.text('5'),
+        BasicTableCell.text('최동혁'),
+        BasicTableCell.text('choi@company.com'),
+        BasicTableCell.text('HR팀',
+            backgroundColor: Colors.pink.withOpacity(0.1)),
+        BasicTableCell.widget(
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+            decoration: BoxDecoration(
+              color: Colors.green,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Text('활성',
+                style: TextStyle(color: Colors.white, fontSize: 12)),
+          ),
+        ),
+        BasicTableCell.text('2023-05-12'),
+      ],
+    ),
+    // 간단한 텍스트 데이터들 (기존 방식과 동일)
+    ...List.generate(20, (index) {
+      final realIndex = index + 5;
+      return BasicTableRow(
+        index: realIndex,
+        cells: [
+          BasicTableCell.text('${realIndex + 1}'),
+          BasicTableCell.text('사용자${realIndex + 1}'),
+          BasicTableCell.text('user${realIndex + 1}@company.com'),
+          BasicTableCell.text(
+              ['개발팀', '디자인팀', '마케팅팀', '영업팀', 'HR팀'][realIndex % 5]),
+          BasicTableCell.text(['활성', '비활성', '대기'][realIndex % 3]),
+          BasicTableCell.text(
+              '2024-${(realIndex % 12 + 1).toString().padLeft(2, '0')}-${(realIndex % 28 + 1).toString().padLeft(2, '0')}'),
+        ],
+      );
+    }),
   ];
 
   // ✅ 깔끔한 모노톤 스타일 테마 정의!
@@ -90,26 +184,21 @@ class _HomeScreenState extends State<HomeScreen> {
         // 헤더 테마 - 깔끔한 흰색/회색 스타일
         headerTheme: BasicTableHeaderCellTheme(
           height: 50.0,
-          backgroundColor: Colors.grey[100], // ✅ 연한 회색 배경
+          backgroundColor: Colors.grey[100],
           textStyle: const TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 14,
-            color: Colors.black87, // ✅ 진한 검정색 텍스트
+            color: Colors.black87,
           ),
           padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
-          border:
-              const BorderSide(color: Colors.black87, width: 1.0), // ✅ 검정색 테두리
-          sortIconColor: Colors.black54, // ✅ 회색 정렬 아이콘
+          border: const BorderSide(color: Colors.black87, width: 1.0),
+          sortIconColor: Colors.black54,
           enableReorder: true,
           enableSorting: true,
           showDragHandles: false,
-
-          // 정렬 아이콘 설정
           ascendingIcon: Icons.arrow_upward,
           descendingIcon: Icons.arrow_downward,
           sortIconSize: 18.0,
-
-          // 헤더 클릭 효과 - 은은한 회색
           splashColor: Colors.grey.withOpacity(0.1),
           highlightColor: Colors.grey.withOpacity(0.05),
         ),
@@ -117,14 +206,10 @@ class _HomeScreenState extends State<HomeScreen> {
         // 데이터 행 테마 - 깨끗한 흰색 스타일
         dataRowTheme: BasicTableDataRowTheme(
           height: 45.0,
-          backgroundColor: Colors.white, // ✅ 깨끗한 흰색 배경
-          textStyle: const TextStyle(
-              fontSize: 13, color: Colors.black87), // ✅ 진한 검정색 텍스트
+          backgroundColor: Colors.white,
+          textStyle: const TextStyle(fontSize: 13, color: Colors.black87),
           padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
-          border:
-              BorderSide(color: Colors.grey[300]!, width: 0.5), // ✅ 연한 회색 테두리
-
-          // 행 클릭 효과 - 은은한 회색
+          border: BorderSide(color: Colors.grey[300]!, width: 0.5),
           splashColor: Colors.grey.withOpacity(0.08),
           highlightColor: Colors.grey.withOpacity(0.04),
         ),
@@ -134,14 +219,14 @@ class _HomeScreenState extends State<HomeScreen> {
           enabled: true,
           columnWidth: 60.0,
           padding: EdgeInsets.all(8.0),
-          activeColor: Colors.black87, // ✅ 체크됐을 때 검정색
-          checkColor: Colors.white, // ✅ 체크 마크는 흰색
+          activeColor: Colors.black87,
+          checkColor: Colors.white,
         ),
 
         // 선택 상태 테마 - 은은한 회색
         selectionTheme: BasicTableSelectionTheme(
-          selectedRowColor: Colors.grey.withOpacity(0.15), // ✅ 선택된 행은 연한 회색
-          hoverRowColor: Colors.grey.withOpacity(0.08), // ✅ hover는 더 연한 회색
+          selectedRowColor: Colors.grey.withOpacity(0.15),
+          hoverRowColor: Colors.grey.withOpacity(0.08),
         ),
 
         // 스크롤바 테마 - 검정/회색 스타일
@@ -152,8 +237,8 @@ class _HomeScreenState extends State<HomeScreen> {
           opacity: 0.7,
           animationDuration: const Duration(milliseconds: 250),
           width: 12.0,
-          color: Colors.black54, // ✅ 회색 스크롤바
-          trackColor: Colors.grey.withOpacity(0.2), // ✅ 연한 회색 트랙
+          color: Colors.black54,
+          trackColor: Colors.grey.withOpacity(0.2),
         ),
 
         // 테두리 테마 - 깔끔한 검정/회색
@@ -161,14 +246,13 @@ class _HomeScreenState extends State<HomeScreen> {
           tableBorder: const BorderSide(color: Colors.black54, width: 0.5),
           headerBorder: const BorderSide(color: Colors.black87, width: 1.0),
           rowBorder: BorderSide(color: Colors.grey[300]!, width: 0.5),
-          cellBorder: BorderSide(
-              color: Colors.grey[200]!, width: 0.3), // ✅ 매우 연한 회색 셀 구분선
+          cellBorder: BorderSide(color: Colors.grey[200]!, width: 0.3),
         ),
 
-        // ✅ Tooltip 테마 - 모노톤 스타일!
+        // Tooltip 테마 - 모노톤 스타일!
         tooltipTheme: BasicTableTooltipTheme(
-          backgroundColor: Colors.black87, // 진한 검정 배경
-          textColor: Colors.white, // 흰색 텍스트
+          backgroundColor: Colors.black87,
+          textColor: Colors.white,
           fontSize: 12.0,
           fontWeight: FontWeight.normal,
           padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0),
@@ -176,14 +260,14 @@ class _HomeScreenState extends State<HomeScreen> {
           borderRadius: BorderRadius.circular(4.0),
           boxShadow: [
             BoxShadow(
-              color: Colors.black38, // 은은한 그림자
+              color: Colors.black38,
               blurRadius: 6.0,
               offset: const Offset(0, 2),
             ),
           ],
           verticalOffset: 20.0,
-          waitDuration: const Duration(milliseconds: 300), // 빠른 반응
-          showDuration: const Duration(milliseconds: 2000), // 2초간 표시
+          waitDuration: const Duration(milliseconds: 300),
+          showDuration: const Duration(milliseconds: 2000),
           preferredPosition: TooltipPosition.auto,
         ),
       );
@@ -207,7 +291,7 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       if (selectAll) {
         selectedRows =
-            Set.from(List.generate(tableData.length, (index) => index));
+            Set.from(List.generate(tableRows.length, (index) => index));
       } else {
         selectedRows.clear();
       }
@@ -258,7 +342,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // 🆕 헤더 컬럼 정렬 콜백
+  // ✅ 헤더 컬럼 정렬 콜백 - BasicTableRow 방식 적용!
   void onColumnSort(int columnIndex, ColumnSortState sortState) {
     setState(() {
       // 다른 컬럼의 정렬 상태 초기화 (한 번에 하나의 컬럼만 정렬)
@@ -267,31 +351,48 @@ class _HomeScreenState extends State<HomeScreen> {
       if (sortState != ColumnSortState.none) {
         columnSortStates[columnIndex] = sortState;
 
-        // 정렬 수행
+        // ✅ 새로운 방식으로 정렬 수행!
         _sortTableData(columnIndex, sortState);
       } else {
         // 원래 상태로 복원
-        tableData =
-            originalTableData.map((row) => List<String>.from(row)).toList();
+        tableRows = originalTableRows
+            .map((row) => BasicTableRow(
+                  index: row.index,
+                  cells: row.cells
+                      .map((cell) => BasicTableCell(
+                            data: cell.data,
+                            widget: cell.widget,
+                            style: cell.style,
+                            backgroundColor: cell.backgroundColor,
+                            alignment: cell.alignment,
+                            padding: cell.padding,
+                            tooltip: cell.tooltip,
+                            enabled: cell.enabled,
+                            onTap: cell.onTap,
+                            onDoubleTap: cell.onDoubleTap,
+                            onSecondaryTap: cell.onSecondaryTap,
+                          ))
+                      .toList(),
+                ))
+            .toList();
       }
     });
 
     debugPrint('Column sort: column $columnIndex -> $sortState');
   }
 
-  /// 테이블 데이터를 정렬합니다
+  /// ✅ BasicTableRow 방식으로 테이블 데이터를 정렬합니다
   void _sortTableData(int columnIndex, ColumnSortState sortState) {
     if (columnIndex >= tableColumns.length) return;
 
-    tableData.sort((a, b) {
-      if (columnIndex >= a.length || columnIndex >= b.length) return 0;
-
-      final String valueA = a[columnIndex];
-      final String valueB = b[columnIndex];
+    tableRows.sort((a, b) {
+      // ✅ BasicTableRow의 새로운 메서드 사용!
+      final String valueA = a.getComparableValue(columnIndex);
+      final String valueB = b.getComparableValue(columnIndex);
 
       // 숫자인지 확인해서 숫자면 숫자로 정렬, 아니면 문자열로 정렬
-      final numA = int.tryParse(valueA);
-      final numB = int.tryParse(valueB);
+      final numA = a.getNumericValue(columnIndex);
+      final numB = b.getNumericValue(columnIndex);
 
       int comparison;
       if (numA != null && numB != null) {
@@ -307,6 +408,7 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  // ✅ BasicTableRow 방식으로 컬럼 순서 변경!
   void onColumnReorder(int oldIndex, int newIndex) {
     setState(() {
       // newIndex 보정
@@ -318,13 +420,9 @@ class _HomeScreenState extends State<HomeScreen> {
       final BasicTableColumn movedColumn = tableColumns.removeAt(oldIndex);
       tableColumns.insert(newIndex, movedColumn);
 
-      // 모든 행의 데이터도 같은 순서로 재정렬
-      for (final row in tableData) {
-        if (oldIndex < row.length && newIndex < row.length) {
-          final String movedCell = row.removeAt(oldIndex);
-          row.insert(newIndex, movedCell);
-        }
-      }
+      // ✅ 모든 행의 데이터도 새로운 방식으로 재정렬!
+      tableRows =
+          tableRows.map((row) => row.reorderCells(oldIndex, newIndex)).toList();
     });
 
     debugPrint('Column order changed: $oldIndex -> $newIndex');
@@ -338,18 +436,18 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Custom Table Demo - Monochrome + Smart Tooltip'),
-        backgroundColor: Colors.grey[200], // ✅ 연한 회색 앱바
-        foregroundColor: Colors.black87, // ✅ 검정색 텍스트
+        title: const Text('Custom Table Demo - New BasicTableCell API'),
+        backgroundColor: Colors.grey[200],
+        foregroundColor: Colors.black87,
       ),
-      backgroundColor: Colors.grey[50], // ✅ 매우 연한 회색 배경
+      backgroundColor: Colors.grey[50],
       body: Column(
         children: [
           // 선택 상태 + 컬럼 순서 표시 카드
           Card(
             margin: const EdgeInsets.all(8.0),
-            color: Colors.white, // ✅ 흰색 카드
-            elevation: 1, // ✅ 은은한 그림자
+            color: Colors.white,
+            elevation: 1,
             child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
@@ -363,7 +461,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w500,
-                            color: Colors.black87), // ✅ 검정색 텍스트
+                            color: Colors.black87),
                       ),
                       if (selectedRows.isNotEmpty)
                         ElevatedButton(
@@ -384,8 +482,8 @@ class _HomeScreenState extends State<HomeScreen> {
                             );
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.black87, // ✅ 검정색 버튼
-                            foregroundColor: Colors.white, // ✅ 흰색 텍스트
+                            backgroundColor: Colors.black87,
+                            foregroundColor: Colors.white,
                           ),
                           child: const Text('선택 항목 보기'),
                         ),
@@ -396,7 +494,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     '컬럼 순서: ${tableColumns.map((col) => col.name).join(' → ')}',
                     style: TextStyle(
                       fontSize: 14,
-                      color: Colors.grey[600], // ✅ 회색 텍스트
+                      color: Colors.grey[600],
                     ),
                   ),
                 ],
@@ -404,16 +502,16 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
 
-          // ✅ 커스텀 테이블이 들어갈 확장된 영역
+          // ✅ 새로운 BasicTable API 사용!
           Expanded(
             child: Card(
               margin: const EdgeInsets.all(8.0),
-              color: Colors.white, // ✅ 흰색 카드
-              elevation: 1, // ✅ 은은한 그림자
+              color: Colors.white,
+              elevation: 1,
               child: BasicTable(
                 columns: tableColumns,
-                data: tableData,
-                theme: tableTheme, // ✅ 깔끔한 모노톤 테마!
+                rows: tableRows, // ✅ 새로운 방식!
+                theme: tableTheme,
                 selectedRows: selectedRows,
                 onRowSelectionChanged: onRowSelectionChanged,
                 onSelectAllChanged: onSelectAllChanged,
@@ -431,35 +529,33 @@ class _HomeScreenState extends State<HomeScreen> {
           // 설명 카드
           Card(
             margin: const EdgeInsets.all(8.0),
-            color: Colors.white, // ✅ 흰색 카드
-            elevation: 1, // ✅ 은은한 그림자
+            color: Colors.white,
+            elevation: 1,
             child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    '✅ 깔끔한 모노톤 스타일 + 스마트 Tooltip:',
+                    '✅ 새로운 BasicTableCell API + 고급 기능:',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
-                      color: Colors.black87, // ✅ 검정색 제목
+                      color: Colors.black87,
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Text('🎨 흰색, 검정색, 회색만 사용한 깔끔한 디자인', style: _descStyle),
+                  Text('🎨 개별 셀 스타일링 (색상, 폰트, 배경색)', style: _descStyle),
+                  Text('🧩 커스텀 위젯 셀 지원 (아이콘, 버튼 등)', style: _descStyle),
+                  Text('🖱️ 셀 레벨 클릭 이벤트 (위젯 셀 클릭해보세요!)', style: _descStyle),
                   Text('🔄 헤더를 드래그해서 컬럼 순서 변경', style: _descStyle),
                   Text('⬆️⬇️ 헤더 클릭으로 정렬: 오름차순 → 내림차순 → 원래상태',
                       style: _descStyle),
                   Text('🔢 숫자 컬럼은 숫자로 정렬, 문자 컬럼은 문자로 정렬', style: _descStyle),
                   Text('✅ 체크박스로 다중 선택 지원', style: _descStyle),
                   Text('✅ 더블클릭 & 우클릭 지원', style: _descStyle),
-                  Text('✅ hover 효과 & 클릭 효과 모두 은은한 회색', style: _descStyle),
-                  Text('📝 텍스트 overflow시 자동 tooltip 표시 (300ms 후)',
-                      style: _descStyle), // ✅ 추가
-                  Text('🎯 헤더는 아래쪽, 데이터는 위쪽에 tooltip 표시',
-                      style: _descStyle), // ✅ 추가
-                  Text('✅ 모든 이벤트가 외부에서 완전히 제어됨', style: _descStyle),
+                  Text('📝 텍스트 overflow시 자동 tooltip 표시', style: _descStyle),
+                  Text('🎯 모든 상태 관리가 외부에서 완전히 제어됨', style: _descStyle),
                 ],
               ),
             ),
@@ -469,7 +565,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ✅ 설명 텍스트 스타일 (회색)
+  // 설명 텍스트 스타일 (회색)
   TextStyle get _descStyle => TextStyle(
         fontSize: 13,
         color: Colors.grey[700],

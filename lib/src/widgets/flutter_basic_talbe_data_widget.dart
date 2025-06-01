@@ -1,5 +1,7 @@
 // lib/src/widgets/flutter_basic_talbe_data_widget.dart
 import 'package:flutter/material.dart';
+import 'package:flutter_basic_table/src/models/flutter_basic_table_cell.dart';
+import 'package:flutter_basic_table/src/widgets/custom_tooltip.dart';
 import 'package:flutter_basic_table/src/widgets/tooltip_able_text_widget.dart';
 
 import '../../flutter_basic_table.dart';
@@ -174,15 +176,15 @@ class _DataRowState extends State<_DataRow> {
 
               // 데이터 셀들
               ...List.generate(widget.row.cells.length, (cellIndex) {
-                final cellData = cellIndex < widget.row.cells.length
+                final cell = cellIndex < widget.row.cells.length
                     ? widget.row.cells[cellIndex]
-                    : '';
+                    : BasicTableCell.text(''); // 빈 셀 처리
                 final cellWidth = cellIndex < widget.columnWidths.length
                     ? widget.columnWidths[cellIndex]
                     : 100.0;
 
                 return _DataCell(
-                  data: cellData,
+                  cell: cell,
                   width: cellWidth,
                   theme: widget.theme,
                 );
@@ -240,45 +242,136 @@ class _CheckboxCell extends StatelessWidget {
   }
 }
 
-/// 개별 데이터 셀 위젯 - ✅ cellBorder 구현 예정
+/// 개별 데이터 셀 위젯 - ✅ BasicTableCell 완전 활용!
 class _DataCell extends StatelessWidget {
-  final String data;
+  final BasicTableCell cell;
   final double width;
   final BasicTableThemeData theme;
 
   const _DataCell({
-    required this.data,
+    required this.cell,
     required this.width,
     required this.theme,
   });
 
+  /// 테마 스타일과 셀 개별 스타일을 병합 (셀 스타일이 우선)
+  TextStyle _getEffectiveTextStyle() {
+    final themeStyle = theme.dataRowTheme.textStyle;
+    final cellStyle = cell.style;
+
+    if (cellStyle == null) return themeStyle ?? const TextStyle();
+    if (themeStyle == null) return cellStyle;
+
+    // 테마 스타일을 기본으로 하고 셀 스타일로 오버라이드
+    return themeStyle.merge(cellStyle);
+  }
+
+  /// 테마 배경색과 셀 개별 배경색을 병합 (셀 배경색이 우선)
+  Color _getEffectiveBackgroundColor() {
+    return cell.backgroundColor ?? Colors.transparent;
+  }
+
+  /// 테마 패딩과 셀 개별 패딩을 병합 (셀 패딩이 우선)
+  EdgeInsets _getEffectivePadding() {
+    return cell.padding ?? theme.dataRowTheme.padding ?? EdgeInsets.zero;
+  }
+
+  /// 셀 정렬 (기본값: centerLeft)
+  Alignment _getEffectiveAlignment() {
+    return cell.alignment ?? Alignment.centerLeft;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
-      // ✅ SizedBox → Container로 변경 (cellBorder 준비)
       width: width,
       height: theme.dataRowTheme.height,
-      // ✅ cellBorder 구현 준비
+      // ✅ cellBorder + 개별 셀 배경색 적용
       decoration: BoxDecoration(
+        color: _getEffectiveBackgroundColor(),
         border: Border(
-          right: theme.borderTheme.cellBorder ??
-              BorderSide.none, // ✅ cellBorder 적용!
+          right: theme.borderTheme.cellBorder ?? BorderSide.none,
         ),
       ),
-      child: Padding(
-        padding: theme.dataRowTheme.padding ?? EdgeInsets.zero,
-        child: Align(
-          alignment: Alignment.centerLeft,
-          child: TooltipAbleText(
-            text: data,
-            style: theme.dataRowTheme.textStyle,
-            tooltipTheme: theme.tooltipTheme,
-            tooltipPosition: TooltipPosition.top, // 데이터는 위쪽에 tooltip
-            overflow: TextOverflow.ellipsis,
-            maxLines: 1,
-          ),
-        ),
+      child: Material(
+        color: Colors.transparent,
+        child: _buildCellContent(),
       ),
     );
+  }
+
+  /// 셀 콘텐츠를 빌드 (위젯 vs 텍스트 vs 클릭 가능)
+  Widget _buildCellContent() {
+    Widget content;
+
+    if (cell.usesWidget) {
+      // 커스텀 위젯 사용
+      content = Padding(
+        padding: _getEffectivePadding(),
+        child: Align(
+          alignment: _getEffectiveAlignment(),
+          child: cell.widget!,
+        ),
+      );
+    } else {
+      // 텍스트 사용
+      content = Padding(
+        padding: _getEffectivePadding(),
+        child: Align(
+          alignment: _getEffectiveAlignment(),
+          child: _buildTextContent(),
+        ),
+      );
+    }
+
+    // 셀 레벨 이벤트가 있으면 클릭 가능하게 래핑
+    if (cell.enabled && _hasCellEvents()) {
+      return CustomInkWell(
+        onTap: cell.onTap,
+        onDoubleTap: cell.onDoubleTap,
+        onSecondaryTap: cell.onSecondaryTap,
+        doubleClickTime: const Duration(milliseconds: 300),
+        child: content,
+      );
+    }
+
+    return content;
+  }
+
+  /// 텍스트 콘텐츠를 빌드 (tooltip 처리 포함)
+  Widget _buildTextContent() {
+    final displayText = cell.displayText ?? '';
+
+    if (cell.tooltip != null) {
+      // 강제 tooltip이 지정된 경우
+      return CustomTooltip(
+        message: cell.tooltip!,
+        theme: theme.tooltipTheme,
+        position: TooltipPosition.top, // 데이터는 위쪽에 tooltip
+        child: Text(
+          displayText,
+          style: _getEffectiveTextStyle(),
+          overflow: TextOverflow.ellipsis,
+          maxLines: 1,
+        ),
+      );
+    } else {
+      // 자동 overflow 감지 tooltip
+      return TooltipAbleText(
+        text: displayText,
+        style: _getEffectiveTextStyle(),
+        tooltipTheme: theme.tooltipTheme,
+        tooltipPosition: TooltipPosition.top, // 데이터는 위쪽에 tooltip
+        overflow: TextOverflow.ellipsis,
+        maxLines: 1,
+      );
+    }
+  }
+
+  /// 셀 레벨 이벤트가 있는지 확인
+  bool _hasCellEvents() {
+    return cell.onTap != null ||
+        cell.onDoubleTap != null ||
+        cell.onSecondaryTap != null;
   }
 }

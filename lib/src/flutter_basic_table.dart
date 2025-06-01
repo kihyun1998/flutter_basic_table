@@ -14,8 +14,8 @@ import 'widgets/synced_scroll_controll_widget.dart';
 /// 모든 데이터는 외부에서 정의되어야 합니다.
 class BasicTable extends StatefulWidget {
   final List<BasicTableColumn> columns;
-  final List<List<String>> data;
-  final BasicTableThemeData? theme; // ✅ config → theme으로 변경
+  final List<BasicTableRow> rows; // ✅ 변경: data → rows
+  final BasicTableThemeData? theme;
 
   // 체크박스 관련 외부 정의 필드들
   final Set<int>? selectedRows;
@@ -28,10 +28,10 @@ class BasicTable extends StatefulWidget {
   final void Function(int index)? onRowSecondaryTap;
   final Duration doubleClickTime;
 
-  // 헤더 reorder 콜백 추가!
+  // 헤더 reorder 콜백
   final void Function(int oldIndex, int newIndex)? onColumnReorder;
 
-  // 헤더 정렬 콜백 추가!
+  // 헤더 정렬 콜백
   final void Function(int columnIndex, ColumnSortState sortState)? onColumnSort;
 
   // 현재 정렬 상태 (외부에서 관리)
@@ -40,8 +40,8 @@ class BasicTable extends StatefulWidget {
   const BasicTable({
     super.key,
     required this.columns,
-    required this.data,
-    this.theme, // ✅ theme 파라미터로 변경
+    required this.rows, // ✅ 변경
+    this.theme,
     this.selectedRows,
     this.onRowSelectionChanged,
     this.onSelectAllChanged,
@@ -53,7 +53,47 @@ class BasicTable extends StatefulWidget {
     this.onColumnSort,
     this.columnSortStates,
   })  : assert(columns.length > 0, 'columns cannot be empty'),
-        assert(data.length > 0, 'data cannot be empty');
+        assert(rows.length > 0, 'rows cannot be empty'); // ✅ 변경
+
+  /// 하위 호환성을 위한 생성자 (기존 List<List<String>> 지원)
+  factory BasicTable.fromStringData({
+    required List<BasicTableColumn> columns,
+    required List<List<String>> data,
+    BasicTableThemeData? theme,
+    Set<int>? selectedRows,
+    void Function(int index, bool selected)? onRowSelectionChanged,
+    void Function(bool selectAll)? onSelectAllChanged,
+    void Function(int index)? onRowTap,
+    void Function(int index)? onRowDoubleTap,
+    void Function(int index)? onRowSecondaryTap,
+    Duration doubleClickTime = const Duration(milliseconds: 300),
+    void Function(int oldIndex, int newIndex)? onColumnReorder,
+    void Function(int columnIndex, ColumnSortState sortState)? onColumnSort,
+    Map<int, ColumnSortState>? columnSortStates,
+  }) {
+    final rows = data.asMap().entries.map((entry) {
+      return BasicTableRow.fromStrings(
+        cells: entry.value,
+        index: entry.key,
+      );
+    }).toList();
+
+    return BasicTable(
+      columns: columns,
+      rows: rows,
+      theme: theme,
+      selectedRows: selectedRows,
+      onRowSelectionChanged: onRowSelectionChanged,
+      onSelectAllChanged: onSelectAllChanged,
+      onRowTap: onRowTap,
+      onRowDoubleTap: onRowDoubleTap,
+      onRowSecondaryTap: onRowSecondaryTap,
+      doubleClickTime: doubleClickTime,
+      onColumnReorder: onColumnReorder,
+      onColumnSort: onColumnSort,
+      columnSortStates: columnSortStates,
+    );
+  }
 
   @override
   State<BasicTable> createState() => _BasicTableState();
@@ -72,15 +112,8 @@ class _BasicTableState extends State<BasicTable> {
     super.initState();
   }
 
-  /// 외부 데이터를 BasicTableRow 형태로 변환하는 헬퍼 함수
-  List<BasicTableRow> get _currentRows {
-    return widget.data.asMap().entries.map((entry) {
-      return BasicTableRow(
-        index: entry.key,
-        cells: List.from(entry.value),
-      );
-    }).toList();
-  }
+  /// 현재 행 데이터 반환 (더 이상 변환 불필요)
+  List<BasicTableRow> get _currentRows => widget.rows; // ✅ 간단해짐!
 
   /// 컬럼 순서가 바뀔 때 호출되는 함수 - 외부 콜백만 호출
   void _handleColumnReorder(int oldIndex, int newIndex) {
