@@ -12,6 +12,7 @@ export 'src/models/flutter_basic_table_cell.dart';
 /// Models
 export 'src/models/flutter_basic_table_column.dart';
 export 'src/models/flutter_basic_table_row.dart';
+export 'src/models/status_config.dart';
 
 /// Theme
 export 'src/theme/flutter_basic_table_border_theme.dart';

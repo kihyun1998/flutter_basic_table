@@ -1,4 +1,8 @@
+// lib/src/models/flutter_basic_table_cell.dart
 import 'package:flutter/material.dart';
+import 'package:flutter_basic_table/src/widgets/generate_status_indicator.dart';
+
+import 'status_config.dart';
 
 /// 테이블 셀의 데이터와 스타일을 정의하는 모델
 ///
@@ -99,6 +103,107 @@ class BasicTableCell {
     return BasicTableCell(
       widget: widget,
       backgroundColor: backgroundColor,
+      padding: padding,
+      tooltip: tooltip,
+      enabled: enabled,
+      onTap: onTap,
+      onDoubleTap: onDoubleTap,
+      onSecondaryTap: onSecondaryTap,
+    );
+  }
+
+  /// Generic 상태 표시기로 셀 생성
+  factory BasicTableCell.status(
+    Enum status, // ✅ dynamic 대신 Enum 사용 (모든 enum이 Enum을 상속)
+    StatusConfig config, {
+    Axis direction = Axis.horizontal,
+    MainAxisAlignment mainAxisAlignment = MainAxisAlignment.start,
+    CrossAxisAlignment crossAxisAlignment = CrossAxisAlignment.center,
+    Color? backgroundColor,
+    Alignment? alignment,
+    EdgeInsets? padding,
+    String? tooltip,
+    bool enabled = true,
+    VoidCallback? onTap,
+    VoidCallback? onDoubleTap,
+    VoidCallback? onSecondaryTap,
+  }) {
+    final statusWidget = GenericStatusIndicator(
+      status: status,
+      config: config,
+      direction: direction,
+      mainAxisAlignment: mainAxisAlignment,
+      crossAxisAlignment: crossAxisAlignment,
+    );
+
+    return BasicTableCell(
+      widget: statusWidget,
+      backgroundColor: backgroundColor,
+      alignment: alignment,
+      padding: padding,
+      tooltip: tooltip ?? config.tooltip,
+      enabled: enabled,
+      onTap: onTap,
+      onDoubleTap: onDoubleTap,
+      onSecondaryTap: onSecondaryTap,
+    );
+  }
+
+  /// 가로 레이아웃 상태 표시기 셀 생성
+  factory BasicTableCell.statusHorizontal(
+    Enum status, // ✅ dynamic 대신 Enum 사용
+    StatusConfig config, {
+    MainAxisAlignment mainAxisAlignment = MainAxisAlignment.start,
+    CrossAxisAlignment crossAxisAlignment = CrossAxisAlignment.center,
+    Color? backgroundColor,
+    Alignment? alignment,
+    EdgeInsets? padding,
+    String? tooltip,
+    bool enabled = true,
+    VoidCallback? onTap,
+    VoidCallback? onDoubleTap,
+    VoidCallback? onSecondaryTap,
+  }) {
+    return BasicTableCell.status(
+      status,
+      config,
+      direction: Axis.horizontal,
+      mainAxisAlignment: mainAxisAlignment,
+      crossAxisAlignment: crossAxisAlignment,
+      backgroundColor: backgroundColor,
+      alignment: alignment,
+      padding: padding,
+      tooltip: tooltip,
+      enabled: enabled,
+      onTap: onTap,
+      onDoubleTap: onDoubleTap,
+      onSecondaryTap: onSecondaryTap,
+    );
+  }
+
+  /// 세로 레이아웃 상태 표시기 셀 생성
+  factory BasicTableCell.statusVertical(
+    Enum status, // ✅ dynamic 대신 Enum 사용
+    StatusConfig config, {
+    MainAxisAlignment mainAxisAlignment = MainAxisAlignment.center,
+    CrossAxisAlignment crossAxisAlignment = CrossAxisAlignment.center,
+    Color? backgroundColor,
+    Alignment? alignment,
+    EdgeInsets? padding,
+    String? tooltip,
+    bool enabled = true,
+    VoidCallback? onTap,
+    VoidCallback? onDoubleTap,
+    VoidCallback? onSecondaryTap,
+  }) {
+    return BasicTableCell.status(
+      status,
+      config,
+      direction: Axis.vertical,
+      mainAxisAlignment: mainAxisAlignment,
+      crossAxisAlignment: crossAxisAlignment,
+      backgroundColor: backgroundColor,
+      alignment: alignment,
       padding: padding,
       tooltip: tooltip,
       enabled: enabled,

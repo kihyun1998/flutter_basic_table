@@ -1,4 +1,4 @@
-// example/lib/main.dart - 새로운 BasicTableCell API 사용
+// example/lib/main.dart - 사용자 정의 상태 시스템 예시
 import 'package:flutter/material.dart';
 import 'package:flutter_basic_table/flutter_basic_table.dart';
 
@@ -22,6 +22,13 @@ class MyApp extends StatelessWidget {
   }
 }
 
+// ✅ 사용자가 정의한 상태 시스템!
+enum EmployeeStatus { active, inactive, pending, onLeave, training }
+
+enum ProjectStatus { planning, inProgress, review, completed, cancelled }
+
+enum PriorityLevel { low, medium, high, urgent }
+
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -33,7 +40,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    // ✅ 원본 데이터와 컬럼 순서 모두 백업!
+    // 원본 데이터와 컬럼 순서 모두 백업!
     originalTableRows = tableRows
         .map((row) => BasicTableRow(
               index: row.index,
@@ -55,7 +62,6 @@ class _HomeScreenState extends State<HomeScreen> {
             ))
         .toList();
 
-    // ✅ 원본 컬럼 순서도 백업!
     originalTableColumns = tableColumns
         .map((col) => BasicTableColumn(
               name: col.name,
@@ -66,29 +72,104 @@ class _HomeScreenState extends State<HomeScreen> {
         .toList();
   }
 
-  // 외부에서 정의된 선택 상태 - 체크박스 기능의 핵심!
+  // 외부에서 정의된 선택 상태
   Set<int> selectedRows = {};
 
   // 정렬 상태 관리
   Map<int, ColumnSortState> columnSortStates = {};
 
-  // 원본 데이터 백업 (정렬 해제시 복원용) - ✅ BasicTableRow로 변경!
+  // 원본 데이터 백업
   late List<BasicTableRow> originalTableRows;
-
-  // ✅ 원본 컬럼 순서도 백업!
   late List<BasicTableColumn> originalTableColumns;
 
-  // 외부에서 컬럼 정의 - minWidth도 모두 직접 설정
+  // ✅ 사용자 정의 상태 설정들!
+  static Map<EmployeeStatus, StatusConfig> employeeStatusConfigs = {
+    EmployeeStatus.active: StatusConfig.simple(
+      color: Colors.green,
+      text: '활성',
+    ),
+    EmployeeStatus.inactive: StatusConfig.simple(
+      color: Colors.red,
+      text: '비활성',
+    ),
+    EmployeeStatus.pending: StatusConfig.simple(
+      color: Colors.orange,
+      text: '대기',
+    ),
+    EmployeeStatus.onLeave: StatusConfig.withIcon(
+      color: Colors.blue,
+      icon: Icons.flight_takeoff,
+      text: '휴가',
+    ),
+    EmployeeStatus.training: StatusConfig.badge(
+      color: Colors.purple,
+      text: '교육중',
+      textColor: Colors.white,
+      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+    ),
+  };
+
+  static Map<ProjectStatus, StatusConfig> projectStatusConfigs = {
+    ProjectStatus.planning: StatusConfig.circleOnly(
+      color: Colors.grey,
+      tooltip: '계획 단계',
+    ),
+    ProjectStatus.inProgress: StatusConfig.withIcon(
+      color: Colors.blue,
+      icon: Icons.play_circle,
+      text: '진행중',
+    ),
+    ProjectStatus.review: StatusConfig.simple(
+      color: Colors.orange,
+      text: '검토',
+    ),
+    ProjectStatus.completed: StatusConfig.withIcon(
+      color: Colors.green,
+      icon: Icons.check_circle,
+      text: '완료',
+    ),
+    ProjectStatus.cancelled: StatusConfig.simple(
+      color: Colors.red,
+      text: '취소됨',
+    ),
+  };
+
+  static Map<PriorityLevel, StatusConfig> priorityConfigs = {
+    PriorityLevel.low: StatusConfig.badge(
+      color: Colors.grey,
+      text: '낮음',
+      textColor: Colors.white,
+    ),
+    PriorityLevel.medium: StatusConfig.badge(
+      color: Colors.blue,
+      text: '보통',
+      textColor: Colors.white,
+    ),
+    PriorityLevel.high: StatusConfig.badge(
+      color: Colors.orange,
+      text: '높음',
+      textColor: Colors.white,
+    ),
+    PriorityLevel.urgent: StatusConfig.badge(
+      color: Colors.red,
+      text: '긴급',
+      textColor: Colors.white,
+    ),
+  };
+
+  // 컬럼 정의
   List<BasicTableColumn> tableColumns = [
-    const BasicTableColumn(name: 'ID', minWidth: 80.0),
-    const BasicTableColumn(name: '이름', minWidth: 150.0),
-    const BasicTableColumn(name: '이메일', minWidth: 250.0),
-    const BasicTableColumn(name: '부서', minWidth: 120.0),
-    const BasicTableColumn(name: '상태', minWidth: 100.0),
-    const BasicTableColumn(name: '가입일', minWidth: 130.0),
+    const BasicTableColumn(name: 'ID', minWidth: 60.0),
+    const BasicTableColumn(name: '이름', minWidth: 120.0),
+    const BasicTableColumn(name: '이메일', minWidth: 200.0),
+    const BasicTableColumn(name: '부서', minWidth: 100.0),
+    const BasicTableColumn(name: '직원상태', minWidth: 100.0),
+    const BasicTableColumn(name: '프로젝트상태', minWidth: 120.0),
+    const BasicTableColumn(name: '우선순위', minWidth: 80.0),
+    const BasicTableColumn(name: '가입일', minWidth: 100.0),
   ];
 
-  // ✅ 새로운 BasicTableRow 방식의 테이블 데이터!
+  // ✅ 사용자 정의 상태 시스템을 사용한 테이블 데이터!
   List<BasicTableRow> tableRows = [
     BasicTableRow(
       index: 0,
@@ -100,9 +181,19 @@ class _HomeScreenState extends State<HomeScreen> {
         BasicTableCell.text('kim@company.com'),
         BasicTableCell.text('개발팀',
             backgroundColor: Colors.blue.withOpacity(0.1)),
-        BasicTableCell.text('활성',
-            style: const TextStyle(
-                color: Colors.green, fontWeight: FontWeight.bold)),
+        BasicTableCell.status(
+          EmployeeStatus.active,
+          employeeStatusConfigs[EmployeeStatus.active]!,
+        ),
+        BasicTableCell.status(
+          ProjectStatus.inProgress,
+          projectStatusConfigs[ProjectStatus.inProgress]!,
+          onTap: () => debugPrint('프로젝트 상태 클릭!'),
+        ),
+        BasicTableCell.status(
+          PriorityLevel.high,
+          priorityConfigs[PriorityLevel.high]!,
+        ),
         BasicTableCell.text('2023-01-15'),
       ],
     ),
@@ -114,16 +205,17 @@ class _HomeScreenState extends State<HomeScreen> {
         BasicTableCell.text('lee@company.com'),
         BasicTableCell.text('디자인팀',
             backgroundColor: Colors.purple.withOpacity(0.1)),
-        BasicTableCell.widget(
-          const Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.check_circle, color: Colors.green, size: 16),
-              SizedBox(width: 4),
-              Text('활성', style: TextStyle(color: Colors.green)),
-            ],
-          ),
-          onTap: () => debugPrint('위젯 셀 클릭!'),
+        BasicTableCell.status(
+          EmployeeStatus.onLeave,
+          employeeStatusConfigs[EmployeeStatus.onLeave]!,
+        ),
+        BasicTableCell.status(
+          ProjectStatus.review,
+          projectStatusConfigs[ProjectStatus.review]!,
+        ),
+        BasicTableCell.status(
+          PriorityLevel.medium,
+          priorityConfigs[PriorityLevel.medium]!,
         ),
         BasicTableCell.text('2023-02-20'),
       ],
@@ -136,7 +228,18 @@ class _HomeScreenState extends State<HomeScreen> {
         BasicTableCell.text('park@company.com'),
         BasicTableCell.text('마케팅팀',
             backgroundColor: Colors.orange.withOpacity(0.1)),
-        BasicTableCell.text('비활성', style: const TextStyle(color: Colors.red)),
+        BasicTableCell.status(
+          EmployeeStatus.inactive,
+          employeeStatusConfigs[EmployeeStatus.inactive]!,
+        ),
+        BasicTableCell.status(
+          ProjectStatus.cancelled,
+          projectStatusConfigs[ProjectStatus.cancelled]!,
+        ),
+        BasicTableCell.status(
+          PriorityLevel.low,
+          priorityConfigs[PriorityLevel.low]!,
+        ),
         BasicTableCell.text('2023-03-10'),
       ],
     ),
@@ -148,7 +251,18 @@ class _HomeScreenState extends State<HomeScreen> {
         BasicTableCell.text('jung@company.com'),
         BasicTableCell.text('영업팀',
             backgroundColor: Colors.green.withOpacity(0.1)),
-        BasicTableCell.text('대기', style: const TextStyle(color: Colors.orange)),
+        BasicTableCell.status(
+          EmployeeStatus.training,
+          employeeStatusConfigs[EmployeeStatus.training]!,
+        ),
+        BasicTableCell.status(
+          ProjectStatus.planning,
+          projectStatusConfigs[ProjectStatus.planning]!,
+        ),
+        BasicTableCell.status(
+          PriorityLevel.urgent,
+          priorityConfigs[PriorityLevel.urgent]!,
+        ),
         BasicTableCell.text('2023-04-05'),
       ],
     ),
@@ -160,23 +274,28 @@ class _HomeScreenState extends State<HomeScreen> {
         BasicTableCell.text('choi@company.com'),
         BasicTableCell.text('HR팀',
             backgroundColor: Colors.pink.withOpacity(0.1)),
-        BasicTableCell.widget(
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-            decoration: BoxDecoration(
-              color: Colors.green,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Text('활성',
-                style: TextStyle(color: Colors.white, fontSize: 12)),
-          ),
+        BasicTableCell.status(
+          EmployeeStatus.pending,
+          employeeStatusConfigs[EmployeeStatus.pending]!,
+        ),
+        BasicTableCell.status(
+          ProjectStatus.completed,
+          projectStatusConfigs[ProjectStatus.completed]!,
+        ),
+        BasicTableCell.status(
+          PriorityLevel.medium,
+          priorityConfigs[PriorityLevel.medium]!,
         ),
         BasicTableCell.text('2023-05-12'),
       ],
     ),
-    // 간단한 텍스트 데이터들 (기존 방식과 동일)
+    // 추가 데이터들 (다양한 상태 조합 표시)
     ...List.generate(20, (index) {
       final realIndex = index + 5;
+      final employeeStatuses = EmployeeStatus.values;
+      final projectStatuses = ProjectStatus.values;
+      final priorities = PriorityLevel.values;
+
       return BasicTableRow(
         index: realIndex,
         cells: [
@@ -185,7 +304,20 @@ class _HomeScreenState extends State<HomeScreen> {
           BasicTableCell.text('user${realIndex + 1}@company.com'),
           BasicTableCell.text(
               ['개발팀', '디자인팀', '마케팅팀', '영업팀', 'HR팀'][realIndex % 5]),
-          BasicTableCell.text(['활성', '비활성', '대기'][realIndex % 3]),
+          BasicTableCell.status(
+            employeeStatuses[realIndex % employeeStatuses.length],
+            employeeStatusConfigs[
+                employeeStatuses[realIndex % employeeStatuses.length]]!,
+          ),
+          BasicTableCell.status(
+            projectStatuses[realIndex % projectStatuses.length],
+            projectStatusConfigs[
+                projectStatuses[realIndex % projectStatuses.length]]!,
+          ),
+          BasicTableCell.status(
+            priorities[realIndex % priorities.length],
+            priorityConfigs[priorities[realIndex % priorities.length]]!,
+          ),
           BasicTableCell.text(
               '2024-${(realIndex % 12 + 1).toString().padLeft(2, '0')}-${(realIndex % 28 + 1).toString().padLeft(2, '0')}'),
         ],
@@ -260,7 +392,7 @@ class _HomeScreenState extends State<HomeScreen> {
           tableBorder: const BorderSide(color: Colors.black54, width: 0.5),
           headerBorder: const BorderSide(color: Colors.black87, width: 1.0),
           rowBorder: BorderSide(color: Colors.grey[300]!, width: 0.5),
-          cellBorder: null,
+          cellBorder: BorderSide.none, // ✅ 세로 border 제거!
         ),
 
         // Tooltip 테마 - 모노톤 스타일!
@@ -469,7 +601,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Custom Table Demo - New BasicTableCell API'),
+        title: const Text('Custom Table Demo - 사용자 정의 상태 시스템'),
         backgroundColor: Colors.grey[200],
         foregroundColor: Colors.black87,
       ),
@@ -570,7 +702,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    '✅ 새로운 BasicTableCell API + 고급 기능:',
+                    '✅ 사용자 정의 상태 시스템 + Generic API:',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
@@ -578,16 +710,27 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Text('🎨 개별 셀 스타일링 (색상, 폰트, 배경색)', style: _descStyle),
-                  Text('🧩 커스텀 위젯 셀 지원 (아이콘, 버튼 등)', style: _descStyle),
-                  Text('🖱️ 셀 레벨 클릭 이벤트 (위젯 셀 클릭해보세요!)', style: _descStyle),
+                  Text('🏗️ 사용자가 직접 정의한 enum + StatusConfig',
+                      style: _descStyle),
+                  Text('📋 직원상태: active, inactive, pending, onLeave, training',
+                      style: _descStyle),
+                  Text(
+                      '📊 프로젝트상태: planning, inProgress, review, completed, cancelled',
+                      style: _descStyle),
+                  Text('⚡ 우선순위: low, medium, high, urgent', style: _descStyle),
+                  Text('🎨 각 상태별 개별 색상, 텍스트, 아이콘 설정', style: _descStyle),
+                  Text(
+                      '🔴 원형 표시기: StatusConfig.simple(), StatusConfig.circleOnly()',
+                      style: _descStyle),
+                  Text('🔘 아이콘 표시기: StatusConfig.withIcon()',
+                      style: _descStyle),
+                  Text('🏷️ 배지 스타일: StatusConfig.badge()', style: _descStyle),
+                  Text('🖱️ 셀 레벨 클릭 이벤트 (프로젝트 상태 클릭해보세요!)', style: _descStyle),
                   Text('🔄 헤더를 드래그해서 컬럼 순서 변경', style: _descStyle),
                   Text('⬆️⬇️ 헤더 클릭으로 정렬: 오름차순 → 내림차순 → 원래상태',
                       style: _descStyle),
-                  Text('🔢 숫자 컬럼은 숫자로 정렬, 문자 컬럼은 문자로 정렬', style: _descStyle),
-                  Text('✅ 체크박스로 다중 선택 지원', style: _descStyle),
-                  Text('✅ 더블클릭 & 우클릭 지원', style: _descStyle),
-                  Text('📝 텍스트 overflow시 자동 tooltip 표시', style: _descStyle),
+                  Text('✅ 라이브러리는 인터페이스만 제공, 상태는 사용자가 완전히 정의',
+                      style: _descStyle),
                   Text('🎯 모든 상태 관리가 외부에서 완전히 제어됨', style: _descStyle),
                 ],
               ),
