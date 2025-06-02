@@ -36,6 +36,8 @@ flutter_basic_table/
     │   │   ├── flutter_basic_table_selection_theme.dart
     │   │   ├── flutter_basic_table_theme.dart
     │   │   └── flutter_basic_table_tooltip_theme.dart
+    │   ├── utils/
+    │   │   └── column_sort_manager.dart
     │   ├── widgets/
     │   │   ├── custom_inkwell_widget.dart
     │   │   ├── custom_tooltip.dart
@@ -206,7 +208,7 @@ class SampleData {
     'HR팀'
   ];
 
-  /// 샘플 테이블 행 데이터 생성
+  /// 샘플 테이블 행 데이터 생성 (기본 높이)
   static List<BasicTableRow> generateRows() {
     final List<BasicTableRow> rows = [];
 
@@ -217,6 +219,134 @@ class SampleData {
     rows.addAll(_createGeneratedRows());
 
     return rows;
+  }
+
+  /// 행별 다양한 높이를 가진 테스트 데이터 생성
+  static List<BasicTableRow> generateRowsWithVariableHeight() {
+    final List<BasicTableRow> rows = [];
+
+    // 다양한 높이의 테스트 행들 추가
+    rows.addAll(_createVariableHeightRows());
+
+    // 일반 높이 행들도 추가
+    rows.addAll(_createGeneratedRows());
+
+    return rows;
+  }
+
+  /// 다양한 높이의 테스트 행들 생성
+  static List<BasicTableRow> _createVariableHeightRows() {
+    return [
+      // 매우 작은 높이 (30px)
+      BasicTableRow.withHeight(
+        index: 0,
+        height: 30.0,
+        cells: [
+          BasicTableCell.text('1'),
+          BasicTableCell.text('김소형', style: const TextStyle(fontSize: 11)),
+          BasicTableCell.text('small@company.com'),
+          _createDepartmentCell('개발팀'),
+          BasicTableCell.status(
+            EmployeeStatus.active,
+            StatusConfigs.getEmployeeConfig(EmployeeStatus.active),
+          ),
+          BasicTableCell.status(
+            ProjectStatus.inProgress,
+            StatusConfigs.getProjectConfig(ProjectStatus.inProgress),
+          ),
+          BasicTableCell.text('2023-01-15'),
+        ],
+      ),
+
+      // 보통 높이 (45px - 기본값)
+      BasicTableRow(
+        index: 1,
+        cells: [
+          BasicTableCell.text('2'),
+          BasicTableCell.text('이보통'),
+          BasicTableCell.text('normal@company.com'),
+          _createDepartmentCell('디자인팀'),
+          BasicTableCell.status(
+            EmployeeStatus.active,
+            StatusConfigs.getEmployeeConfig(EmployeeStatus.active),
+          ),
+          BasicTableCell.status(
+            ProjectStatus.review,
+            StatusConfigs.getProjectConfig(ProjectStatus.review),
+          ),
+          BasicTableCell.text('2023-02-20'),
+        ],
+      ),
+
+      // 큰 높이 (70px)
+      BasicTableRow.withHeight(
+        index: 2,
+        height: 70.0,
+        cells: [
+          BasicTableCell.text('3'),
+          BasicTableCell.text('박대형',
+              style:
+                  const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          BasicTableCell.text('large@company.com'),
+          _createDepartmentCell('마케팅팀'),
+          BasicTableCell.status(
+            EmployeeStatus.active,
+            StatusConfigs.getEmployeeConfig(EmployeeStatus.active),
+          ),
+          BasicTableCell.status(
+            ProjectStatus.completed,
+            StatusConfigs.getProjectConfig(ProjectStatus.completed),
+          ),
+          BasicTableCell.text('2023-03-10'),
+        ],
+      ),
+
+      // 매우 큰 높이 (100px)
+      BasicTableRow.withHeight(
+        index: 3,
+        height: 100.0,
+        cells: [
+          BasicTableCell.text('4'),
+          BasicTableCell.text('최거대',
+              style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.red)),
+          BasicTableCell.text('huge@company.com'),
+          _createDepartmentCell('영업팀'),
+          BasicTableCell.status(
+            EmployeeStatus.active,
+            StatusConfigs.getEmployeeConfig(EmployeeStatus.active),
+          ),
+          BasicTableCell.status(
+            ProjectStatus.planning,
+            StatusConfigs.getProjectConfig(ProjectStatus.planning),
+          ),
+          BasicTableCell.text('2023-04-05'),
+        ],
+      ),
+
+      // 중간 높이 (60px)
+      BasicTableRow.withHeight(
+        index: 4,
+        height: 60.0,
+        cells: [
+          BasicTableCell.text('5'),
+          BasicTableCell.text('한중형'),
+          BasicTableCell.text('medium@company.com'),
+          _createDepartmentCell('HR팀'),
+          BasicTableCell.status(
+            EmployeeStatus.training,
+            StatusConfigs.getEmployeeConfig(EmployeeStatus.training),
+          ),
+          BasicTableCell.status(
+            ProjectStatus.cancelled,
+            StatusConfigs.getProjectConfig(ProjectStatus.cancelled),
+          ),
+          BasicTableCell.text('2023-05-12'),
+        ],
+      ),
+    ];
   }
 
   /// 고정된 샘플 데이터 생성 (다양한 상태 보여주기용)
@@ -375,6 +505,7 @@ class SampleData {
     return original
         .map((row) => BasicTableRow(
               index: row.index,
+              height: row.height, // 높이도 복사
               cells: row.cells
                   .map((cell) => BasicTableCell(
                         data: cell.data,
@@ -567,7 +698,9 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   // 상태 관리
   Set<int> selectedRows = {};
-  Map<int, ColumnSortState> columnSortStates = {};
+
+  // 새로운 ID 기반 정렬 관리자 (기존 Map 대신 사용)
+  late ColumnSortManager sortManager;
 
   // 테이블 데이터
   late List<BasicTableColumn> tableColumns;
@@ -577,21 +710,50 @@ class _HomeScreenState extends State<HomeScreen> {
   late List<BasicTableColumn> originalTableColumns;
   late List<BasicTableRow> originalTableRows;
 
+  // 현재 데이터 모드
+  bool _useVariableHeight = false;
+
   @override
   void initState() {
     super.initState();
+    sortManager = ColumnSortManager(); // 새로운 정렬 관리자 초기화
     _initializeData();
   }
 
   /// 데이터 초기화 및 백업 생성
   void _initializeData() {
-    // 샘플 데이터 가져오기
-    tableColumns = SampleData.columns;
-    tableRows = SampleData.generateRows();
+    // 컬럼에 고유 ID 추가 (name을 ID로 사용)
+    tableColumns = SampleData.columns
+        .map((col) => BasicTableColumn(
+              id: col.name, // 명시적으로 ID 설정 (name과 동일)
+              name: col.name,
+              minWidth: col.minWidth,
+              maxWidth: col.maxWidth,
+              isResizable: col.isResizable,
+              tooltipFormatter: col.tooltipFormatter,
+              forceTooltip: col.forceTooltip,
+            ))
+        .toList();
+
+    tableRows = _useVariableHeight
+        ? SampleData.generateRowsWithVariableHeight()
+        : SampleData.generateRows();
 
     // 백업 데이터 생성
     originalTableColumns = SampleData.deepCopyColumns(tableColumns);
     originalTableRows = SampleData.deepCopyRows(tableRows);
+
+    // 정렬 상태 초기화
+    sortManager.clearAll();
+  }
+
+  /// 데이터 모드 전환
+  void _toggleHeightMode() {
+    setState(() {
+      _useVariableHeight = !_useVariableHeight;
+      selectedRows.clear(); // 선택 상태 초기화
+      _initializeData(); // 데이터 재초기화
+    });
   }
 
   /// 행 선택/해제 콜백
@@ -640,23 +802,49 @@ class _HomeScreenState extends State<HomeScreen> {
     _showDialog('우클릭!', '$index번 행을 우클릭했습니다.');
   }
 
-  /// 컬럼 정렬 콜백
+  /// 컬럼 정렬 콜백 (기존 방식 - 하위 호환성)
   void onColumnSort(int columnIndex, ColumnSortState sortState) {
     setState(() {
-      // 다른 컬럼의 정렬 상태 초기화 (한 번에 하나의 컬럼만 정렬)
-      columnSortStates.clear();
+      // 정렬 관리자 업데이트 (정렬 정보 추적을 위해)
+      if (columnIndex >= 0 && columnIndex < tableColumns.length) {
+        final String columnId = tableColumns[columnIndex].effectiveId;
+        sortManager.setSortState(columnId, sortState);
+      }
 
       if (sortState != ColumnSortState.none) {
-        columnSortStates[columnIndex] = sortState;
         _sortTableData(columnIndex, sortState);
       } else {
         // 원래 상태로 완전히 복원 (데이터 + 컬럼 순서 모두)
         tableRows = SampleData.deepCopyRows(originalTableRows);
-        tableColumns = SampleData.deepCopyColumns(originalTableColumns);
+        tableColumns = List.from(originalTableColumns); // 원본 컬럼 순서도 복원
+        sortManager.clearAll(); // 정렬 상태 초기화
       }
     });
 
     debugPrint('Column sort: column $columnIndex -> $sortState');
+
+    // 디버그: 정렬 후 상태 확인
+    debugPrint('🔍 Sort states after column sort:');
+    sortManager.printDebugInfo(tableColumns);
+  }
+
+  /// ID 기반 컬럼 정렬 콜백 (새로운 방식)
+  void onColumnSortById(String columnId, ColumnSortState sortState) {
+    debugPrint('🆔 Column sort by ID: $columnId -> $sortState');
+
+    // 컬럼 인덱스 찾기
+    int columnIndex = -1;
+    for (int i = 0; i < tableColumns.length; i++) {
+      if (tableColumns[i].effectiveId == columnId) {
+        columnIndex = i;
+        break;
+      }
+    }
+
+    if (columnIndex >= 0) {
+      // 기존 로직과 동일하게 처리
+      onColumnSort(columnIndex, sortState);
+    }
   }
 
   /// 컬럼 순서 변경 콜백
@@ -666,6 +854,14 @@ class _HomeScreenState extends State<HomeScreen> {
       if (newIndex > oldIndex) {
         newIndex -= 1;
       }
+
+      debugPrint('🔄 Column reorder: $oldIndex -> $newIndex');
+      debugPrint('🔄 BEFORE reorder:');
+      debugPrint(
+          '   Column names: ${tableColumns.map((c) => c.name).join(', ')}');
+      debugPrint(
+          '   Column IDs: ${tableColumns.map((c) => c.effectiveId).join(', ')}');
+      sortManager.printDebugInfo(tableColumns);
 
       // 컬럼 순서 변경
       final BasicTableColumn movedColumn = tableColumns.removeAt(oldIndex);
@@ -683,6 +879,13 @@ class _HomeScreenState extends State<HomeScreen> {
       originalTableRows = originalTableRows
           .map((row) => row.reorderCells(oldIndex, newIndex))
           .toList();
+
+      debugPrint('🔄 AFTER reorder:');
+      debugPrint(
+          '   Column names: ${tableColumns.map((c) => c.name).join(', ')}');
+      debugPrint(
+          '   Column IDs: ${tableColumns.map((c) => c.effectiveId).join(', ')}');
+      sortManager.printDebugInfo(tableColumns);
     });
 
     debugPrint('Column order changed: $oldIndex -> $newIndex');
@@ -740,18 +943,95 @@ class _HomeScreenState extends State<HomeScreen> {
     _showDialog('선택된 항목', '선택된 행들의 인덱스:\n${selectedRows.toList()..sort()}');
   }
 
+  /// 높이 정보 표시
+  void _showHeightInfo() {
+    final heightInfo = StringBuffer();
+    heightInfo.writeln('📏 행별 높이 정보:');
+    heightInfo.writeln('');
+
+    for (int i = 0; i < tableRows.length && i < 10; i++) {
+      // 처음 10개만 표시
+      final row = tableRows[i];
+      final effectiveHeight = row.getEffectiveHeight(45.0); // 기본 테마 높이 45px
+      final hasCustom = row.hasCustomHeight ? ' (커스텀)' : ' (테마 기본값)';
+      heightInfo.writeln('Row ${i + 1}: ${effectiveHeight}px$hasCustom');
+    }
+
+    if (tableRows.length > 10) {
+      heightInfo.writeln('... (총 ${tableRows.length}개 행)');
+    }
+
+    _showDialog('높이 정보', heightInfo.toString());
+  }
+
+  /// 정렬 상태 정보 표시
+  void _showSortInfo() {
+    final sortInfo = StringBuffer();
+    sortInfo.writeln('🔍 정렬 상태 정보:');
+    sortInfo.writeln('');
+
+    if (sortManager.hasSortedColumn) {
+      sortInfo.writeln('현재 정렬된 컬럼: ${sortManager.currentSortedColumnId}');
+
+      final currentIndex =
+          sortManager.getCurrentSortedColumnIndex(tableColumns);
+      if (currentIndex != null) {
+        sortInfo.writeln('현재 위치: $currentIndex번 컬럼');
+        sortInfo.writeln('컬럼명: ${tableColumns[currentIndex].name}');
+      }
+    } else {
+      sortInfo.writeln('현재 정렬된 컬럼이 없습니다.');
+    }
+
+    sortInfo.writeln('');
+    sortInfo.writeln('📋 전체 컬럼 정보:');
+    for (int i = 0; i < tableColumns.length; i++) {
+      final column = tableColumns[i];
+      final state = sortManager.getSortState(column.effectiveId);
+      final stateIcon = state == ColumnSortState.ascending
+          ? '↑'
+          : state == ColumnSortState.descending
+              ? '↓'
+              : '○';
+      sortInfo
+          .writeln('  [$i] ${column.name} (${column.effectiveId}) $stateIcon');
+    }
+
+    _showDialog('정렬 정보', sortInfo.toString());
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Custom Table Demo - 상태 정렬 테스트'),
+        title: Text(_useVariableHeight
+            ? 'Basic Table Demo - 가변 높이 모드'
+            : 'Basic Table Demo - 기본 높이 모드'),
         backgroundColor: Colors.grey[200],
         foregroundColor: Colors.black87,
+        actions: [
+          IconButton(
+            onPressed: _showSortInfo,
+            icon: const Icon(Icons.sort),
+            tooltip: '정렬 정보',
+          ),
+          IconButton(
+            onPressed: _showHeightInfo,
+            icon: const Icon(Icons.info),
+            tooltip: '높이 정보',
+          ),
+          IconButton(
+            onPressed: _toggleHeightMode,
+            icon: Icon(
+                _useVariableHeight ? Icons.view_agenda : Icons.view_stream),
+            tooltip: _useVariableHeight ? '기본 높이로 전환' : '가변 높이로 전환',
+          ),
+        ],
       ),
       backgroundColor: Colors.grey[50],
       body: Column(
         children: [
-          // 선택 상태 + 컬럼 순서 표시 카드
+          // 선택 상태 + 컬럼 순서 + 높이 모드 + 정렬 상태 표시 카드
           _buildInfoCard(),
 
           // 테이블 카드
@@ -782,15 +1062,40 @@ class _HomeScreenState extends State<HomeScreen> {
                       fontWeight: FontWeight.w500,
                       color: Colors.black87),
                 ),
-                if (selectedRows.isNotEmpty)
-                  ElevatedButton(
-                    onPressed: _showSelectedItems,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.black87,
-                      foregroundColor: Colors.white,
+                Row(
+                  children: [
+                    if (selectedRows.isNotEmpty)
+                      ElevatedButton(
+                        onPressed: _showSelectedItems,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.black87,
+                          foregroundColor: Colors.white,
+                        ),
+                        child: const Text('선택 항목 보기'),
+                      ),
+                    const SizedBox(width: 8),
+                    ElevatedButton(
+                      onPressed: _showSortInfo,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: sortManager.hasSortedColumn
+                            ? Colors.green
+                            : Colors.grey,
+                        foregroundColor: Colors.white,
+                      ),
+                      child: const Text('정렬 정보'),
                     ),
-                    child: const Text('선택 항목 보기'),
-                  ),
+                    const SizedBox(width: 8),
+                    ElevatedButton(
+                      onPressed: _toggleHeightMode,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor:
+                            _useVariableHeight ? Colors.orange : Colors.blue,
+                        foregroundColor: Colors.white,
+                      ),
+                      child: Text(_useVariableHeight ? '기본 높이 모드' : '가변 높이 모드'),
+                    ),
+                  ],
+                ),
               ],
             ),
             const SizedBox(height: 8),
@@ -800,6 +1105,48 @@ class _HomeScreenState extends State<HomeScreen> {
                 fontSize: 14,
                 color: Colors.grey[600],
               ),
+            ),
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                Icon(
+                  sortManager.hasSortedColumn
+                      ? Icons.sort
+                      : Icons.sort_outlined,
+                  size: 16,
+                  color: sortManager.hasSortedColumn
+                      ? Colors.green
+                      : Colors.grey[600],
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  sortManager.hasSortedColumn
+                      ? '정렬됨: ${sortManager.currentSortedColumnId}'
+                      : '정렬 없음',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: sortManager.hasSortedColumn
+                        ? Colors.green
+                        : Colors.grey[600],
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Icon(
+                  _useVariableHeight ? Icons.height : Icons.horizontal_rule,
+                  size: 16,
+                  color: Colors.grey[600],
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  _useVariableHeight ? '가변 높이 모드' : '기본 높이 모드',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey[600],
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -826,8 +1173,9 @@ class _HomeScreenState extends State<HomeScreen> {
           onRowSecondaryTap: onRowSecondaryTap,
           doubleClickTime: const Duration(milliseconds: 250),
           onColumnReorder: onColumnReorder,
-          onColumnSort: onColumnSort,
-          columnSortStates: columnSortStates,
+          onColumnSort: onColumnSort, // 기존 방식 (하위 호환성)
+          onColumnSortById: onColumnSortById, // 새로운 ID 기반 방식
+          sortManager: sortManager, // 정렬 관리자 전달
         ),
       ),
     );
@@ -1072,6 +1420,7 @@ export 'src/theme/flutter_basic_table_scrollbar_theme.dart';
 export 'src/theme/flutter_basic_table_selection_theme.dart';
 export 'src/theme/flutter_basic_table_theme.dart';
 export 'src/theme/flutter_basic_table_tooltip_theme.dart';
+export 'src/utils/column_sort_manager.dart';
 
 /// Utilities
 export 'src/widgets/custom_inkwell_widget.dart';
@@ -1156,8 +1505,15 @@ class BasicTable extends StatefulWidget {
   // 헤더 정렬 콜백
   final void Function(int columnIndex, ColumnSortState sortState)? onColumnSort;
 
-  // 현재 정렬 상태 (외부에서 관리)
+  // 현재 정렬 상태 (외부에서 관리) - 하위 호환성 유지
   final Map<int, ColumnSortState>? columnSortStates;
+
+  /// 새로운 ID 기반 정렬 콜백 (선택사항)
+  final void Function(String columnId, ColumnSortState sortState)?
+      onColumnSortById;
+
+  /// ID 기반 정렬 상태 관리자 (선택사항)
+  final ColumnSortManager? sortManager;
 
   const BasicTable({
     super.key,
@@ -1174,6 +1530,8 @@ class BasicTable extends StatefulWidget {
     this.onColumnReorder,
     this.onColumnSort,
     this.columnSortStates,
+    this.onColumnSortById,
+    this.sortManager,
   })  : assert(columns.length > 0, 'columns cannot be empty'),
         assert(rows.length > 0, 'rows cannot be empty');
 
@@ -1192,6 +1550,8 @@ class BasicTable extends StatefulWidget {
     void Function(int oldIndex, int newIndex)? onColumnReorder,
     void Function(int columnIndex, ColumnSortState sortState)? onColumnSort,
     Map<int, ColumnSortState>? columnSortStates,
+    void Function(String columnId, ColumnSortState sortState)? onColumnSortById,
+    ColumnSortManager? sortManager,
   }) {
     final rows = data.asMap().entries.map((entry) {
       return BasicTableRow.fromStrings(
@@ -1214,6 +1574,8 @@ class BasicTable extends StatefulWidget {
       onColumnReorder: onColumnReorder,
       onColumnSort: onColumnSort,
       columnSortStates: columnSortStates,
+      onColumnSortById: onColumnSortById,
+      sortManager: sortManager,
     );
   }
 
@@ -1225,6 +1587,9 @@ class _BasicTableState extends State<BasicTable> {
   // 호버 상태 관리
   bool _isHovered = false;
 
+  // 내부 정렬 관리자
+  late ColumnSortManager _internalSortManager;
+
   /// 현재 사용할 테마 (제공된 테마 또는 기본 테마)
   BasicTableThemeData get _currentTheme =>
       widget.theme ?? BasicTableThemeData.defaultTheme();
@@ -1232,25 +1597,78 @@ class _BasicTableState extends State<BasicTable> {
   @override
   void initState() {
     super.initState();
+    _initializeSortManager();
+  }
+
+  @override
+  void didUpdateWidget(BasicTable oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    // 컬럼이나 정렬 상태가 변경되면 정렬 관리자 재초기화
+    if (widget.columns != oldWidget.columns ||
+        widget.columnSortStates != oldWidget.columnSortStates ||
+        widget.sortManager != oldWidget.sortManager) {
+      _initializeSortManager();
+    }
+  }
+
+  /// 정렬 관리자 초기화
+  void _initializeSortManager() {
+    if (widget.sortManager != null) {
+      // 외부에서 제공된 정렬 관리자 사용
+      _internalSortManager = widget.sortManager!.copy();
+    } else if (widget.columnSortStates != null) {
+      // 기존 인덱스 기반 Map에서 생성 (하위 호환성)
+      _internalSortManager = ColumnSortManager.fromIndexMap(
+        widget.columnSortStates!,
+        widget.columns,
+      );
+    } else {
+      // 새로운 빈 정렬 관리자 생성
+      _internalSortManager = ColumnSortManager();
+    }
   }
 
   /// 현재 행 데이터 반환 (더 이상 변환 불필요)
   List<BasicTableRow> get _currentRows => widget.rows;
 
+  /// 전체 테이블 데이터의 높이를 계산 (개별 행 높이 고려)
+  double _calculateTotalDataHeight() {
+    return _currentRows.fold(0.0, (total, row) {
+      return total + row.getEffectiveHeight(_currentTheme.dataRowTheme.height);
+    });
+  }
+
   /// 컬럼 순서가 바뀔 때 호출되는 함수 - 외부 콜백만 호출
+  /// 정렬 상태는 ID 기반이므로 자동으로 올바른 컬럼을 따라감
   void _handleColumnReorder(int oldIndex, int newIndex) {
     // 외부 콜백 호출 (외부에서 데이터 관리)
     widget.onColumnReorder?.call(oldIndex, newIndex);
 
     debugPrint('Column reorder requested: $oldIndex -> $newIndex');
+
+    // 디버그: 정렬 상태 확인
+    debugPrint('Sort states after reorder:');
+    _internalSortManager.printDebugInfo(widget.columns);
   }
 
   /// 컬럼 정렬이 변경될 때 호출되는 함수
   void _handleColumnSort(int columnIndex, ColumnSortState sortState) {
-    // 외부 콜백 호출
+    if (columnIndex < 0 || columnIndex >= widget.columns.length) return;
+
+    final String columnId = widget.columns[columnIndex].effectiveId;
+
+    // 내부 정렬 관리자 업데이트
+    _internalSortManager.setSortState(columnId, sortState);
+
+    // 외부 콜백 호출 (기존 방식 - 하위 호환성)
     widget.onColumnSort?.call(columnIndex, sortState);
 
-    debugPrint('Column sort requested: column $columnIndex -> $sortState');
+    // 새로운 ID 기반 콜백 호출
+    widget.onColumnSortById?.call(columnId, sortState);
+
+    debugPrint(
+        'Column sort requested: column $columnIndex ($columnId) -> $sortState');
   }
 
   /// 헤더 체크박스의 상태를 계산합니다
@@ -1282,6 +1700,11 @@ class _BasicTableState extends State<BasicTable> {
     widget.onSelectAllChanged!(shouldSelectAll);
   }
 
+  /// 현재 정렬 상태를 인덱스 기반 Map으로 변환 (하위 호환성)
+  Map<int, ColumnSortState> _getCurrentSortStates() {
+    return _internalSortManager.toIndexMap(widget.columns);
+  }
+
   @override
   Widget build(BuildContext context) {
     final currentRows = _currentRows;
@@ -1303,9 +1726,8 @@ class _BasicTableState extends State<BasicTable> {
         // 실제 콘텐츠 너비: 최소 너비와 사용 가능한 너비 중 큰 값
         final double contentWidth = max(minTableWidth, availableWidth);
 
-        // 테이블 데이터 높이 계산
-        final double tableDataHeight =
-            theme.dataRowTheme.height * currentRows.length;
+        // 테이블 데이터 높이 계산 (개별 행 높이 고려)
+        final double tableDataHeight = _calculateTotalDataHeight();
 
         // 스크롤바를 위한 전체 콘텐츠 높이
         final double totalContentHeight =
@@ -1355,7 +1777,8 @@ class _BasicTableState extends State<BasicTable> {
                                   _handleHeaderCheckboxChanged,
                               onColumnReorder: _handleColumnReorder,
                               onColumnSort: _handleColumnSort,
-                              columnSortStates: widget.columnSortStates,
+                              columnSortStates:
+                                  _getCurrentSortStates(), // 실시간 변환
                             ),
 
                             // 테이블 데이터
@@ -1821,6 +2244,10 @@ class BasicTableCell {
 ```dart
 /// 테이블 컬럼 정보를 나타내는 모델
 class BasicTableColumn {
+  /// 컬럼의 고유 식별자 (정렬 상태 추적용)
+  /// null이면 name을 ID로 사용
+  final String? id;
+
   final String name;
   final double minWidth;
   final double? maxWidth;
@@ -1835,6 +2262,7 @@ class BasicTableColumn {
   final bool forceTooltip;
 
   const BasicTableColumn({
+    this.id,
     required this.name,
     this.minWidth = 100.0,
     this.maxWidth,
@@ -1843,7 +2271,11 @@ class BasicTableColumn {
     this.forceTooltip = false,
   });
 
+  /// 실제 사용할 고유 ID 반환 (id가 null이면 name 사용)
+  String get effectiveId => id ?? name;
+
   BasicTableColumn copyWith({
+    String? id,
     String? name,
     double? minWidth,
     double? maxWidth,
@@ -1852,6 +2284,7 @@ class BasicTableColumn {
     bool? forceTooltip,
   }) {
     return BasicTableColumn(
+      id: id ?? this.id,
       name: name ?? this.name,
       minWidth: minWidth ?? this.minWidth,
       maxWidth: maxWidth ?? this.maxWidth,
@@ -1859,6 +2292,35 @@ class BasicTableColumn {
       tooltipFormatter: tooltipFormatter ?? this.tooltipFormatter,
       forceTooltip: forceTooltip ?? this.forceTooltip,
     );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is BasicTableColumn &&
+        other.id == id &&
+        other.name == name &&
+        other.minWidth == minWidth &&
+        other.maxWidth == maxWidth &&
+        other.isResizable == isResizable &&
+        other.forceTooltip == forceTooltip;
+  }
+
+  @override
+  int get hashCode {
+    return Object.hash(
+      id,
+      name,
+      minWidth,
+      maxWidth,
+      isResizable,
+      forceTooltip,
+    );
+  }
+
+  @override
+  String toString() {
+    return 'BasicTableColumn(id: $effectiveId, name: $name, minWidth: $minWidth)';
   }
 }
 
@@ -1949,19 +2411,25 @@ class BasicTableRow {
   final List<BasicTableCell> cells;
   final int index;
 
+  /// 개별 행의 높이 (null이면 테마 높이 사용)
+  final double? height;
+
   const BasicTableRow({
     required this.cells,
     required this.index,
+    this.height,
   });
 
   /// String 리스트로부터 BasicTableRow 생성 (하위 호환성)
   factory BasicTableRow.fromStrings({
     required List<String> cells,
     required int index,
+    double? height,
   }) {
     return BasicTableRow(
       cells: cells.map((str) => BasicTableCell.fromString(str)).toList(),
       index: index,
+      height: height,
     );
   }
 
@@ -1969,6 +2437,7 @@ class BasicTableRow {
   factory BasicTableRow.text({
     required List<String> texts,
     required int index,
+    double? height,
     TextStyle? style,
     Color? backgroundColor,
     Alignment? alignment,
@@ -1985,6 +2454,20 @@ class BasicTableRow {
               ))
           .toList(),
       index: index,
+      height: height,
+    );
+  }
+
+  /// 높이가 설정된 행 생성 (편의 메서드)
+  factory BasicTableRow.withHeight({
+    required List<BasicTableCell> cells,
+    required int index,
+    required double height,
+  }) {
+    return BasicTableRow(
+      cells: cells,
+      index: index,
+      height: height,
     );
   }
 
@@ -2002,11 +2485,20 @@ class BasicTableRow {
     return cells.map((cell) => cell.displayText ?? '').toList();
   }
 
+  /// 현재 행의 실제 높이 반환 (개별 높이가 있으면 그것을, 없으면 테마 높이)
+  double getEffectiveHeight(double themeHeight) {
+    return height ?? themeHeight;
+  }
+
+  /// 커스텀 높이가 설정되어 있는지 확인
+  bool get hasCustomHeight => height != null;
+
   /// 새로운 셀을 추가한 복사본 반환
   BasicTableRow addCell(BasicTableCell cell) {
     return BasicTableRow(
       cells: [...cells, cell],
       index: index,
+      height: height,
     );
   }
 
@@ -2020,6 +2512,7 @@ class BasicTableRow {
     return BasicTableRow(
       cells: newCells,
       index: index,
+      height: height,
     );
   }
 
@@ -2033,10 +2526,21 @@ class BasicTableRow {
     return BasicTableRow(
       cells: newCells,
       index: index,
+      height: height,
+    );
+  }
+
+  /// 높이를 변경한 복사본 반환
+  BasicTableRow withNewHeight(double? newHeight) {
+    return BasicTableRow(
+      cells: cells,
+      index: index,
+      height: newHeight,
     );
   }
 
   /// 컬럼 순서 변경을 위한 셀 재정렬 (외부 상태 관리용)
+  /// newIndex는 이미 home_screen.dart에서 보정된 값이므로 추가 보정 없이 사용
   BasicTableRow reorderCells(int oldIndex, int newIndex) {
     if (oldIndex < 0 ||
         oldIndex >= cells.length ||
@@ -2046,16 +2550,14 @@ class BasicTableRow {
       return this;
     }
 
-    // newIndex 보정 (ReorderableListView와 동일한 로직)
-    final int adjustedNewIndex = newIndex > oldIndex ? newIndex - 1 : newIndex;
-
     final newCells = List<BasicTableCell>.from(cells);
     final BasicTableCell movedCell = newCells.removeAt(oldIndex);
-    newCells.insert(adjustedNewIndex, movedCell);
+    newCells.insert(newIndex, movedCell); // 보정 없이 직접 사용
 
     return BasicTableRow(
       cells: newCells,
       index: index,
+      height: height, // 높이 정보 유지
     );
   }
 
@@ -2074,10 +2576,12 @@ class BasicTableRow {
   BasicTableRow copyWith({
     List<BasicTableCell>? cells,
     int? index,
+    double? height,
   }) {
     return BasicTableRow(
       cells: cells ?? this.cells,
       index: index ?? this.index,
+      height: height ?? this.height,
     );
   }
 
@@ -2086,17 +2590,18 @@ class BasicTableRow {
     if (identical(this, other)) return true;
     return other is BasicTableRow &&
         other.index == index &&
+        other.height == height &&
         _listEquals(other.cells, cells);
   }
 
   @override
   int get hashCode {
-    return Object.hash(index, Object.hashAll(cells));
+    return Object.hash(index, height, Object.hashAll(cells));
   }
 
   @override
   String toString() {
-    return 'BasicTableRow(index: $index, cells: $cells)';
+    return 'BasicTableRow(index: $index, height: $height, cells: $cells)';
   }
 
   // List 비교를 위한 헬퍼 함수
@@ -3058,6 +3563,148 @@ class BasicTableTooltipTheme {
 }
 
 ```
+## lib/src/utils/column_sort_manager.dart
+```dart
+import 'package:flutter_basic_table/flutter_basic_table.dart';
+
+/// 컬럼 정렬 상태를 ID 기반으로 관리하는 클래스
+/// 컬럼 순서가 바뀌어도 정렬 상태가 올바른 컬럼을 따라가도록 보장
+class ColumnSortManager {
+  /// ID 기반 정렬 상태 저장소
+  final Map<String, ColumnSortState> _sortStates = {};
+
+  /// 현재 정렬 중인 컬럼 ID (한 번에 하나만 정렬 가능)
+  String? _currentSortedColumnId;
+
+  /// 기본 생성자
+  ColumnSortManager();
+
+  /// 기존 인덱스 기반 Map에서 생성 (하위 호환성)
+  ColumnSortManager.fromIndexMap(
+    Map<int, ColumnSortState> indexMap,
+    List<BasicTableColumn> columns,
+  ) {
+    for (final entry in indexMap.entries) {
+      final int index = entry.key;
+      final ColumnSortState state = entry.value;
+
+      if (index >= 0 && index < columns.length) {
+        final String columnId = columns[index].effectiveId;
+        _sortStates[columnId] = state;
+
+        if (state != ColumnSortState.none) {
+          _currentSortedColumnId = columnId;
+        }
+      }
+    }
+  }
+
+  /// 특정 컬럼의 정렬 상태 가져오기
+  ColumnSortState getSortState(String columnId) {
+    return _sortStates[columnId] ?? ColumnSortState.none;
+  }
+
+  /// 특정 인덱스의 컬럼 정렬 상태 가져오기 (하위 호환성)
+  ColumnSortState getSortStateByIndex(
+      int index, List<BasicTableColumn> columns) {
+    if (index < 0 || index >= columns.length) return ColumnSortState.none;
+    return getSortState(columns[index].effectiveId);
+  }
+
+  /// 컬럼의 정렬 상태 설정
+  void setSortState(String columnId, ColumnSortState state) {
+    // 다른 컬럼의 정렬 해제 (한 번에 하나만 정렬)
+    if (state != ColumnSortState.none) {
+      _clearAllSortStates();
+      _currentSortedColumnId = columnId;
+    } else {
+      _currentSortedColumnId = null;
+    }
+
+    _sortStates[columnId] = state;
+  }
+
+  /// 인덱스로 정렬 상태 설정 (하위 호환성)
+  void setSortStateByIndex(
+      int index, ColumnSortState state, List<BasicTableColumn> columns) {
+    if (index < 0 || index >= columns.length) return;
+    setSortState(columns[index].effectiveId, state);
+  }
+
+  /// 모든 정렬 상태 초기화
+  void clearAll() {
+    _sortStates.clear();
+    _currentSortedColumnId = null;
+  }
+
+  /// 내부적으로 모든 정렬 상태를 none으로 설정
+  void _clearAllSortStates() {
+    for (final key in _sortStates.keys) {
+      _sortStates[key] = ColumnSortState.none;
+    }
+  }
+
+  /// 현재 정렬 중인 컬럼 ID
+  String? get currentSortedColumnId => _currentSortedColumnId;
+
+  /// 현재 정렬 중인 컬럼의 인덱스 (하위 호환성)
+  int? getCurrentSortedColumnIndex(List<BasicTableColumn> columns) {
+    if (_currentSortedColumnId == null) return null;
+
+    for (int i = 0; i < columns.length; i++) {
+      if (columns[i].effectiveId == _currentSortedColumnId) {
+        return i;
+      }
+    }
+    return null;
+  }
+
+  /// 정렬 상태가 있는지 확인
+  bool get hasSortedColumn => _currentSortedColumnId != null;
+
+  /// 인덱스 기반 Map으로 변환 (하위 호환성)
+  Map<int, ColumnSortState> toIndexMap(List<BasicTableColumn> columns) {
+    final Map<int, ColumnSortState> indexMap = {};
+
+    for (int i = 0; i < columns.length; i++) {
+      final String columnId = columns[i].effectiveId;
+      final ColumnSortState state = getSortState(columnId);
+
+      if (state != ColumnSortState.none) {
+        indexMap[i] = state;
+      }
+    }
+
+    return indexMap;
+  }
+
+  /// 디버그용 정보 출력
+  void printDebugInfo(List<BasicTableColumn> columns) {
+    print('🔍 ColumnSortManager Debug Info:');
+    print('   Current sorted column: $_currentSortedColumnId');
+    print('   Sort states:');
+    for (int i = 0; i < columns.length; i++) {
+      final column = columns[i];
+      final state = getSortState(column.effectiveId);
+      print('     [$i] ${column.name} (${column.effectiveId}): $state');
+    }
+  }
+
+  /// 복사본 생성
+  ColumnSortManager copy() {
+    final manager = ColumnSortManager();
+    manager._sortStates.addAll(_sortStates);
+    manager._currentSortedColumnId = _currentSortedColumnId;
+    return manager;
+  }
+
+  @override
+  String toString() {
+    return 'ColumnSortManager(currentSorted: $_currentSortedColumnId, states: $_sortStates)';
+  }
+}
+
+```
 ## lib/src/widgets/custom_inkwell_widget.dart
 ```dart
 import 'dart:async';
@@ -3639,6 +4286,13 @@ class BasicTableData extends StatelessWidget {
     }
   }
 
+  /// 전체 테이블 데이터의 높이를 계산합니다 (개별 행 높이 고려)
+  double calculateTotalDataHeight() {
+    return rows.fold(0.0, (total, row) {
+      return total + row.getEffectiveHeight(theme.dataRowTheme.height);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final List<double> columnWidths = _calculateColumnWidths();
@@ -3703,6 +4357,11 @@ class _DataRow extends StatefulWidget {
 class _DataRowState extends State<_DataRow> {
   bool _isHovered = false;
 
+  /// 현재 행의 실제 높이를 계산합니다
+  double get _effectiveRowHeight {
+    return widget.row.getEffectiveHeight(widget.theme.dataRowTheme.height);
+  }
+
   @override
   Widget build(BuildContext context) {
     Color backgroundColor;
@@ -3721,7 +4380,7 @@ class _DataRowState extends State<_DataRow> {
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
       child: Container(
-        height: widget.theme.dataRowTheme.height,
+        height: _effectiveRowHeight, // 개별 행 높이 적용
         decoration: BoxDecoration(
           color: backgroundColor,
           border: Border(
@@ -3752,6 +4411,7 @@ class _DataRowState extends State<_DataRow> {
               if (widget.theme.checkboxTheme.enabled)
                 _CheckboxCell(
                   width: widget.checkboxWidth,
+                  height: _effectiveRowHeight, // 행 높이 전달
                   theme: widget.theme,
                   isSelected: widget.isSelected,
                   onChanged: (selected) {
@@ -3774,6 +4434,7 @@ class _DataRowState extends State<_DataRow> {
                 return _DataCell(
                   cell: cell,
                   width: cellWidth,
+                  height: _effectiveRowHeight, // 행 높이 전달
                   theme: widget.theme,
                   column: column,
                 );
@@ -3789,12 +4450,14 @@ class _DataRowState extends State<_DataRow> {
 /// 체크박스 셀 위젯
 class _CheckboxCell extends StatelessWidget {
   final double width;
+  final double height; // 행 높이 추가
   final BasicTableThemeData theme;
   final bool isSelected;
   final void Function(bool selected)? onChanged;
 
   const _CheckboxCell({
     required this.width,
+    required this.height,
     required this.theme,
     required this.isSelected,
     this.onChanged,
@@ -3810,7 +4473,7 @@ class _CheckboxCell extends StatelessWidget {
       },
       child: Container(
         width: width,
-        height: theme.dataRowTheme.height,
+        height: height, // 개별 행 높이 적용
         color: Colors.transparent, // 클릭 영역 확보
         child: Padding(
           padding: theme.checkboxTheme.padding ?? EdgeInsets.zero,
@@ -3835,12 +4498,14 @@ class _CheckboxCell extends StatelessWidget {
 class _DataCell extends StatelessWidget {
   final BasicTableCell cell;
   final double width;
+  final double height; // 행 높이 추가
   final BasicTableThemeData theme;
   final BasicTableColumn? column;
 
   const _DataCell({
     required this.cell,
     required this.width,
+    required this.height,
     required this.theme,
     this.column,
   });
@@ -3876,7 +4541,7 @@ class _DataCell extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: width,
-      height: theme.dataRowTheme.height,
+      height: height, // 개별 행 높이 적용
       decoration: BoxDecoration(
         color: _getEffectiveBackgroundColor(),
         border: Border(

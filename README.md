@@ -27,7 +27,7 @@ Add this to your package's `pubspec.yaml` file:
 
 ```yaml
 dependencies:
-  flutter_basic_table: ^1.0.0
+  flutter_basic_table: ^1.0.1
 ```
 
 Then run:

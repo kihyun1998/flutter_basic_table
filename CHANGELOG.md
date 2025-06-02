@@ -1,5 +1,10 @@
-## 1.0.0
+## 1.0.1
+### Fixed
+- Resolved issues with column reordering, ensuring drag-and-drop functionality works correctly across all platforms.
+- Fixed sorting bugs, improving the stability of ID-based sorting in `ColumnSortManager` to maintain correct sort states after column reordering.
+- Enhanced robustness of column reordering and sorting logic to handle dynamic column changes seamlessly.
 
+## 1.0.0
 ### Added
 - Initial release of FlutterBasicTable package
 - `BasicTable` widget with comprehensive table functionality
