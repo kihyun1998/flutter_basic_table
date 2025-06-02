@@ -1,3 +1,9 @@
+## 1.0.2
+### Example Improvements
+- Added column visibility feature with FilterChip controls
+- Improved code structure with separated components
+- Enhanced UI and state management
+
 ## 1.0.1
 ### Fixed
 - Resolved issues with column reordering, ensuring drag-and-drop functionality works correctly across all platforms.

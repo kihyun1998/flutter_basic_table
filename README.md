@@ -1,33 +1,32 @@
 # Flutter Basic Table
 
-[![Pub Version](https://img.shields.io/pub/v/flutter_basic_table.svg)](https://pub.dev/packages/flutter_basic_table)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Flutter](https://img.shields.io/badge/flutter-%3E%3D3.0.0-blue.svg)](https://flutter.dev)
+[![pub package](https://img.shields.io/pub/v/flutter_basic_table.svg)](https://pub.dev/packages/flutter_basic_table)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-A comprehensive and highly customizable table widget for Flutter that provides sorting, selection, theming, and interactive features out of the box.
+A comprehensive and customizable table widget for Flutter with sorting, selection, theming, and interactive features. Perfect for displaying structured data with full control over appearance and behavior.
 
 ## ✨ Features
 
-- 📊 **Responsive Design** - Automatically adjusts column widths based on available space
-- 🎨 **Complete Theming** - Customize every visual aspect with detailed theme options
-- ✅ **Row Selection** - Built-in checkbox support for single and multiple selection
-- 🔄 **Column Sorting** - Ascending, descending, and unsorted states
-- 🎯 **Drag & Drop** - Reorder columns with intuitive drag-and-drop
-- 🏷️ **Status Indicators** - Built-in status widgets with customizable styles
-- 💡 **Smart Tooltips** - Automatic overflow detection with custom formatting
-- 🎮 **Interactive Events** - Comprehensive click, double-click, and right-click support
-- 📱 **Cross Platform** - Works on all Flutter-supported platforms
-- 🚀 **High Performance** - Efficient rendering for large datasets
+- 🔄 **Column sorting** (ascending/descending/none) with stable sort algorithms
+- 🔀 **Column reordering** with intuitive drag & drop interface
+- ☑️ **Row selection** with checkbox support and bulk operations
+- 🎨 **Custom cell widgets** including text, widgets, and status indicators
+- 🎭 **Comprehensive theming** system for complete visual customization
+- 📱 **Responsive design** with automatic column width calculation
+- 💡 **Smart tooltips** with overflow detection and custom formatting
+- 👆 **Rich interactions** including tap, double-tap, and right-click callbacks
+- 📜 **Synchronized scrolling** with custom scrollbar styling
+- 🌍 **Cross-platform** support (Android, iOS, Web, Desktop)
+- 👁️ **Column visibility** control (implementation example provided)
+- ⚡ **High performance** with efficient rendering and state management
 
-## 🚀 Getting Started
-
-### Installation
+## 📦 Installation
 
 Add this to your package's `pubspec.yaml` file:
 
 ```yaml
 dependencies:
-  flutter_basic_table: ^1.0.1
+  flutter_basic_table: ^1.0.2
 ```
 
 Then run:
@@ -36,76 +35,65 @@ Then run:
 flutter pub get
 ```
 
-### Import
+## 🚀 Quick Start
+
+### Basic Table
 
 ```dart
 import 'package:flutter_basic_table/flutter_basic_table.dart';
+
+BasicTable(
+  columns: [
+    BasicTableColumn(name: 'ID', minWidth: 60),
+    BasicTableColumn(name: 'Name', minWidth: 120),
+    BasicTableColumn(name: 'Email', minWidth: 200),
+    BasicTableColumn(name: 'Status', minWidth: 100),
+  ],
+  rows: [
+    BasicTableRow(
+      index: 0,
+      cells: [
+        BasicTableCell.text('1'),
+        BasicTableCell.text('John Doe'),
+        BasicTableCell.text('john@example.com'),
+        BasicTableCell.text('Active'),
+      ],
+    ),
+    BasicTableRow(
+      index: 1,
+      cells: [
+        BasicTableCell.text('2'),
+        BasicTableCell.text('Jane Smith'),
+        BasicTableCell.text('jane@example.com'),
+        BasicTableCell.text('Inactive'),
+      ],
+    ),
+  ],
+  theme: BasicTableThemeData.defaultTheme(),
+)
 ```
 
-## 📖 Usage
-
-### Basic Example
+### With Selection and Sorting
 
 ```dart
-class MyTableWidget extends StatelessWidget {
+class MyTableWidget extends StatefulWidget {
   @override
-  Widget build(BuildContext context) {
-    return BasicTable(
-      columns: [
-        BasicTableColumn(name: 'ID', minWidth: 60.0),
-        BasicTableColumn(name: 'Name', minWidth: 120.0),
-        BasicTableColumn(name: 'Email', minWidth: 200.0),
-        BasicTableColumn(name: 'Status', minWidth: 100.0),
-      ],
-      rows: [
-        BasicTableRow(
-          index: 0,
-          cells: [
-            BasicTableCell.text('1'),
-            BasicTableCell.text('John Doe'),
-            BasicTableCell.text('john@example.com'),
-            BasicTableCell.text('Active'),
-          ],
-        ),
-        // Add more rows...
-      ],
-    );
-  }
-}
-```
-
-### Advanced Example with Features
-
-```dart
-class AdvancedTableWidget extends StatefulWidget {
-  @override
-  State<AdvancedTableWidget> createState() => _AdvancedTableWidgetState();
+  _MyTableWidgetState createState() => _MyTableWidgetState();
 }
 
-class _AdvancedTableWidgetState extends State<AdvancedTableWidget> {
+class _MyTableWidgetState extends State<MyTableWidget> {
   Set<int> selectedRows = {};
-  Map<int, ColumnSortState> columnSortStates = {};
+  ColumnSortManager sortManager = ColumnSortManager();
 
   @override
   Widget build(BuildContext context) {
     return BasicTable(
-      columns: [
-        BasicTableColumn(
-          name: 'Name',
-          minWidth: 120.0,
-          tooltipFormatter: (value) => 'Employee: $value',
-        ),
-        BasicTableColumn(
-          name: 'Department',
-          minWidth: 100.0,
-          forceTooltip: true,
-        ),
-        BasicTableColumn(name: 'Status', minWidth: 120.0),
-      ],
-      rows: _buildRows(),
-      theme: _buildCustomTheme(),
+      columns: columns,
+      rows: rows,
+      theme: BasicTableThemeData.defaultTheme(),
+      
+      // Selection
       selectedRows: selectedRows,
-      columnSortStates: columnSortStates,
       onRowSelectionChanged: (index, selected) {
         setState(() {
           if (selected) {
@@ -117,90 +105,77 @@ class _AdvancedTableWidgetState extends State<AdvancedTableWidget> {
       },
       onSelectAllChanged: (selectAll) {
         setState(() {
-          if (selectAll) {
-            selectedRows = Set.from(List.generate(10, (i) => i));
-          } else {
-            selectedRows.clear();
-          }
+          selectedRows = selectAll 
+              ? Set.from(List.generate(rows.length, (i) => i))
+              : {};
         });
       },
+      
+      // Sorting
+      sortManager: sortManager,
       onColumnSort: (columnIndex, sortState) {
         setState(() {
-          columnSortStates.clear();
-          if (sortState != ColumnSortState.none) {
-            columnSortStates[columnIndex] = sortState;
-          }
           // Implement your sorting logic here
         });
       },
-      onColumnReorder: (oldIndex, newIndex) {
-        // Handle column reordering
-      },
+      
+      // Interactions
       onRowTap: (index) => print('Row $index tapped'),
       onRowDoubleTap: (index) => print('Row $index double-tapped'),
-    );
-  }
-
-  List<BasicTableRow> _buildRows() {
-    return List.generate(10, (index) {
-      return BasicTableRow(
-        index: index,
-        cells: [
-          BasicTableCell.text('Employee $index'),
-          BasicTableCell.text(
-            'Department ${index % 3}',
-            backgroundColor: Colors.blue.withOpacity(0.1),
-          ),
-          BasicTableCell.status(
-            EmployeeStatus.active,
-            StatusConfig.simple(
-              color: Colors.green,
-              text: 'Active',
-            ),
-          ),
-        ],
-      );
-    });
-  }
-
-  BasicTableThemeData _buildCustomTheme() {
-    return BasicTableThemeData(
-      headerTheme: BasicTableHeaderCellTheme(
-        height: 50.0,
-        backgroundColor: Colors.grey[100],
-        textStyle: TextStyle(fontWeight: FontWeight.bold),
-        enableSorting: true,
-        enableReorder: true,
-      ),
-      dataRowTheme: BasicTableDataRowTheme(
-        height: 45.0,
-        backgroundColor: Colors.white,
-      ),
-      checkboxTheme: BasicTableCheckboxCellTheme(
-        enabled: true,
-        columnWidth: 60.0,
-        activeColor: Colors.blue,
-      ),
-      selectionTheme: BasicTableSelectionTheme(
-        selectedRowColor: Colors.blue.withOpacity(0.1),
-        hoverRowColor: Colors.grey.withOpacity(0.05),
-      ),
-      scrollbarTheme: BasicTableScrollbarTheme(
-        showHorizontal: true,
-        showVertical: true,
-        hoverOnly: true,
-      ),
+      onRowSecondaryTap: (index) => print('Row $index right-clicked'),
     );
   }
 }
 ```
 
-## 🎨 Status Indicators
+## 🎨 Custom Themes
 
-The package includes a flexible status indicator system:
+### Using Built-in Themes
 
 ```dart
-// Simple status with color and text
+BasicTable(
+  // ... your data
+  theme: BasicTableThemeData.defaultTheme(),
+)
+```
+
+### Creating Custom Theme
+
+```dart
+BasicTable(
+  // ... your data
+  theme: BasicTableThemeData(
+    headerTheme: BasicTableHeaderCellTheme(
+      height: 50.0,
+      backgroundColor: Colors.blue[50],
+      textStyle: TextStyle(
+        fontWeight: FontWeight.bold,
+        fontSize: 14,
+        color: Colors.blue[800],
+      ),
+      enableSorting: true,
+      enableReorder: true,
+    ),
+    dataRowTheme: BasicTableDataRowTheme(
+      height: 45.0,
+      backgroundColor: Colors.white,
+      textStyle: TextStyle(fontSize: 13),
+    ),
+    checkboxTheme: BasicTableCheckboxCellTheme(
+      enabled: true,
+      columnWidth: 60.0,
+      activeColor: Colors.blue,
+    ),
+    // ... other theme properties
+  ),
+)
+```
+
+## 🔧 Advanced Features
+
+### Status Indicators
+
+```dart
 BasicTableCell.status(
   MyStatus.active,
   StatusConfig.simple(
@@ -209,147 +184,225 @@ BasicTableCell.status(
   ),
 )
 
-// Status with icon
 BasicTableCell.status(
-  MyStatus.inProgress,
+  MyStatus.pending,
   StatusConfig.withIcon(
-    color: Colors.blue,
-    icon: Icons.play_circle,
-    text: 'In Progress',
+    color: Colors.orange,
+    icon: Icons.pending,
+    text: 'Pending',
   ),
 )
 
-// Badge style status
 BasicTableCell.status(
-  MyStatus.urgent,
+  MyStatus.premium,
   StatusConfig.badge(
-    color: Colors.red,
-    text: 'Urgent',
+    color: Colors.purple,
+    text: 'Premium',
     textColor: Colors.white,
   ),
 )
 ```
 
-## 🎯 Theming
-
-Customize every aspect of your table:
+### Custom Cell Widgets
 
 ```dart
-BasicTableThemeData(
-  headerTheme: BasicTableHeaderCellTheme(
-    height: 50.0,
-    backgroundColor: Colors.blue[50],
-    textStyle: TextStyle(
-      fontWeight: FontWeight.bold,
-      color: Colors.blue[800],
-    ),
-    enableSorting: true,
-    enableReorder: true,
-    sortIconColor: Colors.blue,
-  ),
-  dataRowTheme: BasicTableDataRowTheme(
-    height: 45.0,
-    backgroundColor: Colors.white,
-    textStyle: TextStyle(fontSize: 14),
-    border: BorderSide(color: Colors.grey[300]!),
-  ),
-  checkboxTheme: BasicTableCheckboxCellTheme(
-    enabled: true,
-    activeColor: Colors.blue,
-  ),
-  selectionTheme: BasicTableSelectionTheme(
-    selectedRowColor: Colors.blue.withOpacity(0.1),
-    hoverRowColor: Colors.grey.withOpacity(0.05),
-  ),
-  scrollbarTheme: BasicTableScrollbarTheme(
-    showHorizontal: true,
-    showVertical: true,
-    hoverOnly: true,
-    color: Colors.blue,
-  ),
-  tooltipTheme: BasicTableTooltipTheme(
-    backgroundColor: Colors.black87,
-    textColor: Colors.white,
-    fontSize: 12.0,
+BasicTableCell.widget(
+  Row(
+    children: [
+      Icon(Icons.star, color: Colors.amber, size: 16),
+      SizedBox(width: 4),
+      Text('4.5'),
+    ],
   ),
 )
 ```
 
-## 📋 API Reference
+### Tooltips and Formatting
 
-### BasicTable
+```dart
+BasicTableColumn(
+  name: 'Email',
+  minWidth: 200,
+  tooltipFormatter: (value) => 'Click to send email to: $value',
+  forceTooltip: true, // Always show tooltip
+)
+```
 
-The main table widget.
+### Variable Row Heights
 
-#### Properties
+```dart
+BasicTableRow.withHeight(
+  index: 0,
+  height: 60.0, // Custom height for this row
+  cells: [...],
+)
+```
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `columns` | `List<BasicTableColumn>` | Column definitions |
-| `rows` | `List<BasicTableRow>` | Row data |
-| `theme` | `BasicTableThemeData?` | Custom theme |
-| `selectedRows` | `Set<int>?` | Currently selected row indices |
-| `columnSortStates` | `Map<int, ColumnSortState>?` | Current sort states |
-| `onRowSelectionChanged` | `Function(int, bool)?` | Row selection callback |
-| `onSelectAllChanged` | `Function(bool)?` | Select all callback |
-| `onColumnSort` | `Function(int, ColumnSortState)?` | Column sort callback |
-| `onColumnReorder` | `Function(int, int)?` | Column reorder callback |
-| `onRowTap` | `Function(int)?` | Row tap callback |
-| `onRowDoubleTap` | `Function(int)?` | Row double-tap callback |
-| `onRowSecondaryTap` | `Function(int)?` | Row right-click callback |
+## 👁️ Column Visibility Control
 
-### BasicTableColumn
+Here's how to implement column show/hide functionality:
 
-Defines table column properties.
+```dart
+class TableWithVisibility extends StatefulWidget {
+  @override
+  _TableWithVisibilityState createState() => _TableWithVisibilityState();
+}
 
-#### Properties
+class _TableWithVisibilityState extends State<TableWithVisibility> {
+  Set<String> hiddenColumnIds = {};
+  List<BasicTableColumn> allColumns = [...]; // Your full column list
+  List<BasicTableRow> allRows = [...];       // Your full row list
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `name` | `String` | Column header text |
-| `minWidth` | `double` | Minimum column width |
-| `maxWidth` | `double?` | Maximum column width |
-| `isResizable` | `bool` | Whether column is resizable |
-| `tooltipFormatter` | `String Function(String)?` | Custom tooltip formatter |
-| `forceTooltip` | `bool` | Always show tooltip |
+  // Filter visible columns
+  List<BasicTableColumn> get visibleColumns => 
+      allColumns.where((col) => !hiddenColumnIds.contains(col.effectiveId)).toList();
 
-### BasicTableCell
+  // Get visible column indices  
+  List<int> get visibleColumnIndices {
+    final indices = <int>[];
+    for (int i = 0; i < allColumns.length; i++) {
+      if (!hiddenColumnIds.contains(allColumns[i].effectiveId)) {
+        indices.add(i);
+      }
+    }
+    return indices;
+  }
 
-Represents individual table cell data.
+  // Filter visible rows
+  List<BasicTableRow> get visibleRows {
+    return allRows.map((row) => _createFilteredRow(row, visibleColumnIndices)).toList();
+  }
 
-#### Factory Constructors
+  BasicTableRow _createFilteredRow(BasicTableRow originalRow, List<int> indices) {
+    final filteredCells = <BasicTableCell>[];
+    for (final index in indices) {
+      if (index >= 0 && index < originalRow.cells.length) {
+        filteredCells.add(originalRow.cells[index]);
+      }
+    }
+    return BasicTableRow(
+      cells: filteredCells, 
+      index: originalRow.index,
+      height: originalRow.height, // Preserve custom heights
+    );
+  }
 
-- `BasicTableCell.text()` - Simple text cell
-- `BasicTableCell.widget()` - Custom widget cell
-- `BasicTableCell.status()` - Status indicator cell
+  void toggleColumnVisibility(String columnId) {
+    setState(() {
+      if (hiddenColumnIds.contains(columnId)) {
+        hiddenColumnIds.remove(columnId);
+      } else {
+        hiddenColumnIds.add(columnId);
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        // Visibility controls
+        Card(
+          child: Padding(
+            padding: EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Column Visibility', style: TextStyle(fontWeight: FontWeight.bold)),
+                SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  children: allColumns.map((column) {
+                    final isVisible = !hiddenColumnIds.contains(column.effectiveId);
+                    return FilterChip(
+                      label: Text(column.name),
+                      selected: isVisible,
+                      onSelected: (_) => toggleColumnVisibility(column.effectiveId),
+                      avatar: Icon(
+                        isVisible ? Icons.visibility : Icons.visibility_off,
+                        size: 18,
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ],
+            ),
+          ),
+        ),
+        
+        // Table with filtered data
+        Expanded(
+          child: BasicTable(
+            columns: visibleColumns,  // ← Filtered columns
+            rows: visibleRows,        // ← Filtered rows
+            theme: BasicTableThemeData.defaultTheme(),
+            // ... other properties
+          ),
+        ),
+      ],
+    );
+  }
+}
+```
+
+## 📚 API Reference
+
+### Core Components
+
+- **`BasicTable`** - Main table widget
+- **`BasicTableColumn`** - Column definition with sorting and tooltip options
+- **`BasicTableRow`** - Row data with support for custom heights
+- **`BasicTableCell`** - Individual cell with text, widget, or status content
+- **`BasicTableThemeData`** - Complete theming configuration
+
+### State Management
+
+- **`ColumnSortManager`** - ID-based column sorting state management
+- **`ColumnSortState`** - Enum for sort states (none/ascending/descending)
+
+### Theming Components
+
+- **`BasicTableHeaderCellTheme`** - Header styling and behavior
+- **`BasicTableDataRowTheme`** - Data row appearance
+- **`BasicTableCheckboxCellTheme`** - Selection checkbox styling
+- **`BasicTableSelectionTheme`** - Row selection colors
+- **`BasicTableScrollbarTheme`** - Scrollbar appearance and behavior
+- **`BasicTableBorderTheme`** - Border styling
+- **`BasicTableTooltipTheme`** - Tooltip appearance and timing
+
+### Status System
+
+- **`StatusConfig`** - Configuration for status indicators
+- **`GenericStatusIndicator`** - Widget for displaying status with icons/colors
+
+## 🎯 Complete Example
+
+For a complete implementation with all features including:
+- Column visibility controls
+- Advanced sorting and reordering  
+- Custom themes and status indicators
+- Well-structured code architecture
+- State management best practices
+
+Check out the [example](example/) folder in the repository.
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
-## 📝 License
+## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🙏 Acknowledgments
+## 🔗 Links
 
-- Thanks to the Flutter team for the amazing framework
-- Inspired by various table implementations in the Flutter community
+- [Pub.dev Package](https://pub.dev/packages/flutter_basic_table)
+- [API Documentation](https://pub.dev/documentation/flutter_basic_table/latest/)
+- [GitHub Repository](https://github.com/kihyun1998/flutter_basic_table)
+- [Issue Tracker](https://github.com/kihyun1998/flutter_basic_table/issues)
 
-## 📞 Support
+## 💡 Support
 
-If you have any questions or need help, please:
+If you like this package, please give it a ⭐ on GitHub and 👍 on pub.dev!
 
-- Check the [documentation](https://pub.dev/documentation/flutter_basic_table/latest/)
-- Open an [issue](https://github.com/kihyun1998/flutter_basic_table/issues)
-- Start a [discussion](https://github.com/kihyun1998/flutter_basic_table/discussions)
-
----
-
-Made with ❤️ for the Flutter community
+For questions and support, please open an issue on GitHub.
