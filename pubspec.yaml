@@ -1,11 +1,14 @@
 name: flutter_basic_table
-description: "A new Flutter package project."
-version: 0.0.1
-homepage:
+description: A comprehensive and customizable table widget for Flutter with sorting, selection, theming, and interactive features.
+version: 1.0.0
+homepage: https://github.com/kihyun1998/flutter_basic_table
+repository: https://github.com/kihyun1998/flutter_basic_table
+issue_tracker: https://github.com/kihyun1998/flutter_basic_table/issues
+documentation: https://pub.dev/documentation/flutter_basic_table/latest/
 
 environment:
-  sdk: ^3.6.1
-  flutter: ">=1.17.0"
+  sdk: ">=3.0.0 <4.0.0"
+  flutter: ">=3.0.0"
 
 dependencies:
   flutter:
@@ -15,5 +18,30 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
+
+
+# # Screenshots for pub.dev (add these files to your repository)
+# screenshots:
+#   - description: 'Basic table with sorting and selection'
+#     path: screenshots/basic_table.png
+#   - description: 'Custom themes and status indicators'
+#     path: screenshots/themed_table.png
+#   - description: 'Column reordering and responsive design'
+#     path: screenshots/responsive_table.png
+
+topics:
+  - table
+  - widget
+  - data-table
+  - responsive
+  - customizable
+
+platforms:
+  android:
+  ios:
+  linux:
+  macos:
+  web:
+  windows:
 
 flutter:

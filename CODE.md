@@ -4,49 +4,65 @@
 ```
 flutter_basic_table/
 ├── example/
-    └── lib/
+    ├── lib/
     │   ├── data/
-    │       └── sample_data.dart
+    │   │   └── sample_data.dart
     │   ├── models/
-    │       ├── enums.dart
-    │       └── status_configs.dart
+    │   │   ├── enums.dart
+    │   │   └── status_configs.dart
     │   ├── screens/
-    │       └── home_screen.dart
+    │   │   └── home_screen.dart
     │   ├── themes/
-    │       └── table_theme.dart
+    │   │   └── table_theme.dart
     │   └── main.dart
-└── lib/
+    └── pubspec.yaml
+├── lib/
     ├── src/
-        ├── enum/
-        │   ├── column_sort_state.dart
-        │   └── tooltip_position.dart
-        ├── models/
-        │   ├── flutter_basic_table_cell.dart
-        │   ├── flutter_basic_table_column.dart
-        │   ├── flutter_basic_table_config.dart
-        │   ├── flutter_basic_table_row.dart
-        │   └── status_config.dart
-        ├── theme/
-        │   ├── flutter_basic_table_border_theme.dart
-        │   ├── flutter_basic_table_checkbox_cell_theme.dart
-        │   ├── flutter_basic_table_data_row_theme.dart
-        │   ├── flutter_basic_table_header_cell_theme.dart
-        │   ├── flutter_basic_table_scrollbar_theme.dart
-        │   ├── flutter_basic_table_selection_theme.dart
-        │   ├── flutter_basic_table_theme.dart
-        │   └── flutter_basic_table_tooltip_theme.dart
-        ├── widgets/
-        │   ├── custom_inkwell_widget.dart
-        │   ├── custom_tooltip.dart
-        │   ├── flutter_basic_table_header_widget.dart
-        │   ├── flutter_basic_talbe_data_widget.dart
-        │   ├── generate_status_indicator.dart
-        │   ├── synced_scroll_controll_widget.dart
-        │   └── tooltip_able_text_widget.dart
-        └── flutter_basic_table.dart
+    │   ├── enum/
+    │   │   ├── column_sort_state.dart
+    │   │   └── tooltip_position.dart
+    │   ├── models/
+    │   │   ├── flutter_basic_table_cell.dart
+    │   │   ├── flutter_basic_table_column.dart
+    │   │   ├── flutter_basic_table_config.dart
+    │   │   ├── flutter_basic_table_row.dart
+    │   │   └── status_config.dart
+    │   ├── theme/
+    │   │   ├── flutter_basic_table_border_theme.dart
+    │   │   ├── flutter_basic_table_checkbox_cell_theme.dart
+    │   │   ├── flutter_basic_table_data_row_theme.dart
+    │   │   ├── flutter_basic_table_header_cell_theme.dart
+    │   │   ├── flutter_basic_table_scrollbar_theme.dart
+    │   │   ├── flutter_basic_table_selection_theme.dart
+    │   │   ├── flutter_basic_table_theme.dart
+    │   │   └── flutter_basic_table_tooltip_theme.dart
+    │   ├── widgets/
+    │   │   ├── custom_inkwell_widget.dart
+    │   │   ├── custom_tooltip.dart
+    │   │   ├── flutter_basic_table_header_widget.dart
+    │   │   ├── flutter_basic_talbe_data_widget.dart
+    │   │   ├── generate_status_indicator.dart
+    │   │   ├── synced_scroll_controll_widget.dart
+    │   │   └── tooltip_able_text_widget.dart
+    │   └── flutter_basic_table.dart
     └── flutter_basic_table.dart
+├── CHANGELOG.md
+├── LICENSE
+└── pubspec.yaml
 ```
 
+## CHANGELOG.md
+```md
+## 0.0.1
+
+* TODO: Describe initial release.
+
+```
+## LICENSE
+```
+TODO: Add your license here.
+
+```
 ## example/lib/data/sample_data.dart
 ```dart
 import 'package:flutter/material.dart';
@@ -61,14 +77,86 @@ class SampleData {
 
   /// 테이블 컬럼 정의
   static List<BasicTableColumn> get columns => [
+        // ID 컬럼: tooltip 없음 (기본)
         const BasicTableColumn(name: 'ID', minWidth: 60.0),
+
+        // 이름 컬럼: overflow 시에만 기본 tooltip
         const BasicTableColumn(name: '이름', minWidth: 120.0),
-        const BasicTableColumn(name: '이메일', minWidth: 200.0),
-        const BasicTableColumn(name: '부서', minWidth: 100.0),
+
+        // 이메일 컬럼: overflow 시에만 tooltip이지만 커스텀 메시지
+        BasicTableColumn(
+          name: '이메일',
+          minWidth: 200.0,
+          tooltipFormatter: (value) => '📧 이메일 주소: $value\n클릭하면 메일을 보낼 수 있습니다',
+        ),
+
+        // 부서 컬럼: 항상 tooltip 표시 + 부서별 커스텀 메시지
+        BasicTableColumn(
+          name: '부서',
+          minWidth: 100.0,
+          forceTooltip: true, // 항상 tooltip 표시
+          tooltipFormatter: (value) => _getDepartmentTooltip(value),
+        ),
+
+        // 직원상태 컬럼: 기본 동작 (상태 위젯이므로)
         const BasicTableColumn(name: '직원상태', minWidth: 100.0),
+
+        // 프로젝트상태 컬럼: 기본 동작
         const BasicTableColumn(name: '프로젝트상태', minWidth: 120.0),
-        const BasicTableColumn(name: '가입일', minWidth: 100.0),
+
+        // 가입일 컬럼: 항상 tooltip 표시 + 날짜 포맷팅
+        BasicTableColumn(
+          name: '가입일',
+          minWidth: 100.0,
+          forceTooltip: true, // 항상 tooltip 표시
+          tooltipFormatter: (value) => _formatDateTooltip(value),
+        ),
       ];
+
+  /// 부서별 커스텀 tooltip 메시지
+  static String _getDepartmentTooltip(String department) {
+    switch (department) {
+      case '개발팀':
+        return '🛠️ 개발팀\n소프트웨어 개발 및 시스템 유지보수를 담당합니다';
+      case '디자인팀':
+        return '🎨 디자인팀\nUI/UX 디자인과 브랜딩 업무를 담당합니다';
+      case '마케팅팀':
+        return '📊 마케팅팀\n마케팅 전략 수립과 브랜드 홍보를 담당합니다';
+      case '영업팀':
+        return '💼 영업팀\n고객 관리와 신규 영업 개발을 담당합니다';
+      case 'HR팀':
+        return '👥 HR팀\n인사 관리와 복리후생 업무를 담당합니다';
+      default:
+        return '🏢 $department 부서';
+    }
+  }
+
+  /// 날짜 tooltip 포맷터 함수
+  static String _formatDateTooltip(String dateString) {
+    try {
+      // "2023-01-15" -> "2023년 1월 15일에 가입하셨습니다"
+      final parts = dateString.split('-');
+      if (parts.length == 3) {
+        final year = int.parse(parts[0]);
+        final month = int.parse(parts[1]);
+        final day = int.parse(parts[2]);
+
+        // 현재 날짜와 비교해서 근무 기간 계산
+        final now = DateTime.now();
+        final joinDate = DateTime(year, month, day);
+        final difference = now.difference(joinDate);
+        final workDays = difference.inDays;
+        final workMonths = (workDays / 30).toStringAsFixed(1);
+
+        return '''📅 $year년 $month월 $day일에 가입
+⏰ 근무 기간: 약 $workDays일 ($workMonths개월)
+🎉 함께해주셔서 감사합니다!''';
+      }
+    } catch (e) {
+      // 파싱 실패시 기본 메시지
+    }
+    return '📅 가입일: $dateString';
+  }
 
   /// 부서별 배경색 맵
   static const Map<String, Color> _departmentColors = {
@@ -111,7 +199,7 @@ class SampleData {
           BasicTableCell.text('김철수',
               style: const TextStyle(
                   fontWeight: FontWeight.bold, color: Colors.blue)),
-          BasicTableCell.text('kim@company.com'),
+          BasicTableCell.text('kim.cheolsu@company.com'), // 더 긴 이메일로 변경
           _createDepartmentCell('개발팀'),
           BasicTableCell.status(
             EmployeeStatus.active,
@@ -130,7 +218,7 @@ class SampleData {
         cells: [
           BasicTableCell.text('2'),
           BasicTableCell.text('이영희'),
-          BasicTableCell.text('lee@company.com'),
+          BasicTableCell.text('lee.younghee.designer@company.com'), // 더 긴 이메일
           _createDepartmentCell('디자인팀'),
           BasicTableCell.status(
             EmployeeStatus.onLeave,
@@ -148,7 +236,7 @@ class SampleData {
         cells: [
           BasicTableCell.text('3'),
           BasicTableCell.text('박민수'),
-          BasicTableCell.text('park@company.com'),
+          BasicTableCell.text('park.minsu.marketing@company.com'), // 더 긴 이메일
           _createDepartmentCell('마케팅팀'),
           BasicTableCell.status(
             EmployeeStatus.inactive,
@@ -166,7 +254,7 @@ class SampleData {
         cells: [
           BasicTableCell.text('4'),
           BasicTableCell.text('정수진'),
-          BasicTableCell.text('jung@company.com'),
+          BasicTableCell.text('jung.sujin.sales@company.com'),
           _createDepartmentCell('영업팀'),
           BasicTableCell.status(
             EmployeeStatus.training,
@@ -184,7 +272,7 @@ class SampleData {
         cells: [
           BasicTableCell.text('5'),
           BasicTableCell.text('최동혁'),
-          BasicTableCell.text('choi@company.com'),
+          BasicTableCell.text('choi.donghyuk.hr@company.com'),
           _createDepartmentCell('HR팀'),
           BasicTableCell.status(
             EmployeeStatus.pending,
@@ -215,7 +303,8 @@ class SampleData {
         cells: [
           BasicTableCell.text('${realIndex + 1}'),
           BasicTableCell.text('사용자${realIndex + 1}'),
-          BasicTableCell.text('user${realIndex + 1}@company.com'),
+          BasicTableCell.text(
+              'user${realIndex + 1}.very.long.email@company.com'), // 더 긴 이메일
           _createDepartmentCell(department),
           BasicTableCell.status(
             employeeStatuses[realIndex % employeeStatuses.length],
@@ -284,6 +373,8 @@ class SampleData {
               minWidth: col.minWidth,
               maxWidth: col.maxWidth,
               isResizable: col.isResizable,
+              tooltipFormatter: col.tooltipFormatter,
+              forceTooltip: col.forceTooltip,
             ))
         .toList();
   }
@@ -635,9 +726,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
           // 테이블 카드
           _buildTableCard(),
-
-          // 설명 카드
-          _buildDescriptionCard(),
         ],
       ),
     );
@@ -713,59 +801,6 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
     );
-  }
-
-  /// 설명 카드 위젯
-  Widget _buildDescriptionCard() {
-    return Card(
-      margin: const EdgeInsets.all(8.0),
-      color: Colors.white,
-      elevation: 1,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              '✅ 상태 정렬 테스트 + Generic API:',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-                color: Colors.black87,
-              ),
-            ),
-            const SizedBox(height: 8),
-            ..._buildDescriptionItems(),
-          ],
-        ),
-      ),
-    );
-  }
-
-  /// 설명 항목들 생성
-  List<Widget> _buildDescriptionItems() {
-    final descriptionItems = [
-      '🏗️ 사용자가 직접 정의한 enum + StatusConfig',
-      '📋 직원상태: active, inactive, pending, onLeave, training',
-      '🎨 각 상태별 개별 색상, 텍스트, 아이콘 설정',
-      '🔴 원형 표시기: StatusConfig.simple(), StatusConfig.circleOnly()',
-      '🔘 아이콘 표시기: StatusConfig.withIcon()',
-      '🏷️ 배지 스타일: StatusConfig.badge()',
-      '🔄 헤더를 드래그해서 컬럼 순서 변경',
-      '⬆️⬇️ 헤더 클릭으로 정렬: 오름차순 → 내림차순 → 원래상태',
-      '🔢 상태 컬럼 정렬 테스트 (텍스트 기준으로 정렬됨)',
-      '✅ 라이브러리는 인터페이스만 제공, 상태는 사용자가 완전히 정의',
-      '🎯 모든 상태 관리가 외부에서 완전히 제어됨',
-    ];
-
-    return descriptionItems
-        .map((item) => Text(item,
-            style: TextStyle(
-              fontSize: 13,
-              color: Colors.grey[700],
-              height: 1.4,
-            )))
-        .toList();
   }
 }
 
@@ -954,6 +989,32 @@ class AppTableTheme {
 }
 
 ```
+## example/pubspec.yaml
+```yaml
+name: example
+description: "A new Flutter project."
+publish_to: 'none' 
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.6.1
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  flutter_basic_table:
+    path: ../
+    
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
+
+```
 ## lib/flutter_basic_table.dart
 ```dart
 // lib/flutter_basic_table.dart
@@ -1045,7 +1106,7 @@ import 'widgets/synced_scroll_controll_widget.dart';
 /// 모든 데이터는 외부에서 정의되어야 합니다.
 class BasicTable extends StatefulWidget {
   final List<BasicTableColumn> columns;
-  final List<BasicTableRow> rows; // ✅ 변경: data → rows
+  final List<BasicTableRow> rows;
   final BasicTableThemeData? theme;
 
   // 체크박스 관련 외부 정의 필드들
@@ -1071,7 +1132,7 @@ class BasicTable extends StatefulWidget {
   const BasicTable({
     super.key,
     required this.columns,
-    required this.rows, // ✅ 변경
+    required this.rows,
     this.theme,
     this.selectedRows,
     this.onRowSelectionChanged,
@@ -1084,7 +1145,7 @@ class BasicTable extends StatefulWidget {
     this.onColumnSort,
     this.columnSortStates,
   })  : assert(columns.length > 0, 'columns cannot be empty'),
-        assert(rows.length > 0, 'rows cannot be empty'); // ✅ 변경
+        assert(rows.length > 0, 'rows cannot be empty');
 
   /// 하위 호환성을 위한 생성자 (기존 List<List<String>> 지원)
   factory BasicTable.fromStringData({
@@ -1144,7 +1205,7 @@ class _BasicTableState extends State<BasicTable> {
   }
 
   /// 현재 행 데이터 반환 (더 이상 변환 불필요)
-  List<BasicTableRow> get _currentRows => widget.rows; // ✅ 간단해짐!
+  List<BasicTableRow> get _currentRows => widget.rows;
 
   /// 컬럼 순서가 바뀔 때 호출되는 함수 - 외부 콜백만 호출
   void _handleColumnReorder(int oldIndex, int newIndex) {
@@ -1530,7 +1591,7 @@ class BasicTableCell {
 
   /// Generic 상태 표시기로 셀 생성
   factory BasicTableCell.status(
-    Enum status, // ✅ dynamic 대신 Enum 사용 (모든 enum이 Enum을 상속)
+    Enum status,
     StatusConfig config, {
     Axis direction = Axis.horizontal,
     MainAxisAlignment mainAxisAlignment = MainAxisAlignment.start,
@@ -1553,7 +1614,7 @@ class BasicTableCell {
     );
 
     return BasicTableCell(
-      data: config.text ?? status.toString(), // ✅ 정렬을 위한 데이터 추가!
+      data: config.text ?? status.toString(),
       widget: statusWidget,
       backgroundColor: backgroundColor,
       alignment: alignment,
@@ -1568,7 +1629,7 @@ class BasicTableCell {
 
   /// 가로 레이아웃 상태 표시기 셀 생성
   factory BasicTableCell.statusHorizontal(
-    Enum status, // ✅ dynamic 대신 Enum 사용
+    Enum status,
     StatusConfig config, {
     MainAxisAlignment mainAxisAlignment = MainAxisAlignment.start,
     CrossAxisAlignment crossAxisAlignment = CrossAxisAlignment.center,
@@ -1600,7 +1661,7 @@ class BasicTableCell {
 
   /// 세로 레이아웃 상태 표시기 셀 생성
   factory BasicTableCell.statusVertical(
-    Enum status, // ✅ dynamic 대신 Enum 사용
+    Enum status,
     StatusConfig config, {
     MainAxisAlignment mainAxisAlignment = MainAxisAlignment.center,
     CrossAxisAlignment crossAxisAlignment = CrossAxisAlignment.center,
@@ -1637,7 +1698,6 @@ class BasicTableCell {
 
   /// 표시될 텍스트를 반환 (정렬용 데이터 포함)
   String? get displayText {
-    // ✅ data가 있으면 widget이 있어도 data 우선 반환 (정렬용)
     if (data != null) return data.toString();
     // widget만 있고 data가 없으면 null
     return null;
@@ -1736,11 +1796,21 @@ class BasicTableColumn {
   final double? maxWidth;
   final bool isResizable;
 
+  /// 커스텀 tooltip 메시지를 생성하는 함수
+  /// null이면 기본 동작 (원본 텍스트 표시)
+  final String Function(String value)? tooltipFormatter;
+
+  /// overflow 없어도 강제로 tooltip 표시 여부
+  /// true면 항상 tooltip 표시, false면 overflow 시에만 표시
+  final bool forceTooltip;
+
   const BasicTableColumn({
     required this.name,
     this.minWidth = 100.0,
     this.maxWidth,
     this.isResizable = true,
+    this.tooltipFormatter,
+    this.forceTooltip = false,
   });
 
   BasicTableColumn copyWith({
@@ -1748,12 +1818,16 @@ class BasicTableColumn {
     double? minWidth,
     double? maxWidth,
     bool? isResizable,
+    String Function(String value)? tooltipFormatter,
+    bool? forceTooltip,
   }) {
     return BasicTableColumn(
       name: name ?? this.name,
       minWidth: minWidth ?? this.minWidth,
       maxWidth: maxWidth ?? this.maxWidth,
       isResizable: isResizable ?? this.isResizable,
+      tooltipFormatter: tooltipFormatter ?? this.tooltipFormatter,
+      forceTooltip: forceTooltip ?? this.forceTooltip,
     );
   }
 }
@@ -2379,15 +2453,13 @@ class BasicTableCheckboxCellTheme {
 ```dart
 import 'package:flutter/material.dart';
 
-/// 데이터 행의 테마 - ✅ 클릭 효과 색상 추가!
+/// 데이터 행의 테마
 class BasicTableDataRowTheme {
   final double height;
   final Color? backgroundColor;
   final TextStyle? textStyle;
   final EdgeInsets? padding;
   final BorderSide? border;
-
-  // ✅ 클릭 효과 색상 추가!
   final Color? splashColor;
   final Color? highlightColor;
 
@@ -2397,8 +2469,8 @@ class BasicTableDataRowTheme {
     this.textStyle,
     this.padding,
     this.border,
-    this.splashColor, // ✅ 추가
-    this.highlightColor, // ✅ 추가
+    this.splashColor,
+    this.highlightColor,
   });
 
   factory BasicTableDataRowTheme.defaultTheme() {
@@ -2408,8 +2480,8 @@ class BasicTableDataRowTheme {
       textStyle: TextStyle(fontSize: 13, color: Colors.black),
       padding: EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
       border: BorderSide(color: Colors.grey, width: 0.3),
-      splashColor: null, // ✅ 기본값 (Material 기본값 사용)
-      highlightColor: null, // ✅ 기본값 (Material 기본값 사용)
+      splashColor: null,
+      highlightColor: null,
     );
   }
 
@@ -2419,8 +2491,8 @@ class BasicTableDataRowTheme {
     TextStyle? textStyle,
     EdgeInsets? padding,
     BorderSide? border,
-    Color? splashColor, // ✅ 추가
-    Color? highlightColor, // ✅ 추가
+    Color? splashColor,
+    Color? highlightColor,
   }) {
     return BasicTableDataRowTheme(
       height: height ?? this.height,
@@ -2428,8 +2500,8 @@ class BasicTableDataRowTheme {
       textStyle: textStyle ?? this.textStyle,
       padding: padding ?? this.padding,
       border: border ?? this.border,
-      splashColor: splashColor ?? this.splashColor, // ✅ 추가
-      highlightColor: highlightColor ?? this.highlightColor, // ✅ 추가
+      splashColor: splashColor ?? this.splashColor,
+      highlightColor: highlightColor ?? this.highlightColor,
     );
   }
 
@@ -2442,8 +2514,8 @@ class BasicTableDataRowTheme {
         other.textStyle == textStyle &&
         other.padding == padding &&
         other.border == border &&
-        other.splashColor == splashColor && // ✅ 추가
-        other.highlightColor == highlightColor; // ✅ 추가
+        other.splashColor == splashColor &&
+        other.highlightColor == highlightColor;
   }
 
   @override
@@ -2454,8 +2526,8 @@ class BasicTableDataRowTheme {
       textStyle,
       padding,
       border,
-      splashColor, // ✅ 추가
-      highlightColor, // ✅ 추가
+      splashColor,
+      highlightColor,
     );
   }
 }
@@ -2571,11 +2643,11 @@ class BasicTableHeaderCellTheme {
         other.enableReorder == enableReorder &&
         other.enableSorting == enableSorting &&
         other.showDragHandles == showDragHandles &&
-        other.ascendingIcon == ascendingIcon && // ✅ 추가
-        other.descendingIcon == descendingIcon && // ✅ 추가
-        other.sortIconSize == sortIconSize && // ✅ 추가
-        other.splashColor == splashColor && // ✅ 추가
-        other.highlightColor == highlightColor; // ✅ 추가
+        other.ascendingIcon == ascendingIcon &&
+        other.descendingIcon == descendingIcon &&
+        other.sortIconSize == sortIconSize &&
+        other.splashColor == splashColor &&
+        other.highlightColor == highlightColor;
   }
 
   @override
@@ -2590,11 +2662,11 @@ class BasicTableHeaderCellTheme {
       enableReorder,
       enableSorting,
       showDragHandles,
-      ascendingIcon, // ✅ 추가
-      descendingIcon, // ✅ 추가
-      sortIconSize, // ✅ 추가
-      splashColor, // ✅ 추가
-      highlightColor, // ✅ 추가
+      ascendingIcon,
+      descendingIcon,
+      sortIconSize,
+      splashColor,
+      highlightColor,
     );
   }
 }
@@ -2755,7 +2827,7 @@ class BasicTableThemeData {
   final BasicTableSelectionTheme selectionTheme;
   final BasicTableScrollbarTheme scrollbarTheme;
   final BasicTableBorderTheme borderTheme;
-  final BasicTableTooltipTheme tooltipTheme; // ✅ Tooltip 테마 추가!
+  final BasicTableTooltipTheme tooltipTheme;
 
   const BasicTableThemeData({
     required this.headerTheme,
@@ -2764,7 +2836,7 @@ class BasicTableThemeData {
     required this.selectionTheme,
     required this.scrollbarTheme,
     required this.borderTheme,
-    required this.tooltipTheme, // ✅ 추가
+    required this.tooltipTheme,
   });
 
   /// 기본 테마 생성
@@ -2776,7 +2848,7 @@ class BasicTableThemeData {
       selectionTheme: BasicTableSelectionTheme.defaultTheme(),
       scrollbarTheme: BasicTableScrollbarTheme.defaultTheme(),
       borderTheme: BasicTableBorderTheme.defaultTheme(),
-      tooltipTheme: BasicTableTooltipTheme.defaultTheme(), // ✅ 추가
+      tooltipTheme: BasicTableTooltipTheme.defaultTheme(),
     );
   }
 
@@ -2788,7 +2860,7 @@ class BasicTableThemeData {
     BasicTableSelectionTheme? selectionTheme,
     BasicTableScrollbarTheme? scrollbarTheme,
     BasicTableBorderTheme? borderTheme,
-    BasicTableTooltipTheme? tooltipTheme, // ✅ 추가
+    BasicTableTooltipTheme? tooltipTheme,
   }) {
     return BasicTableThemeData(
       headerTheme: headerTheme ?? this.headerTheme,
@@ -2797,7 +2869,7 @@ class BasicTableThemeData {
       selectionTheme: selectionTheme ?? this.selectionTheme,
       scrollbarTheme: scrollbarTheme ?? this.scrollbarTheme,
       borderTheme: borderTheme ?? this.borderTheme,
-      tooltipTheme: tooltipTheme ?? this.tooltipTheme, // ✅ 추가
+      tooltipTheme: tooltipTheme ?? this.tooltipTheme,
     );
   }
 
@@ -2811,7 +2883,7 @@ class BasicTableThemeData {
         other.selectionTheme == selectionTheme &&
         other.scrollbarTheme == scrollbarTheme &&
         other.borderTheme == borderTheme &&
-        other.tooltipTheme == tooltipTheme; // ✅ 추가
+        other.tooltipTheme == tooltipTheme;
   }
 
   @override
@@ -2823,7 +2895,7 @@ class BasicTableThemeData {
       selectionTheme,
       scrollbarTheme,
       borderTheme,
-      tooltipTheme, // ✅ 추가
+      tooltipTheme,
     );
   }
 }
@@ -3199,8 +3271,7 @@ class BasicTableHeader extends StatelessWidget {
       decoration: BoxDecoration(
         color: theme.headerTheme.backgroundColor,
         border: Border(
-          top: theme.headerTheme.border ??
-              BorderSide.none, // ✅ headerTheme.border 사용!
+          top: theme.headerTheme.border ?? BorderSide.none,
         ),
       ),
       child: Row(
@@ -3317,14 +3388,14 @@ class _StaticHeaderRow extends StatelessWidget {
           columnIndex: index,
           sortState: sortState,
           onSort: onColumnSort,
-          showDragHandle: false, // 드래그 핸들 숨김
+          showDragHandle: false,
         );
       }),
     );
   }
 }
 
-/// 체크박스 헤더 셀 위젯 - ✅ 불필요한 border 제거!
+/// 체크박스 헤더 셀 위젯
 class _CheckboxHeaderCell extends StatelessWidget {
   final double width;
   final BasicTableThemeData theme;
@@ -3343,7 +3414,6 @@ class _CheckboxHeaderCell extends StatelessWidget {
     return Container(
       width: width,
       height: theme.headerTheme.height,
-      // ✅ cellBorder 적용
       decoration: BoxDecoration(
         border: Border(
           right: theme.borderTheme.cellBorder ?? BorderSide.none,
@@ -3366,7 +3436,7 @@ class _CheckboxHeaderCell extends StatelessWidget {
   }
 }
 
-/// 개별 헤더 셀 위젯 - ✅ 불필요한 border 제거!
+/// 개별 헤더 셀 위젯
 class _HeaderCell extends StatelessWidget {
   final BasicTableColumn column;
   final double width;
@@ -3398,7 +3468,7 @@ class _HeaderCell extends StatelessWidget {
     }
   }
 
-  /// 정렬 상태에 따른 아이콘을 반환합니다 - ✅ 커스터마이징 가능!
+  /// 정렬 상태에 따른 아이콘을 반환합니다
   Widget? _getSortIcon() {
     if (!theme.headerTheme.enableSorting) return null;
 
@@ -3407,16 +3477,14 @@ class _HeaderCell extends StatelessWidget {
         return null; // 아이콘 없음
       case ColumnSortState.ascending:
         return Icon(
-          theme.headerTheme.ascendingIcon ??
-              Icons.keyboard_arrow_up, // ✅ 커스터마이징 가능!
-          size: theme.headerTheme.sortIconSize ?? 18.0, // ✅ 크기도 커스터마이징!
+          theme.headerTheme.ascendingIcon ?? Icons.keyboard_arrow_up,
+          size: theme.headerTheme.sortIconSize ?? 18.0,
           color: theme.headerTheme.sortIconColor,
         );
       case ColumnSortState.descending:
         return Icon(
-          theme.headerTheme.descendingIcon ??
-              Icons.keyboard_arrow_down, // ✅ 커스터마이징 가능!
-          size: theme.headerTheme.sortIconSize ?? 18.0, // ✅ 크기도 커스터마이징!
+          theme.headerTheme.descendingIcon ?? Icons.keyboard_arrow_down,
+          size: theme.headerTheme.sortIconSize ?? 18.0,
           color: theme.headerTheme.sortIconColor,
         );
     }
@@ -3427,7 +3495,6 @@ class _HeaderCell extends StatelessWidget {
     return Container(
       width: width,
       height: theme.headerTheme.height,
-      // ✅ cellBorder 적용
       decoration: BoxDecoration(
         border: Border(
           right: theme.borderTheme.cellBorder ?? BorderSide.none,
@@ -3437,7 +3504,6 @@ class _HeaderCell extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: () => _onHeaderTap(),
-          // ✅ 헤더 클릭 효과 색상 커스터마이징!
           splashColor: theme.headerTheme.splashColor,
           highlightColor: theme.headerTheme.highlightColor,
           child: Padding(
@@ -3455,13 +3521,13 @@ class _HeaderCell extends StatelessWidget {
                     ),
                   ),
 
-                // 컬럼 이름 - ✅ OverflowableText로 교체!
+                /// 컬럼 이름
                 Expanded(
                   child: TooltipAbleText(
                     text: column.name,
                     style: theme.headerTheme.textStyle,
                     tooltipTheme: theme.tooltipTheme,
-                    tooltipPosition: TooltipPosition.bottom, // 헤더는 아래쪽에 tooltip
+                    tooltipPosition: TooltipPosition.bottom,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
@@ -3491,7 +3557,6 @@ class _HeaderCell extends StatelessWidget {
 ```dart
 // lib/src/widgets/flutter_basic_talbe_data_widget.dart
 import 'package:flutter/material.dart';
-import 'package:flutter_basic_table/src/models/flutter_basic_table_cell.dart';
 import 'package:flutter_basic_table/src/widgets/custom_tooltip.dart';
 import 'package:flutter_basic_table/src/widgets/tooltip_able_text_widget.dart';
 
@@ -3561,6 +3626,7 @@ class BasicTableData extends StatelessWidget {
           theme: theme,
           checkboxWidth: checkboxWidth,
           isSelected: isSelected,
+          columns: columns,
           onSelectionChanged: onRowSelectionChanged,
           onRowTap: onRowTap,
           onRowDoubleTap: onRowDoubleTap,
@@ -3572,13 +3638,14 @@ class BasicTableData extends StatelessWidget {
   }
 }
 
-/// 개별 데이터 행 위젯 - ✅ hover 효과 & dataRowTheme.border 적용!
+/// 개별 데이터 행 위젯
 class _DataRow extends StatefulWidget {
   final BasicTableRow row;
   final List<double> columnWidths;
   final BasicTableThemeData theme;
   final double checkboxWidth;
   final bool isSelected;
+  final List<BasicTableColumn> columns;
   final void Function(int index, bool selected)? onSelectionChanged;
   final void Function(int index)? onRowTap;
   final void Function(int index)? onRowDoubleTap;
@@ -3591,6 +3658,7 @@ class _DataRow extends StatefulWidget {
     required this.theme,
     required this.checkboxWidth,
     required this.isSelected,
+    required this.columns,
     this.onSelectionChanged,
     this.onRowTap,
     this.onRowDoubleTap,
@@ -3603,25 +3671,23 @@ class _DataRow extends StatefulWidget {
 }
 
 class _DataRowState extends State<_DataRow> {
-  bool _isHovered = false; // ✅ hover 상태 추가!
+  bool _isHovered = false;
 
   @override
   Widget build(BuildContext context) {
-    // ✅ 우선순위: 선택됨 > hover > 기본
     Color backgroundColor;
     if (widget.isSelected) {
       backgroundColor = widget.theme.selectionTheme.selectedRowColor ??
           Colors.blue.withOpacity(0.1);
     } else if (_isHovered) {
       backgroundColor = widget.theme.selectionTheme.hoverRowColor ??
-          Colors.grey.withOpacity(0.05); // ✅ hover 색상 적용!
+          Colors.grey.withOpacity(0.05);
     } else {
       backgroundColor =
           widget.theme.dataRowTheme.backgroundColor ?? Colors.white;
     }
 
     return MouseRegion(
-      // ✅ hover 효과 구현!
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
       child: Container(
@@ -3629,8 +3695,7 @@ class _DataRowState extends State<_DataRow> {
         decoration: BoxDecoration(
           color: backgroundColor,
           border: Border(
-            top: widget.theme.dataRowTheme.border ??
-                BorderSide.none, // ✅ dataRowTheme.border 사용!
+            top: widget.theme.dataRowTheme.border ?? BorderSide.none,
           ),
         ),
         child: CustomInkWell(
@@ -3649,7 +3714,6 @@ class _DataRowState extends State<_DataRow> {
               ? () => widget.onRowSecondaryTap!(widget.row.index)
               : null,
           doubleClickTime: widget.doubleClickTime,
-          // ✅ 클릭 효과 색상 커스터마이징!
           splashColor: widget.theme.dataRowTheme.splashColor,
           highlightColor: widget.theme.dataRowTheme.highlightColor,
           child: Row(
@@ -3669,15 +3733,19 @@ class _DataRowState extends State<_DataRow> {
               ...List.generate(widget.row.cells.length, (cellIndex) {
                 final cell = cellIndex < widget.row.cells.length
                     ? widget.row.cells[cellIndex]
-                    : BasicTableCell.text(''); // 빈 셀 처리
+                    : BasicTableCell.text('');
                 final cellWidth = cellIndex < widget.columnWidths.length
                     ? widget.columnWidths[cellIndex]
                     : 100.0;
+                final column = cellIndex < widget.columns.length
+                    ? widget.columns[cellIndex]
+                    : null;
 
                 return _DataCell(
                   cell: cell,
                   width: cellWidth,
                   theme: widget.theme,
+                  column: column,
                 );
               }),
             ],
@@ -3733,16 +3801,18 @@ class _CheckboxCell extends StatelessWidget {
   }
 }
 
-/// 개별 데이터 셀 위젯 - ✅ BasicTableCell 완전 활용!
+/// 개별 데이터 셀 위젯
 class _DataCell extends StatelessWidget {
   final BasicTableCell cell;
   final double width;
   final BasicTableThemeData theme;
+  final BasicTableColumn? column;
 
   const _DataCell({
     required this.cell,
     required this.width,
     required this.theme,
+    this.column,
   });
 
   /// 테마 스타일과 셀 개별 스타일을 병합 (셀 스타일이 우선)
@@ -3777,7 +3847,6 @@ class _DataCell extends StatelessWidget {
     return Container(
       width: width,
       height: theme.dataRowTheme.height,
-      // ✅ cellBorder + 개별 셀 배경색 적용
       decoration: BoxDecoration(
         color: _getEffectiveBackgroundColor(),
         border: Border(
@@ -3834,11 +3903,11 @@ class _DataCell extends StatelessWidget {
     final displayText = cell.displayText ?? '';
 
     if (cell.tooltip != null) {
-      // 강제 tooltip이 지정된 경우
+      // 강제 tooltip이 지정된 경우 (셀 레벨이 우선)
       return CustomTooltip(
         message: cell.tooltip!,
         theme: theme.tooltipTheme,
-        position: TooltipPosition.top, // 데이터는 위쪽에 tooltip
+        position: TooltipPosition.top,
         child: Text(
           displayText,
           style: _getEffectiveTextStyle(),
@@ -3847,14 +3916,15 @@ class _DataCell extends StatelessWidget {
         ),
       );
     } else {
-      // 자동 overflow 감지 tooltip
       return TooltipAbleText(
         text: displayText,
         style: _getEffectiveTextStyle(),
         tooltipTheme: theme.tooltipTheme,
-        tooltipPosition: TooltipPosition.top, // 데이터는 위쪽에 tooltip
+        tooltipPosition: TooltipPosition.top,
         overflow: TextOverflow.ellipsis,
         maxLines: 1,
+        tooltipFormatter: column?.tooltipFormatter,
+        forceTooltip: column?.forceTooltip ?? false,
       );
     }
   }
@@ -3879,7 +3949,7 @@ import '../models/status_config.dart';
 /// 사용자 정의 상태 타입과 StatusConfig를 받아서 렌더링합니다.
 class GenericStatusIndicator extends StatelessWidget {
   /// 상태 값 (사용자 정의 enum 등)
-  final Enum status; // ✅ dynamic 대신 Enum 사용
+  final Enum status;
 
   /// 상태 설정 (색상, 텍스트, 스타일 등)
   final StatusConfig config;
@@ -3902,7 +3972,7 @@ class GenericStatusIndicator extends StatelessWidget {
 
   /// 간단한 가로 레이아웃 팩토리
   factory GenericStatusIndicator.horizontal(
-    Enum status, // ✅ dynamic 대신 Enum 사용
+    Enum status,
     StatusConfig config, {
     MainAxisAlignment mainAxisAlignment = MainAxisAlignment.start,
     CrossAxisAlignment crossAxisAlignment = CrossAxisAlignment.center,
@@ -3918,7 +3988,7 @@ class GenericStatusIndicator extends StatelessWidget {
 
   /// 세로 레이아웃 팩토리
   factory GenericStatusIndicator.vertical(
-    Enum status, // ✅ dynamic 대신 Enum 사용
+    Enum status,
     StatusConfig config, {
     MainAxisAlignment mainAxisAlignment = MainAxisAlignment.center,
     CrossAxisAlignment crossAxisAlignment = CrossAxisAlignment.center,
@@ -4267,6 +4337,9 @@ class TooltipAbleText extends StatelessWidget {
   final BasicTableTooltipTheme? tooltipTheme;
   final TooltipPosition? tooltipPosition;
 
+  final String Function(String value)? tooltipFormatter;
+  final bool forceTooltip;
+
   const TooltipAbleText({
     super.key,
     required this.text,
@@ -4276,6 +4349,8 @@ class TooltipAbleText extends StatelessWidget {
     this.textAlign,
     this.tooltipTheme,
     this.tooltipPosition,
+    this.tooltipFormatter,
+    this.forceTooltip = false,
   });
 
   @override
@@ -4304,16 +4379,24 @@ class TooltipAbleText extends StatelessWidget {
           textAlign: textAlign,
         );
 
-        // overflow시에만 CustomTooltip으로 감싸기
-        if (isOverflow) {
+        // tooltip 표시 조건
+        // 1. forceTooltip이 true면 무조건 tooltip 표시
+        // 2. forceTooltip이 false면 overflow 시에만 tooltip 표시
+        final bool shouldShowTooltip = forceTooltip || isOverflow;
+
+        if (shouldShowTooltip) {
+          final String tooltipMessage = tooltipFormatter != null
+              ? tooltipFormatter!(text) // 커스텀 formatter 사용
+              : text; // 기본값: 원본 텍스트
+
           return CustomTooltip(
-            message: text, // 전체 텍스트를 tooltip으로 표시
+            message: tooltipMessage,
             theme: tooltipTheme,
             position: tooltipPosition,
             child: textWidget,
           );
         } else {
-          // overflow 없으면 그냥 Text만 반환
+          // tooltip 없으면 그냥 Text만 반환
           return textWidget;
         }
       },
@@ -4321,4 +4404,26 @@ class TooltipAbleText extends StatelessWidget {
   }
 }
 
+```
+## pubspec.yaml
+```yaml
+name: flutter_basic_table
+description: "A new Flutter package project."
+version: 0.0.1
+homepage:
+
+environment:
+  sdk: ^3.6.1
+  flutter: ">=1.17.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
 ```

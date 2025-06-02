@@ -205,9 +205,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
           // 테이블 카드
           _buildTableCard(),
-
-          // 설명 카드
-          _buildDescriptionCard(),
         ],
       ),
     );
@@ -283,58 +280,5 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
     );
-  }
-
-  /// 설명 카드 위젯
-  Widget _buildDescriptionCard() {
-    return Card(
-      margin: const EdgeInsets.all(8.0),
-      color: Colors.white,
-      elevation: 1,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              '상태 정렬 테스트 + Generic API:',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-                color: Colors.black87,
-              ),
-            ),
-            const SizedBox(height: 8),
-            ..._buildDescriptionItems(),
-          ],
-        ),
-      ),
-    );
-  }
-
-  /// 설명 항목들 생성
-  List<Widget> _buildDescriptionItems() {
-    final descriptionItems = [
-      '🏗️ 사용자가 직접 정의한 enum + StatusConfig',
-      '📋 직원상태: active, inactive, pending, onLeave, training',
-      '🎨 각 상태별 개별 색상, 텍스트, 아이콘 설정',
-      '🔴 원형 표시기: StatusConfig.simple(), StatusConfig.circleOnly()',
-      '🔘 아이콘 표시기: StatusConfig.withIcon()',
-      '🏷️ 배지 스타일: StatusConfig.badge()',
-      '🔄 헤더를 드래그해서 컬럼 순서 변경',
-      '⬆️⬇️ 헤더 클릭으로 정렬: 오름차순 → 내림차순 → 원래상태',
-      '🔢 상태 컬럼 정렬 테스트 (텍스트 기준으로 정렬됨)',
-      '✅ 라이브러리는 인터페이스만 제공, 상태는 사용자가 완전히 정의',
-      '🎯 모든 상태 관리가 외부에서 완전히 제어됨',
-    ];
-
-    return descriptionItems
-        .map((item) => Text(item,
-            style: TextStyle(
-              fontSize: 13,
-              color: Colors.grey[700],
-              height: 1.4,
-            )))
-        .toList();
   }
 }
