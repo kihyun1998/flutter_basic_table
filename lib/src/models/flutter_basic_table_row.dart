@@ -136,6 +136,7 @@ class BasicTableRow {
   }
 
   /// 컬럼 순서 변경을 위한 셀 재정렬 (외부 상태 관리용)
+  /// newIndex는 이미 home_screen.dart에서 보정된 값이므로 추가 보정 없이 사용
   BasicTableRow reorderCells(int oldIndex, int newIndex) {
     if (oldIndex < 0 ||
         oldIndex >= cells.length ||
@@ -145,12 +146,9 @@ class BasicTableRow {
       return this;
     }
 
-    // newIndex 보정 (ReorderableListView와 동일한 로직)
-    final int adjustedNewIndex = newIndex > oldIndex ? newIndex - 1 : newIndex;
-
     final newCells = List<BasicTableCell>.from(cells);
     final BasicTableCell movedCell = newCells.removeAt(oldIndex);
-    newCells.insert(adjustedNewIndex, movedCell);
+    newCells.insert(newIndex, movedCell); // 보정 없이 직접 사용
 
     return BasicTableRow(
       cells: newCells,
