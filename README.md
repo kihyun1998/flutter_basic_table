@@ -2,7 +2,7 @@
 
 [![Pub Version](https://img.shields.io/pub/v/flutter_basic_table.svg)](https://pub.dev/packages/flutter_basic_table)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Flutter](https://img.shields.io/badge/flutter-%3E%3D3.19.0-blue.svg)](https://flutter.dev)
+[![Flutter](https://img.shields.io/badge/flutter-%3E%3D3.0.0-blue.svg)](https://flutter.dev)
 
 A comprehensive and highly customizable table widget for Flutter that provides sorting, selection, theming, and interactive features out of the box.
 
