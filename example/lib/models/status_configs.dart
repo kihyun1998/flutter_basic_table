@@ -60,30 +60,6 @@ class StatusConfigs {
     ),
   };
 
-  /// 우선순위별 설정
-  static Map<PriorityLevel, StatusConfig> priority = {
-    PriorityLevel.low: StatusConfig.badge(
-      color: Colors.grey,
-      text: '낮음',
-      textColor: Colors.white,
-    ),
-    PriorityLevel.medium: StatusConfig.badge(
-      color: Colors.blue,
-      text: '보통',
-      textColor: Colors.white,
-    ),
-    PriorityLevel.high: StatusConfig.badge(
-      color: Colors.orange,
-      text: '높음',
-      textColor: Colors.white,
-    ),
-    PriorityLevel.urgent: StatusConfig.badge(
-      color: Colors.red,
-      text: '긴급',
-      textColor: Colors.white,
-    ),
-  };
-
   /// 특정 직원 상태의 설정 가져오기
   static StatusConfig getEmployeeConfig(EmployeeStatus status) {
     return employee[status]!;
@@ -92,10 +68,5 @@ class StatusConfigs {
   /// 특정 프로젝트 상태의 설정 가져오기
   static StatusConfig getProjectConfig(ProjectStatus status) {
     return project[status]!;
-  }
-
-  /// 특정 우선순위의 설정 가져오기
-  static StatusConfig getPriorityConfig(PriorityLevel priority) {
-    return StatusConfigs.priority[priority]!;
   }
 }

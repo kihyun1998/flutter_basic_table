@@ -137,6 +137,7 @@ class BasicTableCell {
     );
 
     return BasicTableCell(
+      data: config.text ?? status.toString(), // ✅ 정렬을 위한 데이터 추가!
       widget: statusWidget,
       backgroundColor: backgroundColor,
       alignment: alignment,
@@ -218,10 +219,12 @@ class BasicTableCell {
     return BasicTableCell(data: data);
   }
 
-  /// 표시될 텍스트를 반환 (widget이 있으면 null)
+  /// 표시될 텍스트를 반환 (정렬용 데이터 포함)
   String? get displayText {
-    if (widget != null) return null;
-    return data?.toString();
+    // ✅ data가 있으면 widget이 있어도 data 우선 반환 (정렬용)
+    if (data != null) return data.toString();
+    // widget만 있고 data가 없으면 null
+    return null;
   }
 
   /// 실제로 위젯을 사용할지 여부

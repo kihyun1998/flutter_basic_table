@@ -1,3 +1,4 @@
+// example/lib/screens/home_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_basic_table/flutter_basic_table.dart';
 
@@ -192,7 +193,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Custom Table Demo - 사용자 정의 상태 시스템'),
+        title: const Text('Custom Table Demo - 상태 정렬 테스트'),
         backgroundColor: Colors.grey[200],
         foregroundColor: Colors.black87,
       ),
@@ -296,7 +297,7 @@ class _HomeScreenState extends State<HomeScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              '✅ 사용자 정의 상태 시스템 + Generic API:',
+              '✅ 상태 정렬 테스트 + Generic API:',
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 16,
@@ -316,15 +317,13 @@ class _HomeScreenState extends State<HomeScreen> {
     final descriptionItems = [
       '🏗️ 사용자가 직접 정의한 enum + StatusConfig',
       '📋 직원상태: active, inactive, pending, onLeave, training',
-      '📊 프로젝트상태: planning, inProgress, review, completed, cancelled',
-      '⚡ 우선순위: low, medium, high, urgent',
       '🎨 각 상태별 개별 색상, 텍스트, 아이콘 설정',
       '🔴 원형 표시기: StatusConfig.simple(), StatusConfig.circleOnly()',
       '🔘 아이콘 표시기: StatusConfig.withIcon()',
       '🏷️ 배지 스타일: StatusConfig.badge()',
-      '🖱️ 셀 레벨 클릭 이벤트 (프로젝트 상태 클릭해보세요!)',
       '🔄 헤더를 드래그해서 컬럼 순서 변경',
       '⬆️⬇️ 헤더 클릭으로 정렬: 오름차순 → 내림차순 → 원래상태',
+      '🔢 상태 컬럼 정렬 테스트 (텍스트 기준으로 정렬됨)',
       '✅ 라이브러리는 인터페이스만 제공, 상태는 사용자가 완전히 정의',
       '🎯 모든 상태 관리가 외부에서 완전히 제어됨',
     ];

@@ -16,7 +16,6 @@ class SampleData {
         const BasicTableColumn(name: '부서', minWidth: 100.0),
         const BasicTableColumn(name: '직원상태', minWidth: 100.0),
         const BasicTableColumn(name: '프로젝트상태', minWidth: 120.0),
-        const BasicTableColumn(name: '우선순위', minWidth: 80.0),
         const BasicTableColumn(name: '가입일', minWidth: 100.0),
       ];
 
@@ -72,10 +71,6 @@ class SampleData {
             StatusConfigs.getProjectConfig(ProjectStatus.inProgress),
             onTap: () => debugPrint('프로젝트 상태 클릭!'),
           ),
-          BasicTableCell.status(
-            PriorityLevel.high,
-            StatusConfigs.getPriorityConfig(PriorityLevel.high),
-          ),
           BasicTableCell.text('2023-01-15'),
         ],
       ),
@@ -93,10 +88,6 @@ class SampleData {
           BasicTableCell.status(
             ProjectStatus.review,
             StatusConfigs.getProjectConfig(ProjectStatus.review),
-          ),
-          BasicTableCell.status(
-            PriorityLevel.medium,
-            StatusConfigs.getPriorityConfig(PriorityLevel.medium),
           ),
           BasicTableCell.text('2023-02-20'),
         ],
@@ -116,10 +107,6 @@ class SampleData {
             ProjectStatus.cancelled,
             StatusConfigs.getProjectConfig(ProjectStatus.cancelled),
           ),
-          BasicTableCell.status(
-            PriorityLevel.low,
-            StatusConfigs.getPriorityConfig(PriorityLevel.low),
-          ),
           BasicTableCell.text('2023-03-10'),
         ],
       ),
@@ -137,10 +124,6 @@ class SampleData {
           BasicTableCell.status(
             ProjectStatus.planning,
             StatusConfigs.getProjectConfig(ProjectStatus.planning),
-          ),
-          BasicTableCell.status(
-            PriorityLevel.urgent,
-            StatusConfigs.getPriorityConfig(PriorityLevel.urgent),
           ),
           BasicTableCell.text('2023-04-05'),
         ],
@@ -160,10 +143,6 @@ class SampleData {
             ProjectStatus.completed,
             StatusConfigs.getProjectConfig(ProjectStatus.completed),
           ),
-          BasicTableCell.status(
-            PriorityLevel.medium,
-            StatusConfigs.getPriorityConfig(PriorityLevel.medium),
-          ),
           BasicTableCell.text('2023-05-12'),
         ],
       ),
@@ -175,7 +154,6 @@ class SampleData {
     final List<BasicTableRow> rows = [];
     final employeeStatuses = EmployeeStatus.values;
     final projectStatuses = ProjectStatus.values;
-    final priorities = PriorityLevel.values;
 
     for (int i = 0; i < 20; i++) {
       final realIndex = i + 5; // 고정 데이터 이후부터
@@ -197,11 +175,6 @@ class SampleData {
             projectStatuses[realIndex % projectStatuses.length],
             StatusConfigs.getProjectConfig(
                 projectStatuses[realIndex % projectStatuses.length]),
-          ),
-          BasicTableCell.status(
-            priorities[realIndex % priorities.length],
-            StatusConfigs.getPriorityConfig(
-                priorities[realIndex % priorities.length]),
           ),
           BasicTableCell.text(_generateDate(realIndex)),
         ],
