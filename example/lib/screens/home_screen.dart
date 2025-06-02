@@ -16,7 +16,9 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   // 상태 관리
   Set<int> selectedRows = {};
-  Map<int, ColumnSortState> columnSortStates = {};
+
+  // 새로운 ID 기반 정렬 관리자 (기존 Map 대신 사용)
+  late ColumnSortManager sortManager;
 
   // 테이블 데이터
   late List<BasicTableColumn> tableColumns;
@@ -32,13 +34,25 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    sortManager = ColumnSortManager(); // 새로운 정렬 관리자 초기화
     _initializeData();
   }
 
   /// 데이터 초기화 및 백업 생성
   void _initializeData() {
-    // 샘플 데이터 가져오기
-    tableColumns = SampleData.columns;
+    // 컬럼에 고유 ID 추가 (name을 ID로 사용)
+    tableColumns = SampleData.columns
+        .map((col) => BasicTableColumn(
+              id: col.name, // 명시적으로 ID 설정 (name과 동일)
+              name: col.name,
+              minWidth: col.minWidth,
+              maxWidth: col.maxWidth,
+              isResizable: col.isResizable,
+              tooltipFormatter: col.tooltipFormatter,
+              forceTooltip: col.forceTooltip,
+            ))
+        .toList();
+
     tableRows = _useVariableHeight
         ? SampleData.generateRowsWithVariableHeight()
         : SampleData.generateRows();
@@ -46,6 +60,9 @@ class _HomeScreenState extends State<HomeScreen> {
     // 백업 데이터 생성
     originalTableColumns = SampleData.deepCopyColumns(tableColumns);
     originalTableRows = SampleData.deepCopyRows(tableRows);
+
+    // 정렬 상태 초기화
+    sortManager.clearAll();
   }
 
   /// 데이터 모드 전환
@@ -53,7 +70,6 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       _useVariableHeight = !_useVariableHeight;
       selectedRows.clear(); // 선택 상태 초기화
-      columnSortStates.clear(); // 정렬 상태 초기화
       _initializeData(); // 데이터 재초기화
     });
   }
@@ -104,23 +120,49 @@ class _HomeScreenState extends State<HomeScreen> {
     _showDialog('우클릭!', '$index번 행을 우클릭했습니다.');
   }
 
-  /// 컬럼 정렬 콜백
+  /// 컬럼 정렬 콜백 (기존 방식 - 하위 호환성)
   void onColumnSort(int columnIndex, ColumnSortState sortState) {
     setState(() {
-      // 다른 컬럼의 정렬 상태 초기화 (한 번에 하나의 컬럼만 정렬)
-      columnSortStates.clear();
+      // 정렬 관리자 업데이트 (정렬 정보 추적을 위해)
+      if (columnIndex >= 0 && columnIndex < tableColumns.length) {
+        final String columnId = tableColumns[columnIndex].effectiveId;
+        sortManager.setSortState(columnId, sortState);
+      }
 
       if (sortState != ColumnSortState.none) {
-        columnSortStates[columnIndex] = sortState;
         _sortTableData(columnIndex, sortState);
       } else {
         // 원래 상태로 완전히 복원 (데이터 + 컬럼 순서 모두)
         tableRows = SampleData.deepCopyRows(originalTableRows);
-        tableColumns = SampleData.deepCopyColumns(originalTableColumns);
+        tableColumns = List.from(originalTableColumns); // 원본 컬럼 순서도 복원
+        sortManager.clearAll(); // 정렬 상태 초기화
       }
     });
 
     debugPrint('Column sort: column $columnIndex -> $sortState');
+
+    // 디버그: 정렬 후 상태 확인
+    debugPrint('🔍 Sort states after column sort:');
+    sortManager.printDebugInfo(tableColumns);
+  }
+
+  /// ID 기반 컬럼 정렬 콜백 (새로운 방식)
+  void onColumnSortById(String columnId, ColumnSortState sortState) {
+    debugPrint('🆔 Column sort by ID: $columnId -> $sortState');
+
+    // 컬럼 인덱스 찾기
+    int columnIndex = -1;
+    for (int i = 0; i < tableColumns.length; i++) {
+      if (tableColumns[i].effectiveId == columnId) {
+        columnIndex = i;
+        break;
+      }
+    }
+
+    if (columnIndex >= 0) {
+      // 기존 로직과 동일하게 처리
+      onColumnSort(columnIndex, sortState);
+    }
   }
 
   /// 컬럼 순서 변경 콜백
@@ -130,6 +172,14 @@ class _HomeScreenState extends State<HomeScreen> {
       if (newIndex > oldIndex) {
         newIndex -= 1;
       }
+
+      debugPrint('🔄 Column reorder: $oldIndex -> $newIndex');
+      debugPrint('🔄 BEFORE reorder:');
+      debugPrint(
+          '   Column names: ${tableColumns.map((c) => c.name).join(', ')}');
+      debugPrint(
+          '   Column IDs: ${tableColumns.map((c) => c.effectiveId).join(', ')}');
+      sortManager.printDebugInfo(tableColumns);
 
       // 컬럼 순서 변경
       final BasicTableColumn movedColumn = tableColumns.removeAt(oldIndex);
@@ -147,6 +197,13 @@ class _HomeScreenState extends State<HomeScreen> {
       originalTableRows = originalTableRows
           .map((row) => row.reorderCells(oldIndex, newIndex))
           .toList();
+
+      debugPrint('🔄 AFTER reorder:');
+      debugPrint(
+          '   Column names: ${tableColumns.map((c) => c.name).join(', ')}');
+      debugPrint(
+          '   Column IDs: ${tableColumns.map((c) => c.effectiveId).join(', ')}');
+      sortManager.printDebugInfo(tableColumns);
     });
 
     debugPrint('Column order changed: $oldIndex -> $newIndex');
@@ -225,6 +282,42 @@ class _HomeScreenState extends State<HomeScreen> {
     _showDialog('높이 정보', heightInfo.toString());
   }
 
+  /// 정렬 상태 정보 표시
+  void _showSortInfo() {
+    final sortInfo = StringBuffer();
+    sortInfo.writeln('🔍 정렬 상태 정보:');
+    sortInfo.writeln('');
+
+    if (sortManager.hasSortedColumn) {
+      sortInfo.writeln('현재 정렬된 컬럼: ${sortManager.currentSortedColumnId}');
+
+      final currentIndex =
+          sortManager.getCurrentSortedColumnIndex(tableColumns);
+      if (currentIndex != null) {
+        sortInfo.writeln('현재 위치: $currentIndex번 컬럼');
+        sortInfo.writeln('컬럼명: ${tableColumns[currentIndex].name}');
+      }
+    } else {
+      sortInfo.writeln('현재 정렬된 컬럼이 없습니다.');
+    }
+
+    sortInfo.writeln('');
+    sortInfo.writeln('📋 전체 컬럼 정보:');
+    for (int i = 0; i < tableColumns.length; i++) {
+      final column = tableColumns[i];
+      final state = sortManager.getSortState(column.effectiveId);
+      final stateIcon = state == ColumnSortState.ascending
+          ? '↑'
+          : state == ColumnSortState.descending
+              ? '↓'
+              : '○';
+      sortInfo
+          .writeln('  [$i] ${column.name} (${column.effectiveId}) $stateIcon');
+    }
+
+    _showDialog('정렬 정보', sortInfo.toString());
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -235,6 +328,11 @@ class _HomeScreenState extends State<HomeScreen> {
         backgroundColor: Colors.grey[200],
         foregroundColor: Colors.black87,
         actions: [
+          IconButton(
+            onPressed: _showSortInfo,
+            icon: const Icon(Icons.sort),
+            tooltip: '정렬 정보',
+          ),
           IconButton(
             onPressed: _showHeightInfo,
             icon: const Icon(Icons.info),
@@ -251,7 +349,7 @@ class _HomeScreenState extends State<HomeScreen> {
       backgroundColor: Colors.grey[50],
       body: Column(
         children: [
-          // 선택 상태 + 컬럼 순서 + 높이 모드 표시 카드
+          // 선택 상태 + 컬럼 순서 + 높이 모드 + 정렬 상태 표시 카드
           _buildInfoCard(),
 
           // 테이블 카드
@@ -295,6 +393,17 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     const SizedBox(width: 8),
                     ElevatedButton(
+                      onPressed: _showSortInfo,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: sortManager.hasSortedColumn
+                            ? Colors.green
+                            : Colors.grey,
+                        foregroundColor: Colors.white,
+                      ),
+                      child: const Text('정렬 정보'),
+                    ),
+                    const SizedBox(width: 8),
+                    ElevatedButton(
                       onPressed: _toggleHeightMode,
                       style: ElevatedButton.styleFrom(
                         backgroundColor:
@@ -319,15 +428,36 @@ class _HomeScreenState extends State<HomeScreen> {
             Row(
               children: [
                 Icon(
+                  sortManager.hasSortedColumn
+                      ? Icons.sort
+                      : Icons.sort_outlined,
+                  size: 16,
+                  color: sortManager.hasSortedColumn
+                      ? Colors.green
+                      : Colors.grey[600],
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  sortManager.hasSortedColumn
+                      ? '정렬됨: ${sortManager.currentSortedColumnId}'
+                      : '정렬 없음',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: sortManager.hasSortedColumn
+                        ? Colors.green
+                        : Colors.grey[600],
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Icon(
                   _useVariableHeight ? Icons.height : Icons.horizontal_rule,
                   size: 16,
                   color: Colors.grey[600],
                 ),
                 const SizedBox(width: 4),
                 Text(
-                  _useVariableHeight
-                      ? '가변 높이 모드: 행마다 다른 높이 적용됨'
-                      : '기본 높이 모드: 모든 행이 동일한 높이',
+                  _useVariableHeight ? '가변 높이 모드' : '기본 높이 모드',
                   style: TextStyle(
                     fontSize: 12,
                     color: Colors.grey[600],
@@ -361,8 +491,9 @@ class _HomeScreenState extends State<HomeScreen> {
           onRowSecondaryTap: onRowSecondaryTap,
           doubleClickTime: const Duration(milliseconds: 250),
           onColumnReorder: onColumnReorder,
-          onColumnSort: onColumnSort,
-          columnSortStates: columnSortStates,
+          onColumnSort: onColumnSort, // 기존 방식 (하위 호환성)
+          onColumnSortById: onColumnSortById, // 새로운 ID 기반 방식
+          sortManager: sortManager, // 정렬 관리자 전달
         ),
       ),
     );

@@ -34,8 +34,15 @@ class BasicTable extends StatefulWidget {
   // 헤더 정렬 콜백
   final void Function(int columnIndex, ColumnSortState sortState)? onColumnSort;
 
-  // 현재 정렬 상태 (외부에서 관리)
+  // 현재 정렬 상태 (외부에서 관리) - 하위 호환성 유지
   final Map<int, ColumnSortState>? columnSortStates;
+
+  /// 새로운 ID 기반 정렬 콜백 (선택사항)
+  final void Function(String columnId, ColumnSortState sortState)?
+      onColumnSortById;
+
+  /// ID 기반 정렬 상태 관리자 (선택사항)
+  final ColumnSortManager? sortManager;
 
   const BasicTable({
     super.key,
@@ -52,6 +59,8 @@ class BasicTable extends StatefulWidget {
     this.onColumnReorder,
     this.onColumnSort,
     this.columnSortStates,
+    this.onColumnSortById,
+    this.sortManager,
   })  : assert(columns.length > 0, 'columns cannot be empty'),
         assert(rows.length > 0, 'rows cannot be empty');
 
@@ -70,6 +79,8 @@ class BasicTable extends StatefulWidget {
     void Function(int oldIndex, int newIndex)? onColumnReorder,
     void Function(int columnIndex, ColumnSortState sortState)? onColumnSort,
     Map<int, ColumnSortState>? columnSortStates,
+    void Function(String columnId, ColumnSortState sortState)? onColumnSortById,
+    ColumnSortManager? sortManager,
   }) {
     final rows = data.asMap().entries.map((entry) {
       return BasicTableRow.fromStrings(
@@ -92,6 +103,8 @@ class BasicTable extends StatefulWidget {
       onColumnReorder: onColumnReorder,
       onColumnSort: onColumnSort,
       columnSortStates: columnSortStates,
+      onColumnSortById: onColumnSortById,
+      sortManager: sortManager,
     );
   }
 
@@ -103,6 +116,9 @@ class _BasicTableState extends State<BasicTable> {
   // 호버 상태 관리
   bool _isHovered = false;
 
+  // 내부 정렬 관리자
+  late ColumnSortManager _internalSortManager;
+
   /// 현재 사용할 테마 (제공된 테마 또는 기본 테마)
   BasicTableThemeData get _currentTheme =>
       widget.theme ?? BasicTableThemeData.defaultTheme();
@@ -110,6 +126,36 @@ class _BasicTableState extends State<BasicTable> {
   @override
   void initState() {
     super.initState();
+    _initializeSortManager();
+  }
+
+  @override
+  void didUpdateWidget(BasicTable oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    // 컬럼이나 정렬 상태가 변경되면 정렬 관리자 재초기화
+    if (widget.columns != oldWidget.columns ||
+        widget.columnSortStates != oldWidget.columnSortStates ||
+        widget.sortManager != oldWidget.sortManager) {
+      _initializeSortManager();
+    }
+  }
+
+  /// 정렬 관리자 초기화
+  void _initializeSortManager() {
+    if (widget.sortManager != null) {
+      // 외부에서 제공된 정렬 관리자 사용
+      _internalSortManager = widget.sortManager!.copy();
+    } else if (widget.columnSortStates != null) {
+      // 기존 인덱스 기반 Map에서 생성 (하위 호환성)
+      _internalSortManager = ColumnSortManager.fromIndexMap(
+        widget.columnSortStates!,
+        widget.columns,
+      );
+    } else {
+      // 새로운 빈 정렬 관리자 생성
+      _internalSortManager = ColumnSortManager();
+    }
   }
 
   /// 현재 행 데이터 반환 (더 이상 변환 불필요)
@@ -123,19 +169,35 @@ class _BasicTableState extends State<BasicTable> {
   }
 
   /// 컬럼 순서가 바뀔 때 호출되는 함수 - 외부 콜백만 호출
+  /// 정렬 상태는 ID 기반이므로 자동으로 올바른 컬럼을 따라감
   void _handleColumnReorder(int oldIndex, int newIndex) {
     // 외부 콜백 호출 (외부에서 데이터 관리)
     widget.onColumnReorder?.call(oldIndex, newIndex);
 
     debugPrint('Column reorder requested: $oldIndex -> $newIndex');
+
+    // 디버그: 정렬 상태 확인
+    debugPrint('Sort states after reorder:');
+    _internalSortManager.printDebugInfo(widget.columns);
   }
 
   /// 컬럼 정렬이 변경될 때 호출되는 함수
   void _handleColumnSort(int columnIndex, ColumnSortState sortState) {
-    // 외부 콜백 호출
+    if (columnIndex < 0 || columnIndex >= widget.columns.length) return;
+
+    final String columnId = widget.columns[columnIndex].effectiveId;
+
+    // 내부 정렬 관리자 업데이트
+    _internalSortManager.setSortState(columnId, sortState);
+
+    // 외부 콜백 호출 (기존 방식 - 하위 호환성)
     widget.onColumnSort?.call(columnIndex, sortState);
 
-    debugPrint('Column sort requested: column $columnIndex -> $sortState');
+    // 새로운 ID 기반 콜백 호출
+    widget.onColumnSortById?.call(columnId, sortState);
+
+    debugPrint(
+        'Column sort requested: column $columnIndex ($columnId) -> $sortState');
   }
 
   /// 헤더 체크박스의 상태를 계산합니다
@@ -165,6 +227,11 @@ class _BasicTableState extends State<BasicTable> {
     // 뭔가 선택되어 있으면 전체 해제, 아니면 전체 선택
     final shouldSelectAll = selectedCount == 0;
     widget.onSelectAllChanged!(shouldSelectAll);
+  }
+
+  /// 현재 정렬 상태를 인덱스 기반 Map으로 변환 (하위 호환성)
+  Map<int, ColumnSortState> _getCurrentSortStates() {
+    return _internalSortManager.toIndexMap(widget.columns);
   }
 
   @override
@@ -239,7 +306,8 @@ class _BasicTableState extends State<BasicTable> {
                                   _handleHeaderCheckboxChanged,
                               onColumnReorder: _handleColumnReorder,
                               onColumnSort: _handleColumnSort,
-                              columnSortStates: widget.columnSortStates,
+                              columnSortStates:
+                                  _getCurrentSortStates(), // 실시간 변환
                             ),
 
                             // 테이블 데이터

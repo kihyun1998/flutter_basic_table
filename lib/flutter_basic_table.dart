@@ -23,6 +23,7 @@ export 'src/theme/flutter_basic_table_scrollbar_theme.dart';
 export 'src/theme/flutter_basic_table_selection_theme.dart';
 export 'src/theme/flutter_basic_table_theme.dart';
 export 'src/theme/flutter_basic_table_tooltip_theme.dart';
+export 'src/utils/column_sort_manager.dart';
 
 /// Utilities
 export 'src/widgets/custom_inkwell_widget.dart';
