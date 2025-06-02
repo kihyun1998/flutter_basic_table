@@ -55,8 +55,13 @@ flutter_basic_table/
 
 ## CHANGELOG.md
 ```md
-## 1.0.0
+## 1.0.1
+### Fixed
+- Resolved issues with column reordering, ensuring drag-and-drop functionality works correctly across all platforms.
+- Fixed sorting bugs, improving the stability of ID-based sorting in `ColumnSortManager` to maintain correct sort states after column reordering.
+- Enhanced robustness of column reordering and sorting logic to handle dynamic column changes seamlessly.
 
+## 1.0.0
 ### Added
 - Initial release of FlutterBasicTable package
 - `BasicTable` widget with comprehensive table functionality
@@ -5104,7 +5109,7 @@ class TooltipAbleText extends StatelessWidget {
 ```yaml
 name: flutter_basic_table
 description: A comprehensive and customizable table widget for Flutter with sorting, selection, theming, and interactive features.
-version: 1.0.0
+version: 1.0.1
 homepage: https://github.com/kihyun1998/flutter_basic_table
 repository: https://github.com/kihyun1998/flutter_basic_table
 issue_tracker: https://github.com/kihyun1998/flutter_basic_table/issues
