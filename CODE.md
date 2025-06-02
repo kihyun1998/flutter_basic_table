@@ -5,6 +5,15 @@
 flutter_basic_table/
 ├── example/
     └── lib/
+    │   ├── data/
+    │       └── sample_data.dart
+    │   ├── models/
+    │       ├── enums.dart
+    │       └── status_configs.dart
+    │   ├── screens/
+    │       └── home_screen.dart
+    │   ├── themes/
+    │       └── table_theme.dart
     │   └── main.dart
 └── lib/
     ├── src/
@@ -12,9 +21,11 @@ flutter_basic_table/
         │   ├── column_sort_state.dart
         │   └── tooltip_position.dart
         ├── models/
+        │   ├── flutter_basic_table_cell.dart
         │   ├── flutter_basic_table_column.dart
         │   ├── flutter_basic_table_config.dart
-        │   └── flutter_basic_table_row.dart
+        │   ├── flutter_basic_table_row.dart
+        │   └── status_config.dart
         ├── theme/
         │   ├── flutter_basic_table_border_theme.dart
         │   ├── flutter_basic_table_checkbox_cell_theme.dart
@@ -29,17 +40,289 @@ flutter_basic_table/
         │   ├── custom_tooltip.dart
         │   ├── flutter_basic_table_header_widget.dart
         │   ├── flutter_basic_talbe_data_widget.dart
+        │   ├── generate_status_indicator.dart
         │   ├── synced_scroll_controll_widget.dart
         │   └── tooltip_able_text_widget.dart
         └── flutter_basic_table.dart
     └── flutter_basic_table.dart
 ```
 
-## example/lib/main.dart
+## example/lib/data/sample_data.dart
 ```dart
-// example/lib/main.dart - 깔끔한 모노톤 스타일
 import 'package:flutter/material.dart';
 import 'package:flutter_basic_table/flutter_basic_table.dart';
+
+import '../models/enums.dart';
+import '../models/status_configs.dart';
+
+/// 샘플 테이블 데이터 생성 클래스
+class SampleData {
+  SampleData._(); // private 생성자 (유틸리티 클래스)
+
+  /// 테이블 컬럼 정의
+  static List<BasicTableColumn> get columns => [
+        const BasicTableColumn(name: 'ID', minWidth: 60.0),
+        const BasicTableColumn(name: '이름', minWidth: 120.0),
+        const BasicTableColumn(name: '이메일', minWidth: 200.0),
+        const BasicTableColumn(name: '부서', minWidth: 100.0),
+        const BasicTableColumn(name: '직원상태', minWidth: 100.0),
+        const BasicTableColumn(name: '프로젝트상태', minWidth: 120.0),
+        const BasicTableColumn(name: '우선순위', minWidth: 80.0),
+        const BasicTableColumn(name: '가입일', minWidth: 100.0),
+      ];
+
+  /// 부서별 배경색 맵
+  static const Map<String, Color> _departmentColors = {
+    '개발팀': Colors.blue,
+    '디자인팀': Colors.purple,
+    '마케팅팀': Colors.orange,
+    '영업팀': Colors.green,
+    'HR팀': Colors.pink,
+  };
+
+  /// 부서 리스트
+  static const List<String> _departments = [
+    '개발팀',
+    '디자인팀',
+    '마케팅팀',
+    '영업팀',
+    'HR팀'
+  ];
+
+  /// 샘플 테이블 행 데이터 생성
+  static List<BasicTableRow> generateRows() {
+    final List<BasicTableRow> rows = [];
+
+    // 고정 데이터 (다양한 상태 예시)
+    rows.addAll(_createFixedRows());
+
+    // 동적 생성 데이터
+    rows.addAll(_createGeneratedRows());
+
+    return rows;
+  }
+
+  /// 고정된 샘플 데이터 생성 (다양한 상태 보여주기용)
+  static List<BasicTableRow> _createFixedRows() {
+    return [
+      BasicTableRow(
+        index: 0,
+        cells: [
+          BasicTableCell.text('1'),
+          BasicTableCell.text('김철수',
+              style: const TextStyle(
+                  fontWeight: FontWeight.bold, color: Colors.blue)),
+          BasicTableCell.text('kim@company.com'),
+          _createDepartmentCell('개발팀'),
+          BasicTableCell.status(
+            EmployeeStatus.active,
+            StatusConfigs.getEmployeeConfig(EmployeeStatus.active),
+          ),
+          BasicTableCell.status(
+            ProjectStatus.inProgress,
+            StatusConfigs.getProjectConfig(ProjectStatus.inProgress),
+            onTap: () => debugPrint('프로젝트 상태 클릭!'),
+          ),
+          BasicTableCell.status(
+            PriorityLevel.high,
+            StatusConfigs.getPriorityConfig(PriorityLevel.high),
+          ),
+          BasicTableCell.text('2023-01-15'),
+        ],
+      ),
+      BasicTableRow(
+        index: 1,
+        cells: [
+          BasicTableCell.text('2'),
+          BasicTableCell.text('이영희'),
+          BasicTableCell.text('lee@company.com'),
+          _createDepartmentCell('디자인팀'),
+          BasicTableCell.status(
+            EmployeeStatus.onLeave,
+            StatusConfigs.getEmployeeConfig(EmployeeStatus.onLeave),
+          ),
+          BasicTableCell.status(
+            ProjectStatus.review,
+            StatusConfigs.getProjectConfig(ProjectStatus.review),
+          ),
+          BasicTableCell.status(
+            PriorityLevel.medium,
+            StatusConfigs.getPriorityConfig(PriorityLevel.medium),
+          ),
+          BasicTableCell.text('2023-02-20'),
+        ],
+      ),
+      BasicTableRow(
+        index: 2,
+        cells: [
+          BasicTableCell.text('3'),
+          BasicTableCell.text('박민수'),
+          BasicTableCell.text('park@company.com'),
+          _createDepartmentCell('마케팅팀'),
+          BasicTableCell.status(
+            EmployeeStatus.inactive,
+            StatusConfigs.getEmployeeConfig(EmployeeStatus.inactive),
+          ),
+          BasicTableCell.status(
+            ProjectStatus.cancelled,
+            StatusConfigs.getProjectConfig(ProjectStatus.cancelled),
+          ),
+          BasicTableCell.status(
+            PriorityLevel.low,
+            StatusConfigs.getPriorityConfig(PriorityLevel.low),
+          ),
+          BasicTableCell.text('2023-03-10'),
+        ],
+      ),
+      BasicTableRow(
+        index: 3,
+        cells: [
+          BasicTableCell.text('4'),
+          BasicTableCell.text('정수진'),
+          BasicTableCell.text('jung@company.com'),
+          _createDepartmentCell('영업팀'),
+          BasicTableCell.status(
+            EmployeeStatus.training,
+            StatusConfigs.getEmployeeConfig(EmployeeStatus.training),
+          ),
+          BasicTableCell.status(
+            ProjectStatus.planning,
+            StatusConfigs.getProjectConfig(ProjectStatus.planning),
+          ),
+          BasicTableCell.status(
+            PriorityLevel.urgent,
+            StatusConfigs.getPriorityConfig(PriorityLevel.urgent),
+          ),
+          BasicTableCell.text('2023-04-05'),
+        ],
+      ),
+      BasicTableRow(
+        index: 4,
+        cells: [
+          BasicTableCell.text('5'),
+          BasicTableCell.text('최동혁'),
+          BasicTableCell.text('choi@company.com'),
+          _createDepartmentCell('HR팀'),
+          BasicTableCell.status(
+            EmployeeStatus.pending,
+            StatusConfigs.getEmployeeConfig(EmployeeStatus.pending),
+          ),
+          BasicTableCell.status(
+            ProjectStatus.completed,
+            StatusConfigs.getProjectConfig(ProjectStatus.completed),
+          ),
+          BasicTableCell.status(
+            PriorityLevel.medium,
+            StatusConfigs.getPriorityConfig(PriorityLevel.medium),
+          ),
+          BasicTableCell.text('2023-05-12'),
+        ],
+      ),
+    ];
+  }
+
+  /// 동적으로 생성된 샘플 데이터
+  static List<BasicTableRow> _createGeneratedRows() {
+    final List<BasicTableRow> rows = [];
+    final employeeStatuses = EmployeeStatus.values;
+    final projectStatuses = ProjectStatus.values;
+    final priorities = PriorityLevel.values;
+
+    for (int i = 0; i < 20; i++) {
+      final realIndex = i + 5; // 고정 데이터 이후부터
+      final department = _departments[realIndex % _departments.length];
+
+      rows.add(BasicTableRow(
+        index: realIndex,
+        cells: [
+          BasicTableCell.text('${realIndex + 1}'),
+          BasicTableCell.text('사용자${realIndex + 1}'),
+          BasicTableCell.text('user${realIndex + 1}@company.com'),
+          _createDepartmentCell(department),
+          BasicTableCell.status(
+            employeeStatuses[realIndex % employeeStatuses.length],
+            StatusConfigs.getEmployeeConfig(
+                employeeStatuses[realIndex % employeeStatuses.length]),
+          ),
+          BasicTableCell.status(
+            projectStatuses[realIndex % projectStatuses.length],
+            StatusConfigs.getProjectConfig(
+                projectStatuses[realIndex % projectStatuses.length]),
+          ),
+          BasicTableCell.status(
+            priorities[realIndex % priorities.length],
+            StatusConfigs.getPriorityConfig(
+                priorities[realIndex % priorities.length]),
+          ),
+          BasicTableCell.text(_generateDate(realIndex)),
+        ],
+      ));
+    }
+
+    return rows;
+  }
+
+  /// 부서 셀 생성 (배경색 포함)
+  static BasicTableCell _createDepartmentCell(String department) {
+    final color = _departmentColors[department] ?? Colors.grey;
+    return BasicTableCell.text(
+      department,
+      backgroundColor: color.withOpacity(0.1),
+    );
+  }
+
+  /// 날짜 생성 헬퍼
+  static String _generateDate(int index) {
+    final month = (index % 12 + 1).toString().padLeft(2, '0');
+    final day = (index % 28 + 1).toString().padLeft(2, '0');
+    return '2024-$month-$day';
+  }
+
+  /// 테이블 행 데이터의 딥 카피 생성 (백업용)
+  static List<BasicTableRow> deepCopyRows(List<BasicTableRow> original) {
+    return original
+        .map((row) => BasicTableRow(
+              index: row.index,
+              cells: row.cells
+                  .map((cell) => BasicTableCell(
+                        data: cell.data,
+                        widget: cell.widget,
+                        style: cell.style,
+                        backgroundColor: cell.backgroundColor,
+                        alignment: cell.alignment,
+                        padding: cell.padding,
+                        tooltip: cell.tooltip,
+                        enabled: cell.enabled,
+                        onTap: cell.onTap,
+                        onDoubleTap: cell.onDoubleTap,
+                        onSecondaryTap: cell.onSecondaryTap,
+                      ))
+                  .toList(),
+            ))
+        .toList();
+  }
+
+  /// 컬럼 데이터의 딥 카피 생성 (백업용)
+  static List<BasicTableColumn> deepCopyColumns(
+      List<BasicTableColumn> original) {
+    return original
+        .map((col) => BasicTableColumn(
+              name: col.name,
+              minWidth: col.minWidth,
+              maxWidth: col.maxWidth,
+              isResizable: col.isResizable,
+            ))
+        .toList();
+  }
+}
+
+```
+## example/lib/main.dart
+```dart
+// example/lib/main.dart - 간단한 앱 진입점
+import 'package:flutter/material.dart';
+
+import 'screens/home_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -51,16 +334,163 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Custom Table Demo',
+      title: 'Basic Table Demo',
       theme: ThemeData(
-        primarySwatch: Colors.grey, // ✅ 파란색 → 회색으로 변경
+        primarySwatch: Colors.grey,
         useMaterial3: true,
       ),
       home: const HomeScreen(),
+      debugShowCheckedModeBanner: false,
     );
   }
 }
 
+```
+## example/lib/models/enums.dart
+```dart
+// 사용자가 정의한 상태 시스템
+
+/// 직원 상태
+enum EmployeeStatus {
+  active, // 활성
+  inactive, // 비활성
+  pending, // 대기
+  onLeave, // 휴가
+  training // 교육중
+}
+
+/// 프로젝트 상태
+enum ProjectStatus {
+  planning, // 계획
+  inProgress, // 진행중
+  review, // 검토
+  completed, // 완료
+  cancelled // 취소됨
+}
+
+/// 우선순위 레벨
+enum PriorityLevel {
+  low, // 낮음
+  medium, // 보통
+  high, // 높음
+  urgent // 긴급
+}
+
+```
+## example/lib/models/status_configs.dart
+```dart
+import 'package:flutter/material.dart';
+import 'package:flutter_basic_table/flutter_basic_table.dart';
+
+import 'enums.dart';
+
+/// 상태별 설정 정의 클래스
+class StatusConfigs {
+  StatusConfigs._(); // private 생성자 (유틸리티 클래스)
+
+  /// 직원 상태별 설정
+  static Map<EmployeeStatus, StatusConfig> employee = {
+    EmployeeStatus.active: StatusConfig.simple(
+      color: Colors.green,
+      text: '활성',
+    ),
+    EmployeeStatus.inactive: StatusConfig.simple(
+      color: Colors.red,
+      text: '비활성',
+    ),
+    EmployeeStatus.pending: StatusConfig.simple(
+      color: Colors.orange,
+      text: '대기',
+    ),
+    EmployeeStatus.onLeave: StatusConfig.withIcon(
+      color: Colors.blue,
+      icon: Icons.flight_takeoff,
+      text: '휴가',
+    ),
+    EmployeeStatus.training: StatusConfig.badge(
+      color: Colors.purple,
+      text: '교육중',
+      textColor: Colors.white,
+      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+    ),
+  };
+
+  /// 프로젝트 상태별 설정
+  static Map<ProjectStatus, StatusConfig> project = {
+    ProjectStatus.planning: StatusConfig.circleOnly(
+      color: Colors.grey,
+      tooltip: '계획 단계',
+    ),
+    ProjectStatus.inProgress: StatusConfig.withIcon(
+      color: Colors.blue,
+      icon: Icons.play_circle,
+      text: '진행중',
+    ),
+    ProjectStatus.review: StatusConfig.simple(
+      color: Colors.orange,
+      text: '검토',
+    ),
+    ProjectStatus.completed: StatusConfig.withIcon(
+      color: Colors.green,
+      icon: Icons.check_circle,
+      text: '완료',
+    ),
+    ProjectStatus.cancelled: StatusConfig.simple(
+      color: Colors.red,
+      text: '취소됨',
+    ),
+  };
+
+  /// 우선순위별 설정
+  static Map<PriorityLevel, StatusConfig> priority = {
+    PriorityLevel.low: StatusConfig.badge(
+      color: Colors.grey,
+      text: '낮음',
+      textColor: Colors.white,
+    ),
+    PriorityLevel.medium: StatusConfig.badge(
+      color: Colors.blue,
+      text: '보통',
+      textColor: Colors.white,
+    ),
+    PriorityLevel.high: StatusConfig.badge(
+      color: Colors.orange,
+      text: '높음',
+      textColor: Colors.white,
+    ),
+    PriorityLevel.urgent: StatusConfig.badge(
+      color: Colors.red,
+      text: '긴급',
+      textColor: Colors.white,
+    ),
+  };
+
+  /// 특정 직원 상태의 설정 가져오기
+  static StatusConfig getEmployeeConfig(EmployeeStatus status) {
+    return employee[status]!;
+  }
+
+  /// 특정 프로젝트 상태의 설정 가져오기
+  static StatusConfig getProjectConfig(ProjectStatus status) {
+    return project[status]!;
+  }
+
+  /// 특정 우선순위의 설정 가져오기
+  static StatusConfig getPriorityConfig(PriorityLevel priority) {
+    return StatusConfigs.priority[priority]!;
+  }
+}
+
+```
+## example/lib/screens/home_screen.dart
+```dart
+import 'package:flutter/material.dart';
+import 'package:flutter_basic_table/flutter_basic_table.dart';
+
+import '../data/sample_data.dart';
+import '../themes/table_theme.dart';
+
+/// 메인 테이블 화면
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -69,165 +499,36 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  // 상태 관리
+  Set<int> selectedRows = {};
+  Map<int, ColumnSortState> columnSortStates = {};
+
+  // 테이블 데이터
+  late List<BasicTableColumn> tableColumns;
+  late List<BasicTableRow> tableRows;
+
+  // 백업 데이터 (정렬 해제시 복원용)
+  late List<BasicTableColumn> originalTableColumns;
+  late List<BasicTableRow> originalTableRows;
+
   @override
   void initState() {
     super.initState();
-    // 원본 데이터 백업 (정렬 해제시 복원용)
-    originalTableData = tableData.map((row) => List<String>.from(row)).toList();
+    _initializeData();
   }
 
-  // 외부에서 정의된 선택 상태 - 체크박스 기능의 핵심!
-  Set<int> selectedRows = {};
+  /// 데이터 초기화 및 백업 생성
+  void _initializeData() {
+    // 샘플 데이터 가져오기
+    tableColumns = SampleData.columns;
+    tableRows = SampleData.generateRows();
 
-  // 정렬 상태 관리
-  Map<int, ColumnSortState> columnSortStates = {};
+    // 백업 데이터 생성
+    originalTableColumns = SampleData.deepCopyColumns(tableColumns);
+    originalTableRows = SampleData.deepCopyRows(tableRows);
+  }
 
-  // 원본 데이터 백업 (정렬 해제시 복원용)
-  late List<List<String>> originalTableData;
-
-  // 외부에서 컬럼 정의 - minWidth도 모두 직접 설정
-  List<BasicTableColumn> tableColumns = [
-    const BasicTableColumn(name: 'ID', minWidth: 80.0),
-    const BasicTableColumn(name: '이름', minWidth: 150.0),
-    const BasicTableColumn(name: '이메일', minWidth: 250.0),
-    const BasicTableColumn(name: '부서', minWidth: 120.0),
-    const BasicTableColumn(name: '상태', minWidth: 100.0),
-    const BasicTableColumn(name: '가입일', minWidth: 130.0),
-  ];
-
-  // 외부에서 테이블 데이터 정의
-  List<List<String>> tableData = [
-    ['1', '김철수', 'kim@company.com', '개발팀', '활성', '2023-01-15'],
-    ['2', '이영희', 'lee@company.com', '디자인팀', '활성', '2023-02-20'],
-    ['3', '박민수', 'park@company.com', '마케팅팀', '비활성', '2023-03-10'],
-    ['4', '정수진', 'jung@company.com', '영업팀', '대기', '2023-04-05'],
-    ['5', '최동혁', 'choi@company.com', 'HR팀', '활성', '2023-05-12'],
-    ['6', '송지은', 'song@company.com', '개발팀', '활성', '2023-06-18'],
-    ['7', '윤상호', 'yoon@company.com', '디자인팀', '비활성', '2023-07-22'],
-    ['8', '한미영', 'han@company.com', '마케팅팀', '활성', '2023-08-14'],
-    ['9', '조현우', 'jo@company.com', '영업팀', '대기', '2023-09-09'],
-    ['10', '강예린', 'kang@company.com', 'HR팀', '활성', '2023-10-30'],
-    ['11', '임태윤', 'lim@company.com', '개발팀', '활성', '2023-11-11'],
-    ['12', '신보라', 'shin@company.com', '디자인팀', '활성', '2023-12-01'],
-    ['13', '홍길동', 'hong@company.com', '마케팅팀', '비활성', '2024-01-15'],
-    ['14', '백지훈', 'baek@company.com', '영업팀', '활성', '2024-02-20'],
-    ['15', '오세영', 'oh@company.com', 'HR팀', '대기', '2024-03-10'],
-    ['16', '노아름', 'no@company.com', '개발팀', '활성', '2024-04-05'],
-    ['17', '서준호', 'seo@company.com', '디자인팀', '활성', '2024-05-12'],
-    ['18', '유진아', 'yu@company.com', '마케팅팀', '비활성', '2024-06-18'],
-    ['19', '문성민', 'moon@company.com', '영업팀', '활성', '2024-07-22'],
-    ['20', '양하늘', 'yang@company.com', 'HR팀', '대기', '2024-08-14'],
-    ['21', '배소미', 'bae@company.com', '개발팀', '활성', '2024-09-09'],
-    ['22', '권도영', 'kwon@company.com', '디자인팀', '활성', '2024-10-30'],
-    ['23', '안지혜', 'ahn@company.com', '마케팅팀', '비활성', '2024-11-11'],
-    ['24', '남궁민', 'namgung@company.com', '영업팀', '활성', '2024-12-01'],
-    ['25', '황수정', 'hwang@company.com', 'HR팀', '대기', '2024-12-15'],
-  ];
-
-  // ✅ 깔끔한 모노톤 스타일 테마 정의!
-  BasicTableThemeData get tableTheme => BasicTableThemeData(
-        // 헤더 테마 - 깔끔한 흰색/회색 스타일
-        headerTheme: BasicTableHeaderCellTheme(
-          height: 50.0,
-          backgroundColor: Colors.grey[100], // ✅ 연한 회색 배경
-          textStyle: const TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 14,
-            color: Colors.black87, // ✅ 진한 검정색 텍스트
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
-          border:
-              const BorderSide(color: Colors.black87, width: 1.0), // ✅ 검정색 테두리
-          sortIconColor: Colors.black54, // ✅ 회색 정렬 아이콘
-          enableReorder: true,
-          enableSorting: true,
-          showDragHandles: false,
-
-          // 정렬 아이콘 설정
-          ascendingIcon: Icons.arrow_upward,
-          descendingIcon: Icons.arrow_downward,
-          sortIconSize: 18.0,
-
-          // 헤더 클릭 효과 - 은은한 회색
-          splashColor: Colors.grey.withOpacity(0.1),
-          highlightColor: Colors.grey.withOpacity(0.05),
-        ),
-
-        // 데이터 행 테마 - 깨끗한 흰색 스타일
-        dataRowTheme: BasicTableDataRowTheme(
-          height: 45.0,
-          backgroundColor: Colors.white, // ✅ 깨끗한 흰색 배경
-          textStyle: const TextStyle(
-              fontSize: 13, color: Colors.black87), // ✅ 진한 검정색 텍스트
-          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
-          border:
-              BorderSide(color: Colors.grey[300]!, width: 0.5), // ✅ 연한 회색 테두리
-
-          // 행 클릭 효과 - 은은한 회색
-          splashColor: Colors.grey.withOpacity(0.08),
-          highlightColor: Colors.grey.withOpacity(0.04),
-        ),
-
-        // 체크박스 테마 - 모노톤 스타일
-        checkboxTheme: const BasicTableCheckboxCellTheme(
-          enabled: true,
-          columnWidth: 60.0,
-          padding: EdgeInsets.all(8.0),
-          activeColor: Colors.black87, // ✅ 체크됐을 때 검정색
-          checkColor: Colors.white, // ✅ 체크 마크는 흰색
-        ),
-
-        // 선택 상태 테마 - 은은한 회색
-        selectionTheme: BasicTableSelectionTheme(
-          selectedRowColor: Colors.grey.withOpacity(0.15), // ✅ 선택된 행은 연한 회색
-          hoverRowColor: Colors.grey.withOpacity(0.08), // ✅ hover는 더 연한 회색
-        ),
-
-        // 스크롤바 테마 - 검정/회색 스타일
-        scrollbarTheme: BasicTableScrollbarTheme(
-          showHorizontal: true,
-          showVertical: true,
-          hoverOnly: true,
-          opacity: 0.7,
-          animationDuration: const Duration(milliseconds: 250),
-          width: 12.0,
-          color: Colors.black54, // ✅ 회색 스크롤바
-          trackColor: Colors.grey.withOpacity(0.2), // ✅ 연한 회색 트랙
-        ),
-
-        // 테두리 테마 - 깔끔한 검정/회색
-        borderTheme: BasicTableBorderTheme(
-          tableBorder: const BorderSide(color: Colors.black54, width: 0.5),
-          headerBorder: const BorderSide(color: Colors.black87, width: 1.0),
-          rowBorder: BorderSide(color: Colors.grey[300]!, width: 0.5),
-          cellBorder: BorderSide(
-              color: Colors.grey[200]!, width: 0.3), // ✅ 매우 연한 회색 셀 구분선
-        ),
-
-        // ✅ Tooltip 테마 - 모노톤 스타일!
-        tooltipTheme: BasicTableTooltipTheme(
-          backgroundColor: Colors.black87, // 진한 검정 배경
-          textColor: Colors.white, // 흰색 텍스트
-          fontSize: 12.0,
-          fontWeight: FontWeight.normal,
-          padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0),
-          margin: const EdgeInsets.all(4.0),
-          borderRadius: BorderRadius.circular(4.0),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black38, // 은은한 그림자
-              blurRadius: 6.0,
-              offset: const Offset(0, 2),
-            ),
-          ],
-          verticalOffset: 20.0,
-          waitDuration: const Duration(milliseconds: 300), // 빠른 반응
-          showDuration: const Duration(milliseconds: 2000), // 2초간 표시
-          preferredPosition: TooltipPosition.auto,
-        ),
-      );
-
-  // 외부에서 정의된 개별 행 선택/해제 콜백
+  /// 행 선택/해제 콜백
   void onRowSelectionChanged(int index, bool selected) {
     setState(() {
       if (selected) {
@@ -241,12 +542,12 @@ class _HomeScreenState extends State<HomeScreen> {
         'Row $index ${selected ? 'selected' : 'deselected'}. Total selected: ${selectedRows.length}');
   }
 
-  // 외부에서 정의된 전체 선택/해제 콜백
+  /// 전체 선택/해제 콜백
   void onSelectAllChanged(bool selectAll) {
     setState(() {
       if (selectAll) {
         selectedRows =
-            Set.from(List.generate(tableData.length, (index) => index));
+            Set.from(List.generate(tableRows.length, (index) => index));
       } else {
         selectedRows.clear();
       }
@@ -256,48 +557,24 @@ class _HomeScreenState extends State<HomeScreen> {
         '${selectAll ? 'Select all' : 'Deselect all'}. Total selected: ${selectedRows.length}');
   }
 
-  // 외부에서 정의된 행 클릭 콜백
+  /// 행 클릭 콜백
   void onRowTap(int index) {
     debugPrint('Row $index tapped');
   }
 
-  // 외부에서 정의된 행 더블클릭 콜백
+  /// 행 더블클릭 콜백
   void onRowDoubleTap(int index) {
     debugPrint('Row $index double-tapped');
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('더블클릭!'),
-        content: Text('$index번 행을 더블클릭했습니다.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('확인'),
-          ),
-        ],
-      ),
-    );
+    _showDialog('더블클릭!', '$index번 행을 더블클릭했습니다.');
   }
 
-  // 외부에서 정의된 행 우클릭 콜백
+  /// 행 우클릭 콜백
   void onRowSecondaryTap(int index) {
     debugPrint('Row $index right-clicked');
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('우클릭!'),
-        content: Text('$index번 행을 우클릭했습니다.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('확인'),
-          ),
-        ],
-      ),
-    );
+    _showDialog('우클릭!', '$index번 행을 우클릭했습니다.');
   }
 
-  // 🆕 헤더 컬럼 정렬 콜백
+  /// 컬럼 정렬 콜백
   void onColumnSort(int columnIndex, ColumnSortState sortState) {
     setState(() {
       // 다른 컬럼의 정렬 상태 초기화 (한 번에 하나의 컬럼만 정렬)
@@ -305,32 +582,61 @@ class _HomeScreenState extends State<HomeScreen> {
 
       if (sortState != ColumnSortState.none) {
         columnSortStates[columnIndex] = sortState;
-
-        // 정렬 수행
         _sortTableData(columnIndex, sortState);
       } else {
-        // 원래 상태로 복원
-        tableData =
-            originalTableData.map((row) => List<String>.from(row)).toList();
+        // 원래 상태로 완전히 복원 (데이터 + 컬럼 순서 모두)
+        tableRows = SampleData.deepCopyRows(originalTableRows);
+        tableColumns = SampleData.deepCopyColumns(originalTableColumns);
       }
     });
 
     debugPrint('Column sort: column $columnIndex -> $sortState');
   }
 
-  /// 테이블 데이터를 정렬합니다
+  /// 컬럼 순서 변경 콜백
+  void onColumnReorder(int oldIndex, int newIndex) {
+    setState(() {
+      // newIndex 보정
+      if (newIndex > oldIndex) {
+        newIndex -= 1;
+      }
+
+      // 컬럼 순서 변경
+      final BasicTableColumn movedColumn = tableColumns.removeAt(oldIndex);
+      tableColumns.insert(newIndex, movedColumn);
+
+      // 모든 행의 데이터도 재정렬
+      tableRows =
+          tableRows.map((row) => row.reorderCells(oldIndex, newIndex)).toList();
+
+      // 원본 데이터도 함께 업데이트 (정렬 해제시 현재 컬럼 순서 유지)
+      final BasicTableColumn movedOriginalColumn =
+          originalTableColumns.removeAt(oldIndex);
+      originalTableColumns.insert(newIndex, movedOriginalColumn);
+
+      originalTableRows = originalTableRows
+          .map((row) => row.reorderCells(oldIndex, newIndex))
+          .toList();
+    });
+
+    debugPrint('Column order changed: $oldIndex -> $newIndex');
+
+    // 현재 컬럼 순서 출력
+    final columnNames = tableColumns.map((col) => col.name).join(', ');
+    debugPrint('New column order: $columnNames');
+  }
+
+  /// 테이블 데이터 정렬
   void _sortTableData(int columnIndex, ColumnSortState sortState) {
     if (columnIndex >= tableColumns.length) return;
 
-    tableData.sort((a, b) {
-      if (columnIndex >= a.length || columnIndex >= b.length) return 0;
-
-      final String valueA = a[columnIndex];
-      final String valueB = b[columnIndex];
+    tableRows.sort((a, b) {
+      final String valueA = a.getComparableValue(columnIndex);
+      final String valueB = b.getComparableValue(columnIndex);
 
       // 숫자인지 확인해서 숫자면 숫자로 정렬, 아니면 문자열로 정렬
-      final numA = int.tryParse(valueA);
-      final numB = int.tryParse(valueB);
+      final numA = a.getNumericValue(columnIndex);
+      final numB = b.getNumericValue(columnIndex);
 
       int comparison;
       if (numA != null && numB != null) {
@@ -346,173 +652,361 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  void onColumnReorder(int oldIndex, int newIndex) {
-    setState(() {
-      // newIndex 보정
-      if (newIndex > oldIndex) {
-        newIndex -= 1;
-      }
-
-      // 🔥 중요: tableColumns도 함께 변경해야 UI 표시가 정확해짐!
-      final BasicTableColumn movedColumn = tableColumns.removeAt(oldIndex);
-      tableColumns.insert(newIndex, movedColumn);
-
-      // 모든 행의 데이터도 같은 순서로 재정렬
-      for (final row in tableData) {
-        if (oldIndex < row.length && newIndex < row.length) {
-          final String movedCell = row.removeAt(oldIndex);
-          row.insert(newIndex, movedCell);
-        }
-      }
-    });
-
-    debugPrint('Column order changed: $oldIndex -> $newIndex');
-
-    // 현재 컬럼 순서 출력 (이제 정확함!)
-    final columnNames = tableColumns.map((col) => col.name).join(', ');
-    debugPrint('New column order: $columnNames');
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Custom Table Demo - Monochrome + Smart Tooltip'),
-        backgroundColor: Colors.grey[200], // ✅ 연한 회색 앱바
-        foregroundColor: Colors.black87, // ✅ 검정색 텍스트
-      ),
-      backgroundColor: Colors.grey[50], // ✅ 매우 연한 회색 배경
-      body: Column(
-        children: [
-          // 선택 상태 + 컬럼 순서 표시 카드
-          Card(
-            margin: const EdgeInsets.all(8.0),
-            color: Colors.white, // ✅ 흰색 카드
-            elevation: 1, // ✅ 은은한 그림자
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        '선택된 행: ${selectedRows.length}개',
-                        style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.black87), // ✅ 검정색 텍스트
-                      ),
-                      if (selectedRows.isNotEmpty)
-                        ElevatedButton(
-                          onPressed: () {
-                            showDialog(
-                              context: context,
-                              builder: (context) => AlertDialog(
-                                title: const Text('선택된 항목'),
-                                content: Text(
-                                    '선택된 행들의 인덱스:\n${selectedRows.toList()..sort()}'),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () => Navigator.pop(context),
-                                    child: const Text('확인'),
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.black87, // ✅ 검정색 버튼
-                            foregroundColor: Colors.white, // ✅ 흰색 텍스트
-                          ),
-                          child: const Text('선택 항목 보기'),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    '컬럼 순서: ${tableColumns.map((col) => col.name).join(' → ')}',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey[600], // ✅ 회색 텍스트
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          // ✅ 커스텀 테이블이 들어갈 확장된 영역
-          Expanded(
-            child: Card(
-              margin: const EdgeInsets.all(8.0),
-              color: Colors.white, // ✅ 흰색 카드
-              elevation: 1, // ✅ 은은한 그림자
-              child: BasicTable(
-                columns: tableColumns,
-                data: tableData,
-                theme: tableTheme, // ✅ 깔끔한 모노톤 테마!
-                selectedRows: selectedRows,
-                onRowSelectionChanged: onRowSelectionChanged,
-                onSelectAllChanged: onSelectAllChanged,
-                onRowTap: onRowTap,
-                onRowDoubleTap: onRowDoubleTap,
-                onRowSecondaryTap: onRowSecondaryTap,
-                doubleClickTime: const Duration(milliseconds: 250),
-                onColumnReorder: onColumnReorder,
-                onColumnSort: onColumnSort,
-                columnSortStates: columnSortStates,
-              ),
-            ),
-          ),
-
-          // 설명 카드
-          Card(
-            margin: const EdgeInsets.all(8.0),
-            color: Colors.white, // ✅ 흰색 카드
-            elevation: 1, // ✅ 은은한 그림자
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    '✅ 깔끔한 모노톤 스타일 + 스마트 Tooltip:',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                      color: Colors.black87, // ✅ 검정색 제목
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text('🎨 흰색, 검정색, 회색만 사용한 깔끔한 디자인', style: _descStyle),
-                  Text('🔄 헤더를 드래그해서 컬럼 순서 변경', style: _descStyle),
-                  Text('⬆️⬇️ 헤더 클릭으로 정렬: 오름차순 → 내림차순 → 원래상태',
-                      style: _descStyle),
-                  Text('🔢 숫자 컬럼은 숫자로 정렬, 문자 컬럼은 문자로 정렬', style: _descStyle),
-                  Text('✅ 체크박스로 다중 선택 지원', style: _descStyle),
-                  Text('✅ 더블클릭 & 우클릭 지원', style: _descStyle),
-                  Text('✅ hover 효과 & 클릭 효과 모두 은은한 회색', style: _descStyle),
-                  Text('📝 텍스트 overflow시 자동 tooltip 표시 (300ms 후)',
-                      style: _descStyle), // ✅ 추가
-                  Text('🎯 헤더는 아래쪽, 데이터는 위쪽에 tooltip 표시',
-                      style: _descStyle), // ✅ 추가
-                  Text('✅ 모든 이벤트가 외부에서 완전히 제어됨', style: _descStyle),
-                ],
-              ),
-            ),
+  /// 다이얼로그 표시 헬퍼
+  void _showDialog(String title, String content) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(title),
+        content: Text(content),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('확인'),
           ),
         ],
       ),
     );
   }
 
-  // ✅ 설명 텍스트 스타일 (회색)
-  TextStyle get _descStyle => TextStyle(
-        fontSize: 13,
-        color: Colors.grey[700],
-        height: 1.4,
+  /// 선택된 항목 보기
+  void _showSelectedItems() {
+    _showDialog('선택된 항목', '선택된 행들의 인덱스:\n${selectedRows.toList()..sort()}');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Custom Table Demo - 사용자 정의 상태 시스템'),
+        backgroundColor: Colors.grey[200],
+        foregroundColor: Colors.black87,
+      ),
+      backgroundColor: Colors.grey[50],
+      body: Column(
+        children: [
+          // 선택 상태 + 컬럼 순서 표시 카드
+          _buildInfoCard(),
+
+          // 테이블 카드
+          _buildTableCard(),
+
+          // 설명 카드
+          _buildDescriptionCard(),
+        ],
+      ),
+    );
+  }
+
+  /// 정보 표시 카드 위젯
+  Widget _buildInfoCard() {
+    return Card(
+      margin: const EdgeInsets.all(8.0),
+      color: Colors.white,
+      elevation: 1,
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  '선택된 행: ${selectedRows.length}개',
+                  style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.black87),
+                ),
+                if (selectedRows.isNotEmpty)
+                  ElevatedButton(
+                    onPressed: _showSelectedItems,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.black87,
+                      foregroundColor: Colors.white,
+                    ),
+                    child: const Text('선택 항목 보기'),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              '컬럼 순서: ${tableColumns.map((col) => col.name).join(' → ')}',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[600],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// 테이블 카드 위젯
+  Widget _buildTableCard() {
+    return Expanded(
+      child: Card(
+        margin: const EdgeInsets.all(8.0),
+        color: Colors.white,
+        elevation: 1,
+        child: BasicTable(
+          columns: tableColumns,
+          rows: tableRows,
+          theme: AppTableTheme.monochrome, // 테마 적용
+          selectedRows: selectedRows,
+          onRowSelectionChanged: onRowSelectionChanged,
+          onSelectAllChanged: onSelectAllChanged,
+          onRowTap: onRowTap,
+          onRowDoubleTap: onRowDoubleTap,
+          onRowSecondaryTap: onRowSecondaryTap,
+          doubleClickTime: const Duration(milliseconds: 250),
+          onColumnReorder: onColumnReorder,
+          onColumnSort: onColumnSort,
+          columnSortStates: columnSortStates,
+        ),
+      ),
+    );
+  }
+
+  /// 설명 카드 위젯
+  Widget _buildDescriptionCard() {
+    return Card(
+      margin: const EdgeInsets.all(8.0),
+      color: Colors.white,
+      elevation: 1,
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              '✅ 사용자 정의 상태 시스템 + Generic API:',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+                color: Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 8),
+            ..._buildDescriptionItems(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// 설명 항목들 생성
+  List<Widget> _buildDescriptionItems() {
+    final descriptionItems = [
+      '🏗️ 사용자가 직접 정의한 enum + StatusConfig',
+      '📋 직원상태: active, inactive, pending, onLeave, training',
+      '📊 프로젝트상태: planning, inProgress, review, completed, cancelled',
+      '⚡ 우선순위: low, medium, high, urgent',
+      '🎨 각 상태별 개별 색상, 텍스트, 아이콘 설정',
+      '🔴 원형 표시기: StatusConfig.simple(), StatusConfig.circleOnly()',
+      '🔘 아이콘 표시기: StatusConfig.withIcon()',
+      '🏷️ 배지 스타일: StatusConfig.badge()',
+      '🖱️ 셀 레벨 클릭 이벤트 (프로젝트 상태 클릭해보세요!)',
+      '🔄 헤더를 드래그해서 컬럼 순서 변경',
+      '⬆️⬇️ 헤더 클릭으로 정렬: 오름차순 → 내림차순 → 원래상태',
+      '✅ 라이브러리는 인터페이스만 제공, 상태는 사용자가 완전히 정의',
+      '🎯 모든 상태 관리가 외부에서 완전히 제어됨',
+    ];
+
+    return descriptionItems
+        .map((item) => Text(item,
+            style: TextStyle(
+              fontSize: 13,
+              color: Colors.grey[700],
+              height: 1.4,
+            )))
+        .toList();
+  }
+}
+
+```
+## example/lib/themes/table_theme.dart
+```dart
+import 'package:flutter/material.dart';
+import 'package:flutter_basic_table/flutter_basic_table.dart';
+
+/// 테이블 테마 정의 클래스
+class AppTableTheme {
+  AppTableTheme._(); // private 생성자 (유틸리티 클래스)
+
+  /// 깔끔한 모노톤 스타일 테마
+  static BasicTableThemeData get monochrome => BasicTableThemeData(
+        // 헤더 테마 - 깔끔한 흰색/회색 스타일
+        headerTheme: BasicTableHeaderCellTheme(
+          height: 50.0,
+          backgroundColor: Colors.grey[100],
+          textStyle: const TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 14,
+            color: Colors.black87,
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+          border: const BorderSide(color: Colors.black87, width: 1.0),
+          sortIconColor: Colors.black54,
+          enableReorder: true,
+          enableSorting: true,
+          showDragHandles: false,
+          ascendingIcon: Icons.arrow_upward,
+          descendingIcon: Icons.arrow_downward,
+          sortIconSize: 18.0,
+          splashColor: Colors.grey.withOpacity(0.1),
+          highlightColor: Colors.grey.withOpacity(0.05),
+        ),
+
+        // 데이터 행 테마 - 깨끗한 흰색 스타일
+        dataRowTheme: BasicTableDataRowTheme(
+          height: 45.0,
+          backgroundColor: Colors.white,
+          textStyle: const TextStyle(fontSize: 13, color: Colors.black87),
+          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+          border: BorderSide(color: Colors.grey[300]!, width: 0.5),
+          splashColor: Colors.grey.withOpacity(0.08),
+          highlightColor: Colors.grey.withOpacity(0.04),
+        ),
+
+        // 체크박스 테마 - 모노톤 스타일
+        checkboxTheme: const BasicTableCheckboxCellTheme(
+          enabled: true,
+          columnWidth: 60.0,
+          padding: EdgeInsets.all(8.0),
+          activeColor: Colors.black87,
+          checkColor: Colors.white,
+        ),
+
+        // 선택 상태 테마 - 은은한 회색
+        selectionTheme: BasicTableSelectionTheme(
+          selectedRowColor: Colors.grey.withOpacity(0.15),
+          hoverRowColor: Colors.grey.withOpacity(0.08),
+        ),
+
+        // 스크롤바 테마 - 검정/회색 스타일
+        scrollbarTheme: BasicTableScrollbarTheme(
+          showHorizontal: true,
+          showVertical: true,
+          hoverOnly: true,
+          opacity: 0.7,
+          animationDuration: const Duration(milliseconds: 250),
+          width: 12.0,
+          color: Colors.black54,
+          trackColor: Colors.grey.withOpacity(0.2),
+        ),
+
+        // 테두리 테마 - 깔끔한 검정/회색
+        borderTheme: BasicTableBorderTheme(
+          tableBorder: const BorderSide(color: Colors.black54, width: 0.5),
+          headerBorder: const BorderSide(color: Colors.black87, width: 1.0),
+          rowBorder: BorderSide(color: Colors.grey[300]!, width: 0.5),
+          cellBorder: BorderSide.none, // 세로 border 제거
+        ),
+
+        // Tooltip 테마 - 모노톤 스타일
+        tooltipTheme: BasicTableTooltipTheme(
+          backgroundColor: Colors.black87,
+          textColor: Colors.white,
+          fontSize: 12.0,
+          fontWeight: FontWeight.normal,
+          padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0),
+          margin: const EdgeInsets.all(4.0),
+          borderRadius: BorderRadius.circular(4.0),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black38,
+              blurRadius: 6.0,
+              offset: const Offset(0, 2),
+            ),
+          ],
+          verticalOffset: 20.0,
+          waitDuration: const Duration(milliseconds: 300),
+          showDuration: const Duration(milliseconds: 2000),
+          preferredPosition: TooltipPosition.auto,
+        ),
+      );
+
+  /// 블루 테마 (추가 테마 예시)
+  static BasicTableThemeData get blue => BasicTableThemeData(
+        headerTheme: BasicTableHeaderCellTheme(
+          height: 50.0,
+          backgroundColor: Colors.blue[50],
+          textStyle: const TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 14,
+            color: Colors.blue,
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+          border: BorderSide(color: Colors.blue[300]!, width: 1.0),
+          sortIconColor: Colors.blue,
+          enableReorder: true,
+          enableSorting: true,
+          showDragHandles: false,
+          ascendingIcon: Icons.arrow_upward,
+          descendingIcon: Icons.arrow_downward,
+          sortIconSize: 18.0,
+          splashColor: Colors.blue.withOpacity(0.1),
+          highlightColor: Colors.blue.withOpacity(0.05),
+        ),
+        dataRowTheme: BasicTableDataRowTheme(
+          height: 45.0,
+          backgroundColor: Colors.white,
+          textStyle: const TextStyle(fontSize: 13, color: Colors.black87),
+          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+          border: BorderSide(color: Colors.blue[200]!, width: 0.5),
+          splashColor: Colors.blue.withOpacity(0.08),
+          highlightColor: Colors.blue.withOpacity(0.04),
+        ),
+        checkboxTheme: const BasicTableCheckboxCellTheme(
+          enabled: true,
+          columnWidth: 60.0,
+          padding: EdgeInsets.all(8.0),
+          activeColor: Colors.blue,
+          checkColor: Colors.white,
+        ),
+        selectionTheme: BasicTableSelectionTheme(
+          selectedRowColor: Colors.blue.withOpacity(0.15),
+          hoverRowColor: Colors.blue.withOpacity(0.08),
+        ),
+        scrollbarTheme: BasicTableScrollbarTheme(
+          showHorizontal: true,
+          showVertical: true,
+          hoverOnly: true,
+          opacity: 0.7,
+          animationDuration: const Duration(milliseconds: 250),
+          width: 12.0,
+          color: Colors.blue,
+          trackColor: Colors.blue.withOpacity(0.2),
+        ),
+        borderTheme: BasicTableBorderTheme(
+          tableBorder: BorderSide(color: Colors.blue[300]!, width: 0.5),
+          headerBorder: BorderSide(color: Colors.blue[600]!, width: 1.0),
+          rowBorder: BorderSide(color: Colors.blue[200]!, width: 0.5),
+          cellBorder: BorderSide.none,
+        ),
+        tooltipTheme: BasicTableTooltipTheme(
+          backgroundColor: Colors.blue[800]!,
+          textColor: Colors.white,
+          fontSize: 12.0,
+          fontWeight: FontWeight.normal,
+          padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0),
+          margin: const EdgeInsets.all(4.0),
+          borderRadius: BorderRadius.circular(4.0),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.blue.withOpacity(0.3),
+              blurRadius: 6.0,
+              offset: const Offset(0, 2),
+            ),
+          ],
+          verticalOffset: 20.0,
+          waitDuration: const Duration(milliseconds: 300),
+          showDuration: const Duration(milliseconds: 2000),
+          preferredPosition: TooltipPosition.auto,
+        ),
       );
 }
 
@@ -528,10 +1022,12 @@ export 'src/enum/tooltip_position.dart';
 
 /// Core widgets
 export 'src/flutter_basic_table.dart';
+export 'src/models/flutter_basic_table_cell.dart';
 
 /// Models
 export 'src/models/flutter_basic_table_column.dart';
 export 'src/models/flutter_basic_table_row.dart';
+export 'src/models/status_config.dart';
 
 /// Theme
 export 'src/theme/flutter_basic_table_border_theme.dart';
@@ -606,8 +1102,8 @@ import 'widgets/synced_scroll_controll_widget.dart';
 /// 모든 데이터는 외부에서 정의되어야 합니다.
 class BasicTable extends StatefulWidget {
   final List<BasicTableColumn> columns;
-  final List<List<String>> data;
-  final BasicTableThemeData? theme; // ✅ config → theme으로 변경
+  final List<BasicTableRow> rows; // ✅ 변경: data → rows
+  final BasicTableThemeData? theme;
 
   // 체크박스 관련 외부 정의 필드들
   final Set<int>? selectedRows;
@@ -620,10 +1116,10 @@ class BasicTable extends StatefulWidget {
   final void Function(int index)? onRowSecondaryTap;
   final Duration doubleClickTime;
 
-  // 헤더 reorder 콜백 추가!
+  // 헤더 reorder 콜백
   final void Function(int oldIndex, int newIndex)? onColumnReorder;
 
-  // 헤더 정렬 콜백 추가!
+  // 헤더 정렬 콜백
   final void Function(int columnIndex, ColumnSortState sortState)? onColumnSort;
 
   // 현재 정렬 상태 (외부에서 관리)
@@ -632,8 +1128,8 @@ class BasicTable extends StatefulWidget {
   const BasicTable({
     super.key,
     required this.columns,
-    required this.data,
-    this.theme, // ✅ theme 파라미터로 변경
+    required this.rows, // ✅ 변경
+    this.theme,
     this.selectedRows,
     this.onRowSelectionChanged,
     this.onSelectAllChanged,
@@ -645,7 +1141,47 @@ class BasicTable extends StatefulWidget {
     this.onColumnSort,
     this.columnSortStates,
   })  : assert(columns.length > 0, 'columns cannot be empty'),
-        assert(data.length > 0, 'data cannot be empty');
+        assert(rows.length > 0, 'rows cannot be empty'); // ✅ 변경
+
+  /// 하위 호환성을 위한 생성자 (기존 List<List<String>> 지원)
+  factory BasicTable.fromStringData({
+    required List<BasicTableColumn> columns,
+    required List<List<String>> data,
+    BasicTableThemeData? theme,
+    Set<int>? selectedRows,
+    void Function(int index, bool selected)? onRowSelectionChanged,
+    void Function(bool selectAll)? onSelectAllChanged,
+    void Function(int index)? onRowTap,
+    void Function(int index)? onRowDoubleTap,
+    void Function(int index)? onRowSecondaryTap,
+    Duration doubleClickTime = const Duration(milliseconds: 300),
+    void Function(int oldIndex, int newIndex)? onColumnReorder,
+    void Function(int columnIndex, ColumnSortState sortState)? onColumnSort,
+    Map<int, ColumnSortState>? columnSortStates,
+  }) {
+    final rows = data.asMap().entries.map((entry) {
+      return BasicTableRow.fromStrings(
+        cells: entry.value,
+        index: entry.key,
+      );
+    }).toList();
+
+    return BasicTable(
+      columns: columns,
+      rows: rows,
+      theme: theme,
+      selectedRows: selectedRows,
+      onRowSelectionChanged: onRowSelectionChanged,
+      onSelectAllChanged: onSelectAllChanged,
+      onRowTap: onRowTap,
+      onRowDoubleTap: onRowDoubleTap,
+      onRowSecondaryTap: onRowSecondaryTap,
+      doubleClickTime: doubleClickTime,
+      onColumnReorder: onColumnReorder,
+      onColumnSort: onColumnSort,
+      columnSortStates: columnSortStates,
+    );
+  }
 
   @override
   State<BasicTable> createState() => _BasicTableState();
@@ -664,15 +1200,8 @@ class _BasicTableState extends State<BasicTable> {
     super.initState();
   }
 
-  /// 외부 데이터를 BasicTableRow 형태로 변환하는 헬퍼 함수
-  List<BasicTableRow> get _currentRows {
-    return widget.data.asMap().entries.map((entry) {
-      return BasicTableRow(
-        index: entry.key,
-        cells: List.from(entry.value),
-      );
-    }).toList();
-  }
+  /// 현재 행 데이터 반환 (더 이상 변환 불필요)
+  List<BasicTableRow> get _currentRows => widget.rows; // ✅ 간단해짐!
 
   /// 컬럼 순서가 바뀔 때 호출되는 함수 - 외부 콜백만 호출
   void _handleColumnReorder(int oldIndex, int newIndex) {
@@ -940,6 +1469,318 @@ class _BasicTableState extends State<BasicTable> {
 }
 
 ```
+## lib/src/models/flutter_basic_table_cell.dart
+```dart
+// lib/src/models/flutter_basic_table_cell.dart
+import 'package:flutter/material.dart';
+import 'package:flutter_basic_table/src/widgets/generate_status_indicator.dart';
+
+import 'status_config.dart';
+
+/// 테이블 셀의 데이터와 스타일을 정의하는 모델
+///
+/// 각 셀은 다음 중 하나의 방식으로 표시될 수 있습니다:
+/// 1. [data] + [style] - 텍스트 데이터와 스타일
+/// 2. [widget] - 완전히 커스텀한 위젯
+///
+/// [widget]이 제공되면 [data]와 [style]은 무시됩니다.
+class BasicTableCell {
+  /// 셀에 표시할 데이터 (보통 String, 하지만 toString()이 가능한 모든 타입)
+  final dynamic data;
+
+  /// 커스텀 위젯 (제공되면 data와 style은 무시됨)
+  final Widget? widget;
+
+  /// 개별 셀의 텍스트 스타일 (테마보다 우선 적용)
+  final TextStyle? style;
+
+  /// 개별 셀의 배경색 (테마보다 우선 적용)
+  final Color? backgroundColor;
+
+  /// 개별 셀의 텍스트 정렬
+  final Alignment? alignment;
+
+  /// 개별 셀의 패딩
+  final EdgeInsets? padding;
+
+  /// 개별 셀의 tooltip 메시지 (자동 감지 대신 강제 지정)
+  final String? tooltip;
+
+  /// 셀 클릭 가능 여부
+  final bool enabled;
+
+  /// 셀 클릭 콜백 (행 클릭과 별개)
+  final VoidCallback? onTap;
+
+  /// 셀 더블클릭 콜백
+  final VoidCallback? onDoubleTap;
+
+  /// 셀 우클릭 콜백
+  final VoidCallback? onSecondaryTap;
+
+  const BasicTableCell({
+    this.data,
+    this.widget,
+    this.style,
+    this.backgroundColor,
+    this.alignment,
+    this.padding,
+    this.tooltip,
+    this.enabled = true,
+    this.onTap,
+    this.onDoubleTap,
+    this.onSecondaryTap,
+  }) : assert(
+          data != null || widget != null,
+          'Either data or widget must be provided',
+        );
+
+  /// 문자열 데이터로 간단한 셀 생성
+  factory BasicTableCell.text(
+    String text, {
+    TextStyle? style,
+    Color? backgroundColor,
+    Alignment? alignment,
+    EdgeInsets? padding,
+    String? tooltip,
+    bool enabled = true,
+    VoidCallback? onTap,
+    VoidCallback? onDoubleTap,
+    VoidCallback? onSecondaryTap,
+  }) {
+    return BasicTableCell(
+      data: text,
+      style: style,
+      backgroundColor: backgroundColor,
+      alignment: alignment,
+      padding: padding,
+      tooltip: tooltip,
+      enabled: enabled,
+      onTap: onTap,
+      onDoubleTap: onDoubleTap,
+      onSecondaryTap: onSecondaryTap,
+    );
+  }
+
+  /// 커스텀 위젯으로 셀 생성
+  factory BasicTableCell.widget(
+    Widget widget, {
+    Color? backgroundColor,
+    EdgeInsets? padding,
+    String? tooltip,
+    bool enabled = true,
+    VoidCallback? onTap,
+    VoidCallback? onDoubleTap,
+    VoidCallback? onSecondaryTap,
+  }) {
+    return BasicTableCell(
+      widget: widget,
+      backgroundColor: backgroundColor,
+      padding: padding,
+      tooltip: tooltip,
+      enabled: enabled,
+      onTap: onTap,
+      onDoubleTap: onDoubleTap,
+      onSecondaryTap: onSecondaryTap,
+    );
+  }
+
+  /// Generic 상태 표시기로 셀 생성
+  factory BasicTableCell.status(
+    Enum status, // ✅ dynamic 대신 Enum 사용 (모든 enum이 Enum을 상속)
+    StatusConfig config, {
+    Axis direction = Axis.horizontal,
+    MainAxisAlignment mainAxisAlignment = MainAxisAlignment.start,
+    CrossAxisAlignment crossAxisAlignment = CrossAxisAlignment.center,
+    Color? backgroundColor,
+    Alignment? alignment,
+    EdgeInsets? padding,
+    String? tooltip,
+    bool enabled = true,
+    VoidCallback? onTap,
+    VoidCallback? onDoubleTap,
+    VoidCallback? onSecondaryTap,
+  }) {
+    final statusWidget = GenericStatusIndicator(
+      status: status,
+      config: config,
+      direction: direction,
+      mainAxisAlignment: mainAxisAlignment,
+      crossAxisAlignment: crossAxisAlignment,
+    );
+
+    return BasicTableCell(
+      widget: statusWidget,
+      backgroundColor: backgroundColor,
+      alignment: alignment,
+      padding: padding,
+      tooltip: tooltip ?? config.tooltip,
+      enabled: enabled,
+      onTap: onTap,
+      onDoubleTap: onDoubleTap,
+      onSecondaryTap: onSecondaryTap,
+    );
+  }
+
+  /// 가로 레이아웃 상태 표시기 셀 생성
+  factory BasicTableCell.statusHorizontal(
+    Enum status, // ✅ dynamic 대신 Enum 사용
+    StatusConfig config, {
+    MainAxisAlignment mainAxisAlignment = MainAxisAlignment.start,
+    CrossAxisAlignment crossAxisAlignment = CrossAxisAlignment.center,
+    Color? backgroundColor,
+    Alignment? alignment,
+    EdgeInsets? padding,
+    String? tooltip,
+    bool enabled = true,
+    VoidCallback? onTap,
+    VoidCallback? onDoubleTap,
+    VoidCallback? onSecondaryTap,
+  }) {
+    return BasicTableCell.status(
+      status,
+      config,
+      direction: Axis.horizontal,
+      mainAxisAlignment: mainAxisAlignment,
+      crossAxisAlignment: crossAxisAlignment,
+      backgroundColor: backgroundColor,
+      alignment: alignment,
+      padding: padding,
+      tooltip: tooltip,
+      enabled: enabled,
+      onTap: onTap,
+      onDoubleTap: onDoubleTap,
+      onSecondaryTap: onSecondaryTap,
+    );
+  }
+
+  /// 세로 레이아웃 상태 표시기 셀 생성
+  factory BasicTableCell.statusVertical(
+    Enum status, // ✅ dynamic 대신 Enum 사용
+    StatusConfig config, {
+    MainAxisAlignment mainAxisAlignment = MainAxisAlignment.center,
+    CrossAxisAlignment crossAxisAlignment = CrossAxisAlignment.center,
+    Color? backgroundColor,
+    Alignment? alignment,
+    EdgeInsets? padding,
+    String? tooltip,
+    bool enabled = true,
+    VoidCallback? onTap,
+    VoidCallback? onDoubleTap,
+    VoidCallback? onSecondaryTap,
+  }) {
+    return BasicTableCell.status(
+      status,
+      config,
+      direction: Axis.vertical,
+      mainAxisAlignment: mainAxisAlignment,
+      crossAxisAlignment: crossAxisAlignment,
+      backgroundColor: backgroundColor,
+      alignment: alignment,
+      padding: padding,
+      tooltip: tooltip,
+      enabled: enabled,
+      onTap: onTap,
+      onDoubleTap: onDoubleTap,
+      onSecondaryTap: onSecondaryTap,
+    );
+  }
+
+  /// 기존 String 데이터와의 호환성을 위한 팩토리
+  factory BasicTableCell.fromString(String data) {
+    return BasicTableCell(data: data);
+  }
+
+  /// 표시될 텍스트를 반환 (widget이 있으면 null)
+  String? get displayText {
+    if (widget != null) return null;
+    return data?.toString();
+  }
+
+  /// 실제로 위젯을 사용할지 여부
+  bool get usesWidget => widget != null;
+
+  /// 텍스트를 사용할지 여부
+  bool get usesText => widget == null && data != null;
+
+  BasicTableCell copyWith({
+    dynamic data,
+    Widget? widget,
+    TextStyle? style,
+    Color? backgroundColor,
+    Alignment? alignment,
+    EdgeInsets? padding,
+    String? tooltip,
+    bool? enabled,
+    VoidCallback? onTap,
+    VoidCallback? onDoubleTap,
+    VoidCallback? onSecondaryTap,
+  }) {
+    return BasicTableCell(
+      data: data ?? this.data,
+      widget: widget ?? this.widget,
+      style: style ?? this.style,
+      backgroundColor: backgroundColor ?? this.backgroundColor,
+      alignment: alignment ?? this.alignment,
+      padding: padding ?? this.padding,
+      tooltip: tooltip ?? this.tooltip,
+      enabled: enabled ?? this.enabled,
+      onTap: onTap ?? this.onTap,
+      onDoubleTap: onDoubleTap ?? this.onDoubleTap,
+      onSecondaryTap: onSecondaryTap ?? this.onSecondaryTap,
+    );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is BasicTableCell &&
+        other.data == data &&
+        other.widget == widget &&
+        other.style == style &&
+        other.backgroundColor == backgroundColor &&
+        other.alignment == alignment &&
+        other.padding == padding &&
+        other.tooltip == tooltip &&
+        other.enabled == enabled &&
+        other.onTap == onTap &&
+        other.onDoubleTap == onDoubleTap &&
+        other.onSecondaryTap == onSecondaryTap;
+  }
+
+  @override
+  int get hashCode {
+    return Object.hash(
+      data,
+      widget,
+      style,
+      backgroundColor,
+      alignment,
+      padding,
+      tooltip,
+      enabled,
+      onTap,
+      onDoubleTap,
+      onSecondaryTap,
+    );
+  }
+
+  @override
+  String toString() {
+    return 'BasicTableCell('
+        'data: $data, '
+        'widget: $widget, '
+        'style: $style, '
+        'backgroundColor: $backgroundColor, '
+        'alignment: $alignment, '
+        'padding: $padding, '
+        'tooltip: $tooltip, '
+        'enabled: $enabled'
+        ')';
+  }
+}
+
+```
 ## lib/src/models/flutter_basic_table_column.dart
 ```dart
 /// 테이블 컬럼 정보를 나타내는 모델
@@ -1049,10 +1890,13 @@ class BasicTableConfig {
 ```
 ## lib/src/models/flutter_basic_table_row.dart
 ```dart
-// ignore_for_file: public_member_api_docs, sort_constructors_first
+import 'package:flutter/material.dart';
+
+import 'flutter_basic_table_cell.dart';
+
 /// 테이블 행 데이터를 나타내는 모델
 class BasicTableRow {
-  final List<String> cells;
+  final List<BasicTableCell> cells;
   final int index;
 
   const BasicTableRow({
@@ -1060,14 +1904,405 @@ class BasicTableRow {
     required this.index,
   });
 
+  /// String 리스트로부터 BasicTableRow 생성 (하위 호환성)
+  factory BasicTableRow.fromStrings({
+    required List<String> cells,
+    required int index,
+  }) {
+    return BasicTableRow(
+      cells: cells.map((str) => BasicTableCell.fromString(str)).toList(),
+      index: index,
+    );
+  }
+
+  /// 편의 생성자 - 텍스트 셀들로 구성
+  factory BasicTableRow.text({
+    required List<String> texts,
+    required int index,
+    TextStyle? style,
+    Color? backgroundColor,
+    Alignment? alignment,
+    EdgeInsets? padding,
+  }) {
+    return BasicTableRow(
+      cells: texts
+          .map((text) => BasicTableCell.text(
+                text,
+                style: style,
+                backgroundColor: backgroundColor,
+                alignment: alignment,
+                padding: padding,
+              ))
+          .toList(),
+      index: index,
+    );
+  }
+
+  /// 셀 개수 반환
+  int get cellCount => cells.length;
+
+  /// 특정 인덱스의 셀 반환 (안전한 접근)
+  BasicTableCell? cellAt(int index) {
+    if (index < 0 || index >= cells.length) return null;
+    return cells[index];
+  }
+
+  /// 모든 셀의 텍스트 데이터를 String 리스트로 반환 (하위 호환성)
+  List<String> get cellTexts {
+    return cells.map((cell) => cell.displayText ?? '').toList();
+  }
+
+  /// 새로운 셀을 추가한 복사본 반환
+  BasicTableRow addCell(BasicTableCell cell) {
+    return BasicTableRow(
+      cells: [...cells, cell],
+      index: index,
+    );
+  }
+
+  /// 특정 인덱스의 셀을 교체한 복사본 반환
+  BasicTableRow replaceCell(int cellIndex, BasicTableCell newCell) {
+    if (cellIndex < 0 || cellIndex >= cells.length) return this;
+
+    final newCells = List<BasicTableCell>.from(cells);
+    newCells[cellIndex] = newCell;
+
+    return BasicTableRow(
+      cells: newCells,
+      index: index,
+    );
+  }
+
+  /// 특정 인덱스의 셀을 제거한 복사본 반환
+  BasicTableRow removeCell(int cellIndex) {
+    if (cellIndex < 0 || cellIndex >= cells.length) return this;
+
+    final newCells = List<BasicTableCell>.from(cells);
+    newCells.removeAt(cellIndex);
+
+    return BasicTableRow(
+      cells: newCells,
+      index: index,
+    );
+  }
+
+  /// 컬럼 순서 변경을 위한 셀 재정렬 (외부 상태 관리용)
+  BasicTableRow reorderCells(int oldIndex, int newIndex) {
+    if (oldIndex < 0 ||
+        oldIndex >= cells.length ||
+        newIndex < 0 ||
+        newIndex >= cells.length ||
+        oldIndex == newIndex) {
+      return this;
+    }
+
+    // newIndex 보정 (ReorderableListView와 동일한 로직)
+    final int adjustedNewIndex = newIndex > oldIndex ? newIndex - 1 : newIndex;
+
+    final newCells = List<BasicTableCell>.from(cells);
+    final BasicTableCell movedCell = newCells.removeAt(oldIndex);
+    newCells.insert(adjustedNewIndex, movedCell);
+
+    return BasicTableRow(
+      cells: newCells,
+      index: index,
+    );
+  }
+
+  /// 정렬을 위한 특정 셀의 비교 가능한 값 반환
+  String getComparableValue(int cellIndex) {
+    if (cellIndex < 0 || cellIndex >= cells.length) return '';
+    return cells[cellIndex].displayText ?? '';
+  }
+
+  /// 정렬을 위한 특정 셀의 숫자 값 반환 (숫자가 아니면 null)
+  num? getNumericValue(int cellIndex) {
+    final textValue = getComparableValue(cellIndex);
+    return num.tryParse(textValue);
+  }
+
   BasicTableRow copyWith({
-    List<String>? cells,
+    List<BasicTableCell>? cells,
     int? index,
   }) {
     return BasicTableRow(
       cells: cells ?? this.cells,
       index: index ?? this.index,
     );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is BasicTableRow &&
+        other.index == index &&
+        _listEquals(other.cells, cells);
+  }
+
+  @override
+  int get hashCode {
+    return Object.hash(index, Object.hashAll(cells));
+  }
+
+  @override
+  String toString() {
+    return 'BasicTableRow(index: $index, cells: $cells)';
+  }
+
+  // List 비교를 위한 헬퍼 함수
+  bool _listEquals<T>(List<T> a, List<T> b) {
+    if (a.length != b.length) return false;
+    for (int i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
+    return true;
+  }
+}
+
+```
+## lib/src/models/status_config.dart
+```dart
+import 'package:flutter/material.dart';
+
+/// 상태 표시기의 설정을 정의하는 클래스
+/// 사용자가 자신만의 상태 시스템을 구현할 때 사용합니다.
+class StatusConfig {
+  /// 상태 표시 색상
+  final Color color;
+
+  /// 상태 텍스트 (null이면 텍스트 없음)
+  final String? text;
+
+  /// 원형 표시기 크기
+  final double circleSize;
+
+  /// 텍스트 스타일
+  final TextStyle? textStyle;
+
+  /// 아이콘 (원형 대신 아이콘 사용 가능)
+  final IconData? icon;
+
+  /// 아이콘 크기
+  final double? iconSize;
+
+  /// 원형과 텍스트/아이콘 사이의 간격
+  final double spacing;
+
+  /// 툴팁 텍스트 (null이면 자동 툴팁 또는 툴팁 없음)
+  final String? tooltip;
+
+  /// 배경 모양 (원형, 사각형, 라운드 사각형 등)
+  final ShapeBorder? shape;
+
+  /// 배경 패딩
+  final EdgeInsets? padding;
+
+  const StatusConfig({
+    required this.color,
+    this.text,
+    this.circleSize = 8.0,
+    this.textStyle,
+    this.icon,
+    this.iconSize,
+    this.spacing = 6.0,
+    this.tooltip,
+    this.shape,
+    this.padding,
+  }) : assert(circleSize >= 0, 'circleSize must be non-negative');
+
+  /// 간단한 원형 + 텍스트 설정
+  factory StatusConfig.simple({
+    required Color color,
+    required String text,
+    double circleSize = 8.0,
+    TextStyle? textStyle,
+    double spacing = 6.0,
+    String? tooltip,
+  }) {
+    return StatusConfig(
+      color: color,
+      text: text,
+      circleSize: circleSize,
+      textStyle: textStyle,
+      spacing: spacing,
+      tooltip: tooltip,
+    );
+  }
+
+  /// 원형만 있는 설정 (텍스트 없음)
+  factory StatusConfig.circleOnly({
+    required Color color,
+    double circleSize = 8.0,
+    String? tooltip,
+    ShapeBorder? shape,
+    EdgeInsets? padding,
+  }) {
+    return StatusConfig(
+      color: color,
+      text: null,
+      circleSize: circleSize,
+      tooltip: tooltip,
+      shape: shape,
+      padding: padding,
+    );
+  }
+
+  /// 아이콘 + 텍스트 설정
+  factory StatusConfig.withIcon({
+    required Color color,
+    required IconData icon,
+    String? text,
+    double iconSize = 16.0,
+    TextStyle? textStyle,
+    double spacing = 6.0,
+    String? tooltip,
+    EdgeInsets? padding,
+  }) {
+    return StatusConfig(
+      color: color,
+      text: text,
+      icon: icon,
+      iconSize: iconSize,
+      textStyle: textStyle,
+      spacing: spacing,
+      tooltip: tooltip,
+      padding: padding,
+      circleSize: 0, // 아이콘을 사용하므로 원형은 숨김
+    );
+  }
+
+  /// 텍스트만 있는 설정 (원형/아이콘 없음)
+  factory StatusConfig.textOnly({
+    required String text,
+    required Color color,
+    TextStyle? textStyle,
+    String? tooltip,
+    EdgeInsets? padding,
+  }) {
+    return StatusConfig(
+      color: color,
+      text: text,
+      textStyle: textStyle,
+      tooltip: tooltip,
+      padding: padding,
+      circleSize: 0, // 원형 숨김
+      spacing: 0, // 간격 없음
+    );
+  }
+
+  /// 배지 스타일 설정 (배경색이 있는 라운드 사각형)
+  factory StatusConfig.badge({
+    required Color color,
+    required String text,
+    Color? textColor,
+    double fontSize = 12.0,
+    EdgeInsets padding = const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+    double borderRadius = 12.0,
+    String? tooltip,
+  }) {
+    return StatusConfig(
+      color: Colors.transparent, // 원형은 투명
+      text: text,
+      textStyle: TextStyle(
+        color: textColor ?? Colors.white,
+        fontSize: fontSize,
+        fontWeight: FontWeight.w500,
+      ),
+      tooltip: tooltip,
+      circleSize: 0, // 원형 숨김
+      spacing: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(borderRadius),
+      ),
+      padding: padding,
+    );
+  }
+
+  /// 표시할 색상 계산 (아이콘이나 배지 배경색 등에 사용)
+  Color get effectiveColor => color;
+
+  /// 텍스트 표시 여부
+  bool get hasText => text != null && text!.isNotEmpty;
+
+  /// 원형 표시 여부
+  bool get hasCircle => circleSize > 0 && icon == null;
+
+  /// 아이콘 표시 여부
+  bool get hasIcon => icon != null;
+
+  /// 배경 모양 사용 여부
+  bool get hasShape => shape != null;
+
+  /// 패딩 사용 여부
+  bool get hasPadding => padding != null;
+
+  StatusConfig copyWith({
+    Color? color,
+    String? text,
+    double? circleSize,
+    TextStyle? textStyle,
+    IconData? icon,
+    double? iconSize,
+    double? spacing,
+    String? tooltip,
+    ShapeBorder? shape,
+    EdgeInsets? padding,
+  }) {
+    return StatusConfig(
+      color: color ?? this.color,
+      text: text ?? this.text,
+      circleSize: circleSize ?? this.circleSize,
+      textStyle: textStyle ?? this.textStyle,
+      icon: icon ?? this.icon,
+      iconSize: iconSize ?? this.iconSize,
+      spacing: spacing ?? this.spacing,
+      tooltip: tooltip ?? this.tooltip,
+      shape: shape ?? this.shape,
+      padding: padding ?? this.padding,
+    );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is StatusConfig &&
+        other.color == color &&
+        other.text == text &&
+        other.circleSize == circleSize &&
+        other.textStyle == textStyle &&
+        other.icon == icon &&
+        other.iconSize == iconSize &&
+        other.spacing == spacing &&
+        other.tooltip == tooltip &&
+        other.shape == shape &&
+        other.padding == padding;
+  }
+
+  @override
+  int get hashCode {
+    return Object.hash(
+      color,
+      text,
+      circleSize,
+      textStyle,
+      icon,
+      iconSize,
+      spacing,
+      tooltip,
+      shape,
+      padding,
+    );
+  }
+
+  @override
+  String toString() {
+    return 'StatusConfig('
+        'color: $color, '
+        'text: $text, '
+        'circleSize: $circleSize, '
+        'hasIcon: $hasIcon, '
+        'hasShape: $hasShape'
+        ')';
   }
 }
 
@@ -2310,6 +3545,8 @@ class _HeaderCell extends StatelessWidget {
 ```dart
 // lib/src/widgets/flutter_basic_talbe_data_widget.dart
 import 'package:flutter/material.dart';
+import 'package:flutter_basic_table/src/models/flutter_basic_table_cell.dart';
+import 'package:flutter_basic_table/src/widgets/custom_tooltip.dart';
 import 'package:flutter_basic_table/src/widgets/tooltip_able_text_widget.dart';
 
 import '../../flutter_basic_table.dart';
@@ -2484,15 +3721,15 @@ class _DataRowState extends State<_DataRow> {
 
               // 데이터 셀들
               ...List.generate(widget.row.cells.length, (cellIndex) {
-                final cellData = cellIndex < widget.row.cells.length
+                final cell = cellIndex < widget.row.cells.length
                     ? widget.row.cells[cellIndex]
-                    : '';
+                    : BasicTableCell.text(''); // 빈 셀 처리
                 final cellWidth = cellIndex < widget.columnWidths.length
                     ? widget.columnWidths[cellIndex]
                     : 100.0;
 
                 return _DataCell(
-                  data: cellData,
+                  cell: cell,
                   width: cellWidth,
                   theme: widget.theme,
                 );
@@ -2550,46 +3787,375 @@ class _CheckboxCell extends StatelessWidget {
   }
 }
 
-/// 개별 데이터 셀 위젯 - ✅ cellBorder 구현 예정
+/// 개별 데이터 셀 위젯 - ✅ BasicTableCell 완전 활용!
 class _DataCell extends StatelessWidget {
-  final String data;
+  final BasicTableCell cell;
   final double width;
   final BasicTableThemeData theme;
 
   const _DataCell({
-    required this.data,
+    required this.cell,
     required this.width,
     required this.theme,
   });
 
+  /// 테마 스타일과 셀 개별 스타일을 병합 (셀 스타일이 우선)
+  TextStyle _getEffectiveTextStyle() {
+    final themeStyle = theme.dataRowTheme.textStyle;
+    final cellStyle = cell.style;
+
+    if (cellStyle == null) return themeStyle ?? const TextStyle();
+    if (themeStyle == null) return cellStyle;
+
+    // 테마 스타일을 기본으로 하고 셀 스타일로 오버라이드
+    return themeStyle.merge(cellStyle);
+  }
+
+  /// 테마 배경색과 셀 개별 배경색을 병합 (셀 배경색이 우선)
+  Color _getEffectiveBackgroundColor() {
+    return cell.backgroundColor ?? Colors.transparent;
+  }
+
+  /// 테마 패딩과 셀 개별 패딩을 병합 (셀 패딩이 우선)
+  EdgeInsets _getEffectivePadding() {
+    return cell.padding ?? theme.dataRowTheme.padding ?? EdgeInsets.zero;
+  }
+
+  /// 셀 정렬 (기본값: centerLeft)
+  Alignment _getEffectiveAlignment() {
+    return cell.alignment ?? Alignment.centerLeft;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
-      // ✅ SizedBox → Container로 변경 (cellBorder 준비)
       width: width,
       height: theme.dataRowTheme.height,
-      // ✅ cellBorder 구현 준비
+      // ✅ cellBorder + 개별 셀 배경색 적용
       decoration: BoxDecoration(
+        color: _getEffectiveBackgroundColor(),
         border: Border(
-          right: theme.borderTheme.cellBorder ??
-              BorderSide.none, // ✅ cellBorder 적용!
+          right: theme.borderTheme.cellBorder ?? BorderSide.none,
         ),
       ),
-      child: Padding(
-        padding: theme.dataRowTheme.padding ?? EdgeInsets.zero,
-        child: Align(
-          alignment: Alignment.centerLeft,
-          child: TooltipAbleText(
-            text: data,
-            style: theme.dataRowTheme.textStyle,
-            tooltipTheme: theme.tooltipTheme,
-            tooltipPosition: TooltipPosition.top, // 데이터는 위쪽에 tooltip
-            overflow: TextOverflow.ellipsis,
-            maxLines: 1,
-          ),
-        ),
+      child: Material(
+        color: Colors.transparent,
+        child: _buildCellContent(),
       ),
     );
+  }
+
+  /// 셀 콘텐츠를 빌드 (위젯 vs 텍스트 vs 클릭 가능)
+  Widget _buildCellContent() {
+    Widget content;
+
+    if (cell.usesWidget) {
+      // 커스텀 위젯 사용
+      content = Padding(
+        padding: _getEffectivePadding(),
+        child: Align(
+          alignment: _getEffectiveAlignment(),
+          child: cell.widget!,
+        ),
+      );
+    } else {
+      // 텍스트 사용
+      content = Padding(
+        padding: _getEffectivePadding(),
+        child: Align(
+          alignment: _getEffectiveAlignment(),
+          child: _buildTextContent(),
+        ),
+      );
+    }
+
+    // 셀 레벨 이벤트가 있으면 클릭 가능하게 래핑
+    if (cell.enabled && _hasCellEvents()) {
+      return CustomInkWell(
+        onTap: cell.onTap,
+        onDoubleTap: cell.onDoubleTap,
+        onSecondaryTap: cell.onSecondaryTap,
+        doubleClickTime: const Duration(milliseconds: 300),
+        child: content,
+      );
+    }
+
+    return content;
+  }
+
+  /// 텍스트 콘텐츠를 빌드 (tooltip 처리 포함)
+  Widget _buildTextContent() {
+    final displayText = cell.displayText ?? '';
+
+    if (cell.tooltip != null) {
+      // 강제 tooltip이 지정된 경우
+      return CustomTooltip(
+        message: cell.tooltip!,
+        theme: theme.tooltipTheme,
+        position: TooltipPosition.top, // 데이터는 위쪽에 tooltip
+        child: Text(
+          displayText,
+          style: _getEffectiveTextStyle(),
+          overflow: TextOverflow.ellipsis,
+          maxLines: 1,
+        ),
+      );
+    } else {
+      // 자동 overflow 감지 tooltip
+      return TooltipAbleText(
+        text: displayText,
+        style: _getEffectiveTextStyle(),
+        tooltipTheme: theme.tooltipTheme,
+        tooltipPosition: TooltipPosition.top, // 데이터는 위쪽에 tooltip
+        overflow: TextOverflow.ellipsis,
+        maxLines: 1,
+      );
+    }
+  }
+
+  /// 셀 레벨 이벤트가 있는지 확인
+  bool _hasCellEvents() {
+    return cell.onTap != null ||
+        cell.onDoubleTap != null ||
+        cell.onSecondaryTap != null;
+  }
+}
+
+```
+## lib/src/widgets/generate_status_indicator.dart
+```dart
+// lib/src/widgets/generic_status_indicator.dart
+import 'package:flutter/material.dart';
+
+import '../models/status_config.dart';
+
+/// Generic 상태 표시기 위젯
+/// 사용자 정의 상태 타입과 StatusConfig를 받아서 렌더링합니다.
+class GenericStatusIndicator extends StatelessWidget {
+  /// 상태 값 (사용자 정의 enum 등)
+  final Enum status; // ✅ dynamic 대신 Enum 사용
+
+  /// 상태 설정 (색상, 텍스트, 스타일 등)
+  final StatusConfig config;
+
+  /// 레이아웃 방향 (가로/세로)
+  final Axis direction;
+
+  /// 정렬 방식
+  final MainAxisAlignment mainAxisAlignment;
+  final CrossAxisAlignment crossAxisAlignment;
+
+  const GenericStatusIndicator({
+    super.key,
+    required this.status,
+    required this.config,
+    this.direction = Axis.horizontal,
+    this.mainAxisAlignment = MainAxisAlignment.start,
+    this.crossAxisAlignment = CrossAxisAlignment.center,
+  });
+
+  /// 간단한 가로 레이아웃 팩토리
+  factory GenericStatusIndicator.horizontal(
+    Enum status, // ✅ dynamic 대신 Enum 사용
+    StatusConfig config, {
+    MainAxisAlignment mainAxisAlignment = MainAxisAlignment.start,
+    CrossAxisAlignment crossAxisAlignment = CrossAxisAlignment.center,
+  }) {
+    return GenericStatusIndicator(
+      status: status,
+      config: config,
+      direction: Axis.horizontal,
+      mainAxisAlignment: mainAxisAlignment,
+      crossAxisAlignment: crossAxisAlignment,
+    );
+  }
+
+  /// 세로 레이아웃 팩토리
+  factory GenericStatusIndicator.vertical(
+    Enum status, // ✅ dynamic 대신 Enum 사용
+    StatusConfig config, {
+    MainAxisAlignment mainAxisAlignment = MainAxisAlignment.center,
+    CrossAxisAlignment crossAxisAlignment = CrossAxisAlignment.center,
+  }) {
+    return GenericStatusIndicator(
+      status: status,
+      config: config,
+      direction: Axis.vertical,
+      mainAxisAlignment: mainAxisAlignment,
+      crossAxisAlignment: crossAxisAlignment,
+    );
+  }
+
+  /// 원형 표시기 위젯
+  Widget _buildCircle() {
+    if (!config.hasCircle) return const SizedBox.shrink();
+
+    return Container(
+      width: config.circleSize,
+      height: config.circleSize,
+      decoration: BoxDecoration(
+        color: config.effectiveColor,
+        shape: BoxShape.circle,
+      ),
+    );
+  }
+
+  /// 아이콘 위젯
+  Widget _buildIcon() {
+    if (!config.hasIcon) return const SizedBox.shrink();
+
+    return Icon(
+      config.icon!,
+      size: config.iconSize ?? 16.0,
+      color: config.effectiveColor,
+    );
+  }
+
+  /// 텍스트 위젯
+  Widget _buildText() {
+    if (!config.hasText) return const SizedBox.shrink();
+
+    return Text(
+      config.text!,
+      style: config.textStyle ?? const TextStyle(fontSize: 13),
+    );
+  }
+
+  /// 간격 위젯
+  Widget _buildSpacing() {
+    // 표시할 요소가 2개 이상이고 spacing > 0일 때만 간격 추가
+    final hasMultipleElements = [
+          config.hasCircle,
+          config.hasIcon,
+          config.hasText,
+        ].where((has) => has).length >
+        1;
+
+    if (!hasMultipleElements || config.spacing <= 0) {
+      return const SizedBox.shrink();
+    }
+
+    return direction == Axis.horizontal
+        ? SizedBox(width: config.spacing)
+        : SizedBox(height: config.spacing);
+  }
+
+  /// 콘텐츠 위젯들을 빌드
+  List<Widget> _buildContentWidgets() {
+    final widgets = <Widget>[];
+
+    // 원형 또는 아이콘 추가
+    if (config.hasCircle) {
+      widgets.add(_buildCircle());
+    } else if (config.hasIcon) {
+      widgets.add(_buildIcon());
+    }
+
+    // 간격 추가 (앞에 요소가 있고 뒤에 텍스트가 있을 때)
+    if (widgets.isNotEmpty && config.hasText) {
+      widgets.add(_buildSpacing());
+    }
+
+    // 텍스트 추가
+    if (config.hasText) {
+      widgets.add(_buildText());
+    }
+
+    return widgets;
+  }
+
+  /// 배경 모양이 있는 콘텐츠 래핑
+  Widget _wrapWithShape(Widget child) {
+    if (!config.hasShape) return child;
+
+    return Container(
+      padding: config.padding,
+      decoration: ShapeDecoration(
+        color: config.effectiveColor,
+        shape: config.shape!,
+      ),
+      child: child,
+    );
+  }
+
+  /// 패딩이 있는 콘텐츠 래핑 (배경 모양이 없을 때)
+  Widget _wrapWithPadding(Widget child) {
+    if (!config.hasPadding || config.hasShape) return child;
+
+    return Padding(
+      padding: config.padding!,
+      child: child,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final contentWidgets = _buildContentWidgets();
+
+    if (contentWidgets.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    Widget content;
+
+    if (direction == Axis.horizontal) {
+      content = Row(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: mainAxisAlignment,
+        crossAxisAlignment: crossAxisAlignment,
+        children: contentWidgets,
+      );
+    } else {
+      content = Column(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: mainAxisAlignment,
+        crossAxisAlignment: crossAxisAlignment,
+        children: contentWidgets,
+      );
+    }
+
+    // 배경 모양이나 패딩 적용
+    content = _wrapWithShape(content);
+    content = _wrapWithPadding(content);
+
+    // 툴팁 적용
+    if (config.tooltip != null && config.tooltip!.isNotEmpty) {
+      content = Tooltip(
+        message: config.tooltip!,
+        child: content,
+      );
+    }
+
+    return content;
+  }
+}
+
+/// 편의를 위한 Enum 확장 메서드들
+extension GenericStatusIndicatorExtensions on Enum {
+  /// 이 상태 값으로 상태 표시기 생성
+  GenericStatusIndicator toStatusIndicator(
+    StatusConfig config, {
+    Axis direction = Axis.horizontal,
+    MainAxisAlignment mainAxisAlignment = MainAxisAlignment.start,
+    CrossAxisAlignment crossAxisAlignment = CrossAxisAlignment.center,
+  }) {
+    return GenericStatusIndicator(
+      status: this,
+      config: config,
+      direction: direction,
+      mainAxisAlignment: mainAxisAlignment,
+      crossAxisAlignment: crossAxisAlignment,
+    );
+  }
+
+  /// 가로 레이아웃 상태 표시기 생성
+  GenericStatusIndicator toHorizontalStatusIndicator(StatusConfig config) {
+    return GenericStatusIndicator.horizontal(this, config);
+  }
+
+  /// 세로 레이아웃 상태 표시기 생성
+  GenericStatusIndicator toVerticalStatusIndicator(StatusConfig config) {
+    return GenericStatusIndicator.vertical(this, config);
   }
 }
 
