@@ -106,11 +106,11 @@ class BasicTableHeaderCellTheme {
         other.enableReorder == enableReorder &&
         other.enableSorting == enableSorting &&
         other.showDragHandles == showDragHandles &&
-        other.ascendingIcon == ascendingIcon && // ✅ 추가
-        other.descendingIcon == descendingIcon && // ✅ 추가
-        other.sortIconSize == sortIconSize && // ✅ 추가
-        other.splashColor == splashColor && // ✅ 추가
-        other.highlightColor == highlightColor; // ✅ 추가
+        other.ascendingIcon == ascendingIcon &&
+        other.descendingIcon == descendingIcon &&
+        other.sortIconSize == sortIconSize &&
+        other.splashColor == splashColor &&
+        other.highlightColor == highlightColor;
   }
 
   @override
@@ -125,11 +125,11 @@ class BasicTableHeaderCellTheme {
       enableReorder,
       enableSorting,
       showDragHandles,
-      ascendingIcon, // ✅ 추가
-      descendingIcon, // ✅ 추가
-      sortIconSize, // ✅ 추가
-      splashColor, // ✅ 추가
-      highlightColor, // ✅ 추가
+      ascendingIcon,
+      descendingIcon,
+      sortIconSize,
+      splashColor,
+      highlightColor,
     );
   }
 }

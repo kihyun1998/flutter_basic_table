@@ -114,7 +114,7 @@ class BasicTableCell {
 
   /// Generic 상태 표시기로 셀 생성
   factory BasicTableCell.status(
-    Enum status, // ✅ dynamic 대신 Enum 사용 (모든 enum이 Enum을 상속)
+    Enum status,
     StatusConfig config, {
     Axis direction = Axis.horizontal,
     MainAxisAlignment mainAxisAlignment = MainAxisAlignment.start,
@@ -137,7 +137,7 @@ class BasicTableCell {
     );
 
     return BasicTableCell(
-      data: config.text ?? status.toString(), // ✅ 정렬을 위한 데이터 추가!
+      data: config.text ?? status.toString(),
       widget: statusWidget,
       backgroundColor: backgroundColor,
       alignment: alignment,
@@ -152,7 +152,7 @@ class BasicTableCell {
 
   /// 가로 레이아웃 상태 표시기 셀 생성
   factory BasicTableCell.statusHorizontal(
-    Enum status, // ✅ dynamic 대신 Enum 사용
+    Enum status,
     StatusConfig config, {
     MainAxisAlignment mainAxisAlignment = MainAxisAlignment.start,
     CrossAxisAlignment crossAxisAlignment = CrossAxisAlignment.center,
@@ -184,7 +184,7 @@ class BasicTableCell {
 
   /// 세로 레이아웃 상태 표시기 셀 생성
   factory BasicTableCell.statusVertical(
-    Enum status, // ✅ dynamic 대신 Enum 사용
+    Enum status,
     StatusConfig config, {
     MainAxisAlignment mainAxisAlignment = MainAxisAlignment.center,
     CrossAxisAlignment crossAxisAlignment = CrossAxisAlignment.center,
@@ -221,7 +221,6 @@ class BasicTableCell {
 
   /// 표시될 텍스트를 반환 (정렬용 데이터 포함)
   String? get displayText {
-    // ✅ data가 있으면 widget이 있어도 data 우선 반환 (정렬용)
     if (data != null) return data.toString();
     // widget만 있고 data가 없으면 null
     return null;

@@ -7,7 +7,7 @@ import '../models/status_config.dart';
 /// 사용자 정의 상태 타입과 StatusConfig를 받아서 렌더링합니다.
 class GenericStatusIndicator extends StatelessWidget {
   /// 상태 값 (사용자 정의 enum 등)
-  final Enum status; // ✅ dynamic 대신 Enum 사용
+  final Enum status;
 
   /// 상태 설정 (색상, 텍스트, 스타일 등)
   final StatusConfig config;
@@ -30,7 +30,7 @@ class GenericStatusIndicator extends StatelessWidget {
 
   /// 간단한 가로 레이아웃 팩토리
   factory GenericStatusIndicator.horizontal(
-    Enum status, // ✅ dynamic 대신 Enum 사용
+    Enum status,
     StatusConfig config, {
     MainAxisAlignment mainAxisAlignment = MainAxisAlignment.start,
     CrossAxisAlignment crossAxisAlignment = CrossAxisAlignment.center,
@@ -46,7 +46,7 @@ class GenericStatusIndicator extends StatelessWidget {
 
   /// 세로 레이아웃 팩토리
   factory GenericStatusIndicator.vertical(
-    Enum status, // ✅ dynamic 대신 Enum 사용
+    Enum status,
     StatusConfig config, {
     MainAxisAlignment mainAxisAlignment = MainAxisAlignment.center,
     CrossAxisAlignment crossAxisAlignment = CrossAxisAlignment.center,

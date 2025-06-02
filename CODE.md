@@ -67,7 +67,6 @@ class SampleData {
         const BasicTableColumn(name: '부서', minWidth: 100.0),
         const BasicTableColumn(name: '직원상태', minWidth: 100.0),
         const BasicTableColumn(name: '프로젝트상태', minWidth: 120.0),
-        const BasicTableColumn(name: '우선순위', minWidth: 80.0),
         const BasicTableColumn(name: '가입일', minWidth: 100.0),
       ];
 
@@ -123,10 +122,6 @@ class SampleData {
             StatusConfigs.getProjectConfig(ProjectStatus.inProgress),
             onTap: () => debugPrint('프로젝트 상태 클릭!'),
           ),
-          BasicTableCell.status(
-            PriorityLevel.high,
-            StatusConfigs.getPriorityConfig(PriorityLevel.high),
-          ),
           BasicTableCell.text('2023-01-15'),
         ],
       ),
@@ -144,10 +139,6 @@ class SampleData {
           BasicTableCell.status(
             ProjectStatus.review,
             StatusConfigs.getProjectConfig(ProjectStatus.review),
-          ),
-          BasicTableCell.status(
-            PriorityLevel.medium,
-            StatusConfigs.getPriorityConfig(PriorityLevel.medium),
           ),
           BasicTableCell.text('2023-02-20'),
         ],
@@ -167,10 +158,6 @@ class SampleData {
             ProjectStatus.cancelled,
             StatusConfigs.getProjectConfig(ProjectStatus.cancelled),
           ),
-          BasicTableCell.status(
-            PriorityLevel.low,
-            StatusConfigs.getPriorityConfig(PriorityLevel.low),
-          ),
           BasicTableCell.text('2023-03-10'),
         ],
       ),
@@ -188,10 +175,6 @@ class SampleData {
           BasicTableCell.status(
             ProjectStatus.planning,
             StatusConfigs.getProjectConfig(ProjectStatus.planning),
-          ),
-          BasicTableCell.status(
-            PriorityLevel.urgent,
-            StatusConfigs.getPriorityConfig(PriorityLevel.urgent),
           ),
           BasicTableCell.text('2023-04-05'),
         ],
@@ -211,10 +194,6 @@ class SampleData {
             ProjectStatus.completed,
             StatusConfigs.getProjectConfig(ProjectStatus.completed),
           ),
-          BasicTableCell.status(
-            PriorityLevel.medium,
-            StatusConfigs.getPriorityConfig(PriorityLevel.medium),
-          ),
           BasicTableCell.text('2023-05-12'),
         ],
       ),
@@ -226,7 +205,6 @@ class SampleData {
     final List<BasicTableRow> rows = [];
     final employeeStatuses = EmployeeStatus.values;
     final projectStatuses = ProjectStatus.values;
-    final priorities = PriorityLevel.values;
 
     for (int i = 0; i < 20; i++) {
       final realIndex = i + 5; // 고정 데이터 이후부터
@@ -248,11 +226,6 @@ class SampleData {
             projectStatuses[realIndex % projectStatuses.length],
             StatusConfigs.getProjectConfig(
                 projectStatuses[realIndex % projectStatuses.length]),
-          ),
-          BasicTableCell.status(
-            priorities[realIndex % priorities.length],
-            StatusConfigs.getPriorityConfig(
-                priorities[realIndex % priorities.length]),
           ),
           BasicTableCell.text(_generateDate(realIndex)),
         ],
@@ -441,30 +414,6 @@ class StatusConfigs {
     ),
   };
 
-  /// 우선순위별 설정
-  static Map<PriorityLevel, StatusConfig> priority = {
-    PriorityLevel.low: StatusConfig.badge(
-      color: Colors.grey,
-      text: '낮음',
-      textColor: Colors.white,
-    ),
-    PriorityLevel.medium: StatusConfig.badge(
-      color: Colors.blue,
-      text: '보통',
-      textColor: Colors.white,
-    ),
-    PriorityLevel.high: StatusConfig.badge(
-      color: Colors.orange,
-      text: '높음',
-      textColor: Colors.white,
-    ),
-    PriorityLevel.urgent: StatusConfig.badge(
-      color: Colors.red,
-      text: '긴급',
-      textColor: Colors.white,
-    ),
-  };
-
   /// 특정 직원 상태의 설정 가져오기
   static StatusConfig getEmployeeConfig(EmployeeStatus status) {
     return employee[status]!;
@@ -474,16 +423,12 @@ class StatusConfigs {
   static StatusConfig getProjectConfig(ProjectStatus status) {
     return project[status]!;
   }
-
-  /// 특정 우선순위의 설정 가져오기
-  static StatusConfig getPriorityConfig(PriorityLevel priority) {
-    return StatusConfigs.priority[priority]!;
-  }
 }
 
 ```
 ## example/lib/screens/home_screen.dart
 ```dart
+// example/lib/screens/home_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_basic_table/flutter_basic_table.dart';
 
@@ -678,7 +623,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Custom Table Demo - 사용자 정의 상태 시스템'),
+        title: const Text('Custom Table Demo - 상태 정렬 테스트'),
         backgroundColor: Colors.grey[200],
         foregroundColor: Colors.black87,
       ),
@@ -782,7 +727,7 @@ class _HomeScreenState extends State<HomeScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              '✅ 사용자 정의 상태 시스템 + Generic API:',
+              '✅ 상태 정렬 테스트 + Generic API:',
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 16,
@@ -802,15 +747,13 @@ class _HomeScreenState extends State<HomeScreen> {
     final descriptionItems = [
       '🏗️ 사용자가 직접 정의한 enum + StatusConfig',
       '📋 직원상태: active, inactive, pending, onLeave, training',
-      '📊 프로젝트상태: planning, inProgress, review, completed, cancelled',
-      '⚡ 우선순위: low, medium, high, urgent',
       '🎨 각 상태별 개별 색상, 텍스트, 아이콘 설정',
       '🔴 원형 표시기: StatusConfig.simple(), StatusConfig.circleOnly()',
       '🔘 아이콘 표시기: StatusConfig.withIcon()',
       '🏷️ 배지 스타일: StatusConfig.badge()',
-      '🖱️ 셀 레벨 클릭 이벤트 (프로젝트 상태 클릭해보세요!)',
       '🔄 헤더를 드래그해서 컬럼 순서 변경',
       '⬆️⬇️ 헤더 클릭으로 정렬: 오름차순 → 내림차순 → 원래상태',
+      '🔢 상태 컬럼 정렬 테스트 (텍스트 기준으로 정렬됨)',
       '✅ 라이브러리는 인터페이스만 제공, 상태는 사용자가 완전히 정의',
       '🎯 모든 상태 관리가 외부에서 완전히 제어됨',
     ];
@@ -1610,6 +1553,7 @@ class BasicTableCell {
     );
 
     return BasicTableCell(
+      data: config.text ?? status.toString(), // ✅ 정렬을 위한 데이터 추가!
       widget: statusWidget,
       backgroundColor: backgroundColor,
       alignment: alignment,
@@ -1691,10 +1635,12 @@ class BasicTableCell {
     return BasicTableCell(data: data);
   }
 
-  /// 표시될 텍스트를 반환 (widget이 있으면 null)
+  /// 표시될 텍스트를 반환 (정렬용 데이터 포함)
   String? get displayText {
-    if (widget != null) return null;
-    return data?.toString();
+    // ✅ data가 있으면 widget이 있어도 data 우선 반환 (정렬용)
+    if (data != null) return data.toString();
+    // widget만 있고 data가 없으면 null
+    return null;
   }
 
   /// 실제로 위젯을 사용할지 여부

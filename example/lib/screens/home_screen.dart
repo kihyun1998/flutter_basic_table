@@ -297,7 +297,7 @@ class _HomeScreenState extends State<HomeScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              '✅ 상태 정렬 테스트 + Generic API:',
+              '상태 정렬 테스트 + Generic API:',
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 16,

@@ -1,6 +1,5 @@
 // lib/src/widgets/flutter_basic_talbe_data_widget.dart
 import 'package:flutter/material.dart';
-import 'package:flutter_basic_table/src/models/flutter_basic_table_cell.dart';
 import 'package:flutter_basic_table/src/widgets/custom_tooltip.dart';
 import 'package:flutter_basic_table/src/widgets/tooltip_able_text_widget.dart';
 
@@ -70,6 +69,7 @@ class BasicTableData extends StatelessWidget {
           theme: theme,
           checkboxWidth: checkboxWidth,
           isSelected: isSelected,
+          columns: columns,
           onSelectionChanged: onRowSelectionChanged,
           onRowTap: onRowTap,
           onRowDoubleTap: onRowDoubleTap,
@@ -81,13 +81,14 @@ class BasicTableData extends StatelessWidget {
   }
 }
 
-/// 개별 데이터 행 위젯 - ✅ hover 효과 & dataRowTheme.border 적용!
+/// 개별 데이터 행 위젯
 class _DataRow extends StatefulWidget {
   final BasicTableRow row;
   final List<double> columnWidths;
   final BasicTableThemeData theme;
   final double checkboxWidth;
   final bool isSelected;
+  final List<BasicTableColumn> columns;
   final void Function(int index, bool selected)? onSelectionChanged;
   final void Function(int index)? onRowTap;
   final void Function(int index)? onRowDoubleTap;
@@ -100,6 +101,7 @@ class _DataRow extends StatefulWidget {
     required this.theme,
     required this.checkboxWidth,
     required this.isSelected,
+    required this.columns,
     this.onSelectionChanged,
     this.onRowTap,
     this.onRowDoubleTap,
@@ -112,25 +114,23 @@ class _DataRow extends StatefulWidget {
 }
 
 class _DataRowState extends State<_DataRow> {
-  bool _isHovered = false; // ✅ hover 상태 추가!
+  bool _isHovered = false;
 
   @override
   Widget build(BuildContext context) {
-    // ✅ 우선순위: 선택됨 > hover > 기본
     Color backgroundColor;
     if (widget.isSelected) {
       backgroundColor = widget.theme.selectionTheme.selectedRowColor ??
           Colors.blue.withOpacity(0.1);
     } else if (_isHovered) {
       backgroundColor = widget.theme.selectionTheme.hoverRowColor ??
-          Colors.grey.withOpacity(0.05); // ✅ hover 색상 적용!
+          Colors.grey.withOpacity(0.05);
     } else {
       backgroundColor =
           widget.theme.dataRowTheme.backgroundColor ?? Colors.white;
     }
 
     return MouseRegion(
-      // ✅ hover 효과 구현!
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
       child: Container(
@@ -138,8 +138,7 @@ class _DataRowState extends State<_DataRow> {
         decoration: BoxDecoration(
           color: backgroundColor,
           border: Border(
-            top: widget.theme.dataRowTheme.border ??
-                BorderSide.none, // ✅ dataRowTheme.border 사용!
+            top: widget.theme.dataRowTheme.border ?? BorderSide.none,
           ),
         ),
         child: CustomInkWell(
@@ -158,7 +157,6 @@ class _DataRowState extends State<_DataRow> {
               ? () => widget.onRowSecondaryTap!(widget.row.index)
               : null,
           doubleClickTime: widget.doubleClickTime,
-          // ✅ 클릭 효과 색상 커스터마이징!
           splashColor: widget.theme.dataRowTheme.splashColor,
           highlightColor: widget.theme.dataRowTheme.highlightColor,
           child: Row(
@@ -178,15 +176,19 @@ class _DataRowState extends State<_DataRow> {
               ...List.generate(widget.row.cells.length, (cellIndex) {
                 final cell = cellIndex < widget.row.cells.length
                     ? widget.row.cells[cellIndex]
-                    : BasicTableCell.text(''); // 빈 셀 처리
+                    : BasicTableCell.text('');
                 final cellWidth = cellIndex < widget.columnWidths.length
                     ? widget.columnWidths[cellIndex]
                     : 100.0;
+                final column = cellIndex < widget.columns.length
+                    ? widget.columns[cellIndex]
+                    : null;
 
                 return _DataCell(
                   cell: cell,
                   width: cellWidth,
                   theme: widget.theme,
+                  column: column,
                 );
               }),
             ],
@@ -242,16 +244,18 @@ class _CheckboxCell extends StatelessWidget {
   }
 }
 
-/// 개별 데이터 셀 위젯 - ✅ BasicTableCell 완전 활용!
+/// 개별 데이터 셀 위젯
 class _DataCell extends StatelessWidget {
   final BasicTableCell cell;
   final double width;
   final BasicTableThemeData theme;
+  final BasicTableColumn? column;
 
   const _DataCell({
     required this.cell,
     required this.width,
     required this.theme,
+    this.column,
   });
 
   /// 테마 스타일과 셀 개별 스타일을 병합 (셀 스타일이 우선)
@@ -286,7 +290,6 @@ class _DataCell extends StatelessWidget {
     return Container(
       width: width,
       height: theme.dataRowTheme.height,
-      // ✅ cellBorder + 개별 셀 배경색 적용
       decoration: BoxDecoration(
         color: _getEffectiveBackgroundColor(),
         border: Border(
@@ -343,11 +346,11 @@ class _DataCell extends StatelessWidget {
     final displayText = cell.displayText ?? '';
 
     if (cell.tooltip != null) {
-      // 강제 tooltip이 지정된 경우
+      // 강제 tooltip이 지정된 경우 (셀 레벨이 우선)
       return CustomTooltip(
         message: cell.tooltip!,
         theme: theme.tooltipTheme,
-        position: TooltipPosition.top, // 데이터는 위쪽에 tooltip
+        position: TooltipPosition.top,
         child: Text(
           displayText,
           style: _getEffectiveTextStyle(),
@@ -356,14 +359,15 @@ class _DataCell extends StatelessWidget {
         ),
       );
     } else {
-      // 자동 overflow 감지 tooltip
       return TooltipAbleText(
         text: displayText,
         style: _getEffectiveTextStyle(),
         tooltipTheme: theme.tooltipTheme,
-        tooltipPosition: TooltipPosition.top, // 데이터는 위쪽에 tooltip
+        tooltipPosition: TooltipPosition.top,
         overflow: TextOverflow.ellipsis,
         maxLines: 1,
+        tooltipFormatter: column?.tooltipFormatter,
+        forceTooltip: column?.forceTooltip ?? false,
       );
     }
   }

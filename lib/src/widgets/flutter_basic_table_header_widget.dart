@@ -59,8 +59,7 @@ class BasicTableHeader extends StatelessWidget {
       decoration: BoxDecoration(
         color: theme.headerTheme.backgroundColor,
         border: Border(
-          top: theme.headerTheme.border ??
-              BorderSide.none, // ✅ headerTheme.border 사용!
+          top: theme.headerTheme.border ?? BorderSide.none,
         ),
       ),
       child: Row(
@@ -177,14 +176,14 @@ class _StaticHeaderRow extends StatelessWidget {
           columnIndex: index,
           sortState: sortState,
           onSort: onColumnSort,
-          showDragHandle: false, // 드래그 핸들 숨김
+          showDragHandle: false,
         );
       }),
     );
   }
 }
 
-/// 체크박스 헤더 셀 위젯 - ✅ 불필요한 border 제거!
+/// 체크박스 헤더 셀 위젯
 class _CheckboxHeaderCell extends StatelessWidget {
   final double width;
   final BasicTableThemeData theme;
@@ -203,7 +202,6 @@ class _CheckboxHeaderCell extends StatelessWidget {
     return Container(
       width: width,
       height: theme.headerTheme.height,
-      // ✅ cellBorder 적용
       decoration: BoxDecoration(
         border: Border(
           right: theme.borderTheme.cellBorder ?? BorderSide.none,
@@ -226,7 +224,7 @@ class _CheckboxHeaderCell extends StatelessWidget {
   }
 }
 
-/// 개별 헤더 셀 위젯 - ✅ 불필요한 border 제거!
+/// 개별 헤더 셀 위젯
 class _HeaderCell extends StatelessWidget {
   final BasicTableColumn column;
   final double width;
@@ -258,7 +256,7 @@ class _HeaderCell extends StatelessWidget {
     }
   }
 
-  /// 정렬 상태에 따른 아이콘을 반환합니다 - ✅ 커스터마이징 가능!
+  /// 정렬 상태에 따른 아이콘을 반환합니다
   Widget? _getSortIcon() {
     if (!theme.headerTheme.enableSorting) return null;
 
@@ -267,16 +265,14 @@ class _HeaderCell extends StatelessWidget {
         return null; // 아이콘 없음
       case ColumnSortState.ascending:
         return Icon(
-          theme.headerTheme.ascendingIcon ??
-              Icons.keyboard_arrow_up, // ✅ 커스터마이징 가능!
-          size: theme.headerTheme.sortIconSize ?? 18.0, // ✅ 크기도 커스터마이징!
+          theme.headerTheme.ascendingIcon ?? Icons.keyboard_arrow_up,
+          size: theme.headerTheme.sortIconSize ?? 18.0,
           color: theme.headerTheme.sortIconColor,
         );
       case ColumnSortState.descending:
         return Icon(
-          theme.headerTheme.descendingIcon ??
-              Icons.keyboard_arrow_down, // ✅ 커스터마이징 가능!
-          size: theme.headerTheme.sortIconSize ?? 18.0, // ✅ 크기도 커스터마이징!
+          theme.headerTheme.descendingIcon ?? Icons.keyboard_arrow_down,
+          size: theme.headerTheme.sortIconSize ?? 18.0,
           color: theme.headerTheme.sortIconColor,
         );
     }
@@ -287,7 +283,6 @@ class _HeaderCell extends StatelessWidget {
     return Container(
       width: width,
       height: theme.headerTheme.height,
-      // ✅ cellBorder 적용
       decoration: BoxDecoration(
         border: Border(
           right: theme.borderTheme.cellBorder ?? BorderSide.none,
@@ -297,7 +292,6 @@ class _HeaderCell extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: () => _onHeaderTap(),
-          // ✅ 헤더 클릭 효과 색상 커스터마이징!
           splashColor: theme.headerTheme.splashColor,
           highlightColor: theme.headerTheme.highlightColor,
           child: Padding(
@@ -315,13 +309,13 @@ class _HeaderCell extends StatelessWidget {
                     ),
                   ),
 
-                // 컬럼 이름 - ✅ OverflowableText로 교체!
+                /// 컬럼 이름
                 Expanded(
                   child: TooltipAbleText(
                     text: column.name,
                     style: theme.headerTheme.textStyle,
                     tooltipTheme: theme.tooltipTheme,
-                    tooltipPosition: TooltipPosition.bottom, // 헤더는 아래쪽에 tooltip
+                    tooltipPosition: TooltipPosition.bottom,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),

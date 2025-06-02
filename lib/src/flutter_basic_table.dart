@@ -14,7 +14,7 @@ import 'widgets/synced_scroll_controll_widget.dart';
 /// 모든 데이터는 외부에서 정의되어야 합니다.
 class BasicTable extends StatefulWidget {
   final List<BasicTableColumn> columns;
-  final List<BasicTableRow> rows; // ✅ 변경: data → rows
+  final List<BasicTableRow> rows;
   final BasicTableThemeData? theme;
 
   // 체크박스 관련 외부 정의 필드들
@@ -40,7 +40,7 @@ class BasicTable extends StatefulWidget {
   const BasicTable({
     super.key,
     required this.columns,
-    required this.rows, // ✅ 변경
+    required this.rows,
     this.theme,
     this.selectedRows,
     this.onRowSelectionChanged,
@@ -53,7 +53,7 @@ class BasicTable extends StatefulWidget {
     this.onColumnSort,
     this.columnSortStates,
   })  : assert(columns.length > 0, 'columns cannot be empty'),
-        assert(rows.length > 0, 'rows cannot be empty'); // ✅ 변경
+        assert(rows.length > 0, 'rows cannot be empty');
 
   /// 하위 호환성을 위한 생성자 (기존 List<List<String>> 지원)
   factory BasicTable.fromStringData({
@@ -113,7 +113,7 @@ class _BasicTableState extends State<BasicTable> {
   }
 
   /// 현재 행 데이터 반환 (더 이상 변환 불필요)
-  List<BasicTableRow> get _currentRows => widget.rows; // ✅ 간단해짐!
+  List<BasicTableRow> get _currentRows => widget.rows;
 
   /// 컬럼 순서가 바뀔 때 호출되는 함수 - 외부 콜백만 호출
   void _handleColumnReorder(int oldIndex, int newIndex) {

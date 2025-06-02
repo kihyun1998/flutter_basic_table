@@ -10,14 +10,86 @@ class SampleData {
 
   /// 테이블 컬럼 정의
   static List<BasicTableColumn> get columns => [
+        // ID 컬럼: tooltip 없음 (기본)
         const BasicTableColumn(name: 'ID', minWidth: 60.0),
+
+        // 이름 컬럼: overflow 시에만 기본 tooltip
         const BasicTableColumn(name: '이름', minWidth: 120.0),
-        const BasicTableColumn(name: '이메일', minWidth: 200.0),
-        const BasicTableColumn(name: '부서', minWidth: 100.0),
+
+        // 이메일 컬럼: overflow 시에만 tooltip이지만 커스텀 메시지
+        BasicTableColumn(
+          name: '이메일',
+          minWidth: 200.0,
+          tooltipFormatter: (value) => '📧 이메일 주소: $value\n클릭하면 메일을 보낼 수 있습니다',
+        ),
+
+        // 부서 컬럼: 항상 tooltip 표시 + 부서별 커스텀 메시지
+        BasicTableColumn(
+          name: '부서',
+          minWidth: 100.0,
+          forceTooltip: true, // 항상 tooltip 표시
+          tooltipFormatter: (value) => _getDepartmentTooltip(value),
+        ),
+
+        // 직원상태 컬럼: 기본 동작 (상태 위젯이므로)
         const BasicTableColumn(name: '직원상태', minWidth: 100.0),
+
+        // 프로젝트상태 컬럼: 기본 동작
         const BasicTableColumn(name: '프로젝트상태', minWidth: 120.0),
-        const BasicTableColumn(name: '가입일', minWidth: 100.0),
+
+        // 가입일 컬럼: 항상 tooltip 표시 + 날짜 포맷팅
+        BasicTableColumn(
+          name: '가입일',
+          minWidth: 100.0,
+          forceTooltip: true, // 항상 tooltip 표시
+          tooltipFormatter: (value) => _formatDateTooltip(value),
+        ),
       ];
+
+  /// 부서별 커스텀 tooltip 메시지
+  static String _getDepartmentTooltip(String department) {
+    switch (department) {
+      case '개발팀':
+        return '🛠️ 개발팀\n소프트웨어 개발 및 시스템 유지보수를 담당합니다';
+      case '디자인팀':
+        return '🎨 디자인팀\nUI/UX 디자인과 브랜딩 업무를 담당합니다';
+      case '마케팅팀':
+        return '📊 마케팅팀\n마케팅 전략 수립과 브랜드 홍보를 담당합니다';
+      case '영업팀':
+        return '💼 영업팀\n고객 관리와 신규 영업 개발을 담당합니다';
+      case 'HR팀':
+        return '👥 HR팀\n인사 관리와 복리후생 업무를 담당합니다';
+      default:
+        return '🏢 $department 부서';
+    }
+  }
+
+  /// 날짜 tooltip 포맷터 함수
+  static String _formatDateTooltip(String dateString) {
+    try {
+      // "2023-01-15" -> "2023년 1월 15일에 가입하셨습니다"
+      final parts = dateString.split('-');
+      if (parts.length == 3) {
+        final year = int.parse(parts[0]);
+        final month = int.parse(parts[1]);
+        final day = int.parse(parts[2]);
+
+        // 현재 날짜와 비교해서 근무 기간 계산
+        final now = DateTime.now();
+        final joinDate = DateTime(year, month, day);
+        final difference = now.difference(joinDate);
+        final workDays = difference.inDays;
+        final workMonths = (workDays / 30).toStringAsFixed(1);
+
+        return '''📅 $year년 $month월 $day일에 가입
+⏰ 근무 기간: 약 $workDays일 ($workMonths개월)
+🎉 함께해주셔서 감사합니다!''';
+      }
+    } catch (e) {
+      // 파싱 실패시 기본 메시지
+    }
+    return '📅 가입일: $dateString';
+  }
 
   /// 부서별 배경색 맵
   static const Map<String, Color> _departmentColors = {
@@ -60,7 +132,7 @@ class SampleData {
           BasicTableCell.text('김철수',
               style: const TextStyle(
                   fontWeight: FontWeight.bold, color: Colors.blue)),
-          BasicTableCell.text('kim@company.com'),
+          BasicTableCell.text('kim.cheolsu@company.com'), // 더 긴 이메일로 변경
           _createDepartmentCell('개발팀'),
           BasicTableCell.status(
             EmployeeStatus.active,
@@ -79,7 +151,7 @@ class SampleData {
         cells: [
           BasicTableCell.text('2'),
           BasicTableCell.text('이영희'),
-          BasicTableCell.text('lee@company.com'),
+          BasicTableCell.text('lee.younghee.designer@company.com'), // 더 긴 이메일
           _createDepartmentCell('디자인팀'),
           BasicTableCell.status(
             EmployeeStatus.onLeave,
@@ -97,7 +169,7 @@ class SampleData {
         cells: [
           BasicTableCell.text('3'),
           BasicTableCell.text('박민수'),
-          BasicTableCell.text('park@company.com'),
+          BasicTableCell.text('park.minsu.marketing@company.com'), // 더 긴 이메일
           _createDepartmentCell('마케팅팀'),
           BasicTableCell.status(
             EmployeeStatus.inactive,
@@ -115,7 +187,7 @@ class SampleData {
         cells: [
           BasicTableCell.text('4'),
           BasicTableCell.text('정수진'),
-          BasicTableCell.text('jung@company.com'),
+          BasicTableCell.text('jung.sujin.sales@company.com'),
           _createDepartmentCell('영업팀'),
           BasicTableCell.status(
             EmployeeStatus.training,
@@ -133,7 +205,7 @@ class SampleData {
         cells: [
           BasicTableCell.text('5'),
           BasicTableCell.text('최동혁'),
-          BasicTableCell.text('choi@company.com'),
+          BasicTableCell.text('choi.donghyuk.hr@company.com'),
           _createDepartmentCell('HR팀'),
           BasicTableCell.status(
             EmployeeStatus.pending,
@@ -164,7 +236,8 @@ class SampleData {
         cells: [
           BasicTableCell.text('${realIndex + 1}'),
           BasicTableCell.text('사용자${realIndex + 1}'),
-          BasicTableCell.text('user${realIndex + 1}@company.com'),
+          BasicTableCell.text(
+              'user${realIndex + 1}.very.long.email@company.com'), // 더 긴 이메일
           _createDepartmentCell(department),
           BasicTableCell.status(
             employeeStatuses[realIndex % employeeStatuses.length],
@@ -233,6 +306,8 @@ class SampleData {
               minWidth: col.minWidth,
               maxWidth: col.maxWidth,
               isResizable: col.isResizable,
+              tooltipFormatter: col.tooltipFormatter,
+              forceTooltip: col.forceTooltip,
             ))
         .toList();
   }

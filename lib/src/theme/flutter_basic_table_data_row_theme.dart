@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
 
-/// 데이터 행의 테마 - ✅ 클릭 효과 색상 추가!
+/// 데이터 행의 테마
 class BasicTableDataRowTheme {
   final double height;
   final Color? backgroundColor;
   final TextStyle? textStyle;
   final EdgeInsets? padding;
   final BorderSide? border;
-
-  // ✅ 클릭 효과 색상 추가!
   final Color? splashColor;
   final Color? highlightColor;
 
@@ -18,8 +16,8 @@ class BasicTableDataRowTheme {
     this.textStyle,
     this.padding,
     this.border,
-    this.splashColor, // ✅ 추가
-    this.highlightColor, // ✅ 추가
+    this.splashColor,
+    this.highlightColor,
   });
 
   factory BasicTableDataRowTheme.defaultTheme() {
@@ -29,8 +27,8 @@ class BasicTableDataRowTheme {
       textStyle: TextStyle(fontSize: 13, color: Colors.black),
       padding: EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
       border: BorderSide(color: Colors.grey, width: 0.3),
-      splashColor: null, // ✅ 기본값 (Material 기본값 사용)
-      highlightColor: null, // ✅ 기본값 (Material 기본값 사용)
+      splashColor: null,
+      highlightColor: null,
     );
   }
 
@@ -40,8 +38,8 @@ class BasicTableDataRowTheme {
     TextStyle? textStyle,
     EdgeInsets? padding,
     BorderSide? border,
-    Color? splashColor, // ✅ 추가
-    Color? highlightColor, // ✅ 추가
+    Color? splashColor,
+    Color? highlightColor,
   }) {
     return BasicTableDataRowTheme(
       height: height ?? this.height,
@@ -49,8 +47,8 @@ class BasicTableDataRowTheme {
       textStyle: textStyle ?? this.textStyle,
       padding: padding ?? this.padding,
       border: border ?? this.border,
-      splashColor: splashColor ?? this.splashColor, // ✅ 추가
-      highlightColor: highlightColor ?? this.highlightColor, // ✅ 추가
+      splashColor: splashColor ?? this.splashColor,
+      highlightColor: highlightColor ?? this.highlightColor,
     );
   }
 
@@ -63,8 +61,8 @@ class BasicTableDataRowTheme {
         other.textStyle == textStyle &&
         other.padding == padding &&
         other.border == border &&
-        other.splashColor == splashColor && // ✅ 추가
-        other.highlightColor == highlightColor; // ✅ 추가
+        other.splashColor == splashColor &&
+        other.highlightColor == highlightColor;
   }
 
   @override
@@ -75,8 +73,8 @@ class BasicTableDataRowTheme {
       textStyle,
       padding,
       border,
-      splashColor, // ✅ 추가
-      highlightColor, // ✅ 추가
+      splashColor,
+      highlightColor,
     );
   }
 }

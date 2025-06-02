@@ -12,6 +12,9 @@ class TooltipAbleText extends StatelessWidget {
   final BasicTableTooltipTheme? tooltipTheme;
   final TooltipPosition? tooltipPosition;
 
+  final String Function(String value)? tooltipFormatter;
+  final bool forceTooltip;
+
   const TooltipAbleText({
     super.key,
     required this.text,
@@ -21,6 +24,8 @@ class TooltipAbleText extends StatelessWidget {
     this.textAlign,
     this.tooltipTheme,
     this.tooltipPosition,
+    this.tooltipFormatter,
+    this.forceTooltip = false,
   });
 
   @override
@@ -49,16 +54,24 @@ class TooltipAbleText extends StatelessWidget {
           textAlign: textAlign,
         );
 
-        // overflow시에만 CustomTooltip으로 감싸기
-        if (isOverflow) {
+        // tooltip 표시 조건
+        // 1. forceTooltip이 true면 무조건 tooltip 표시
+        // 2. forceTooltip이 false면 overflow 시에만 tooltip 표시
+        final bool shouldShowTooltip = forceTooltip || isOverflow;
+
+        if (shouldShowTooltip) {
+          final String tooltipMessage = tooltipFormatter != null
+              ? tooltipFormatter!(text) // 커스텀 formatter 사용
+              : text; // 기본값: 원본 텍스트
+
           return CustomTooltip(
-            message: text, // 전체 텍스트를 tooltip으로 표시
+            message: tooltipMessage,
             theme: tooltipTheme,
             position: tooltipPosition,
             child: textWidget,
           );
         } else {
-          // overflow 없으면 그냥 Text만 반환
+          // tooltip 없으면 그냥 Text만 반환
           return textWidget;
         }
       },

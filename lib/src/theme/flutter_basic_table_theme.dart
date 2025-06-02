@@ -14,7 +14,7 @@ class BasicTableThemeData {
   final BasicTableSelectionTheme selectionTheme;
   final BasicTableScrollbarTheme scrollbarTheme;
   final BasicTableBorderTheme borderTheme;
-  final BasicTableTooltipTheme tooltipTheme; // ✅ Tooltip 테마 추가!
+  final BasicTableTooltipTheme tooltipTheme;
 
   const BasicTableThemeData({
     required this.headerTheme,
@@ -23,7 +23,7 @@ class BasicTableThemeData {
     required this.selectionTheme,
     required this.scrollbarTheme,
     required this.borderTheme,
-    required this.tooltipTheme, // ✅ 추가
+    required this.tooltipTheme,
   });
 
   /// 기본 테마 생성
@@ -35,7 +35,7 @@ class BasicTableThemeData {
       selectionTheme: BasicTableSelectionTheme.defaultTheme(),
       scrollbarTheme: BasicTableScrollbarTheme.defaultTheme(),
       borderTheme: BasicTableBorderTheme.defaultTheme(),
-      tooltipTheme: BasicTableTooltipTheme.defaultTheme(), // ✅ 추가
+      tooltipTheme: BasicTableTooltipTheme.defaultTheme(),
     );
   }
 
@@ -47,7 +47,7 @@ class BasicTableThemeData {
     BasicTableSelectionTheme? selectionTheme,
     BasicTableScrollbarTheme? scrollbarTheme,
     BasicTableBorderTheme? borderTheme,
-    BasicTableTooltipTheme? tooltipTheme, // ✅ 추가
+    BasicTableTooltipTheme? tooltipTheme,
   }) {
     return BasicTableThemeData(
       headerTheme: headerTheme ?? this.headerTheme,
@@ -56,7 +56,7 @@ class BasicTableThemeData {
       selectionTheme: selectionTheme ?? this.selectionTheme,
       scrollbarTheme: scrollbarTheme ?? this.scrollbarTheme,
       borderTheme: borderTheme ?? this.borderTheme,
-      tooltipTheme: tooltipTheme ?? this.tooltipTheme, // ✅ 추가
+      tooltipTheme: tooltipTheme ?? this.tooltipTheme,
     );
   }
 
@@ -70,7 +70,7 @@ class BasicTableThemeData {
         other.selectionTheme == selectionTheme &&
         other.scrollbarTheme == scrollbarTheme &&
         other.borderTheme == borderTheme &&
-        other.tooltipTheme == tooltipTheme; // ✅ 추가
+        other.tooltipTheme == tooltipTheme;
   }
 
   @override
@@ -82,7 +82,7 @@ class BasicTableThemeData {
       selectionTheme,
       scrollbarTheme,
       borderTheme,
-      tooltipTheme, // ✅ 추가
+      tooltipTheme,
     );
   }
 }
