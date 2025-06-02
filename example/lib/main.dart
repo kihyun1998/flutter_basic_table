@@ -260,7 +260,7 @@ class _HomeScreenState extends State<HomeScreen> {
           tableBorder: const BorderSide(color: Colors.black54, width: 0.5),
           headerBorder: const BorderSide(color: Colors.black87, width: 1.0),
           rowBorder: BorderSide(color: Colors.grey[300]!, width: 0.5),
-          cellBorder: BorderSide(color: Colors.grey[200]!, width: 0.3),
+          cellBorder: null,
         ),
 
         // Tooltip 테마 - 모노톤 스타일!
