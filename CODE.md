@@ -53,14 +53,44 @@ flutter_basic_table/
 
 ## CHANGELOG.md
 ```md
-## 0.0.1
+## 1.0.0
 
-* TODO: Describe initial release.
-
+### Added
+- Initial release of FlutterBasicTable package
+- `BasicTable` widget with comprehensive table functionality
+- Support for text, custom widgets, and status indicators in cells
+- Column sorting (ascending/descending/none) and reordering
+- Row selection with checkbox support
+- Complete theming system for all table components
+- Custom tooltip system with overflow detection
+- Responsive column width calculation
+- Row and cell interaction callbacks (tap, double-tap, right-click)
+- Synchronized horizontal and vertical scrollbars
+- Cross-platform support (Android, iOS, Web, Desktop)
 ```
 ## LICENSE
 ```
-TODO: Add your license here.
+MIT License
+
+Copyright (c) 2025 KiHyun Park
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 
 ```
 ## example/lib/data/sample_data.dart
@@ -4408,13 +4438,16 @@ class TooltipAbleText extends StatelessWidget {
 ## pubspec.yaml
 ```yaml
 name: flutter_basic_table
-description: "A new Flutter package project."
-version: 0.0.1
-homepage:
+description: A comprehensive and customizable table widget for Flutter with sorting, selection, theming, and interactive features.
+version: 1.0.0
+homepage: https://github.com/kihyun1998/flutter_basic_table
+repository: https://github.com/kihyun1998/flutter_basic_table
+issue_tracker: https://github.com/kihyun1998/flutter_basic_table/issues
+documentation: https://pub.dev/documentation/flutter_basic_table/latest/
 
 environment:
-  sdk: ^3.6.1
-  flutter: ">=1.17.0"
+  sdk: ">=3.0.0 <4.0.0"
+  flutter: ">=3.0.0"
 
 dependencies:
   flutter:
@@ -4424,6 +4457,31 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
+
+
+# # Screenshots for pub.dev (add these files to your repository)
+# screenshots:
+#   - description: 'Basic table with sorting and selection'
+#     path: screenshots/basic_table.png
+#   - description: 'Custom themes and status indicators'
+#     path: screenshots/themed_table.png
+#   - description: 'Column reordering and responsive design'
+#     path: screenshots/responsive_table.png
+
+topics:
+  - table
+  - widget
+  - data-table
+  - responsive
+  - customizable
+
+platforms:
+  android:
+  ios:
+  linux:
+  macos:
+  web:
+  windows:
 
 flutter:
 ```

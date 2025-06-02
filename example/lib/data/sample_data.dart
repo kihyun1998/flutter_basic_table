@@ -109,7 +109,7 @@ class SampleData {
     'HR팀'
   ];
 
-  /// 샘플 테이블 행 데이터 생성
+  /// 샘플 테이블 행 데이터 생성 (기본 높이)
   static List<BasicTableRow> generateRows() {
     final List<BasicTableRow> rows = [];
 
@@ -120,6 +120,134 @@ class SampleData {
     rows.addAll(_createGeneratedRows());
 
     return rows;
+  }
+
+  /// 행별 다양한 높이를 가진 테스트 데이터 생성
+  static List<BasicTableRow> generateRowsWithVariableHeight() {
+    final List<BasicTableRow> rows = [];
+
+    // 다양한 높이의 테스트 행들 추가
+    rows.addAll(_createVariableHeightRows());
+
+    // 일반 높이 행들도 추가
+    rows.addAll(_createGeneratedRows());
+
+    return rows;
+  }
+
+  /// 다양한 높이의 테스트 행들 생성
+  static List<BasicTableRow> _createVariableHeightRows() {
+    return [
+      // 매우 작은 높이 (30px)
+      BasicTableRow.withHeight(
+        index: 0,
+        height: 30.0,
+        cells: [
+          BasicTableCell.text('1'),
+          BasicTableCell.text('김소형', style: const TextStyle(fontSize: 11)),
+          BasicTableCell.text('small@company.com'),
+          _createDepartmentCell('개발팀'),
+          BasicTableCell.status(
+            EmployeeStatus.active,
+            StatusConfigs.getEmployeeConfig(EmployeeStatus.active),
+          ),
+          BasicTableCell.status(
+            ProjectStatus.inProgress,
+            StatusConfigs.getProjectConfig(ProjectStatus.inProgress),
+          ),
+          BasicTableCell.text('2023-01-15'),
+        ],
+      ),
+
+      // 보통 높이 (45px - 기본값)
+      BasicTableRow(
+        index: 1,
+        cells: [
+          BasicTableCell.text('2'),
+          BasicTableCell.text('이보통'),
+          BasicTableCell.text('normal@company.com'),
+          _createDepartmentCell('디자인팀'),
+          BasicTableCell.status(
+            EmployeeStatus.active,
+            StatusConfigs.getEmployeeConfig(EmployeeStatus.active),
+          ),
+          BasicTableCell.status(
+            ProjectStatus.review,
+            StatusConfigs.getProjectConfig(ProjectStatus.review),
+          ),
+          BasicTableCell.text('2023-02-20'),
+        ],
+      ),
+
+      // 큰 높이 (70px)
+      BasicTableRow.withHeight(
+        index: 2,
+        height: 70.0,
+        cells: [
+          BasicTableCell.text('3'),
+          BasicTableCell.text('박대형',
+              style:
+                  const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          BasicTableCell.text('large@company.com'),
+          _createDepartmentCell('마케팅팀'),
+          BasicTableCell.status(
+            EmployeeStatus.active,
+            StatusConfigs.getEmployeeConfig(EmployeeStatus.active),
+          ),
+          BasicTableCell.status(
+            ProjectStatus.completed,
+            StatusConfigs.getProjectConfig(ProjectStatus.completed),
+          ),
+          BasicTableCell.text('2023-03-10'),
+        ],
+      ),
+
+      // 매우 큰 높이 (100px)
+      BasicTableRow.withHeight(
+        index: 3,
+        height: 100.0,
+        cells: [
+          BasicTableCell.text('4'),
+          BasicTableCell.text('최거대',
+              style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.red)),
+          BasicTableCell.text('huge@company.com'),
+          _createDepartmentCell('영업팀'),
+          BasicTableCell.status(
+            EmployeeStatus.active,
+            StatusConfigs.getEmployeeConfig(EmployeeStatus.active),
+          ),
+          BasicTableCell.status(
+            ProjectStatus.planning,
+            StatusConfigs.getProjectConfig(ProjectStatus.planning),
+          ),
+          BasicTableCell.text('2023-04-05'),
+        ],
+      ),
+
+      // 중간 높이 (60px)
+      BasicTableRow.withHeight(
+        index: 4,
+        height: 60.0,
+        cells: [
+          BasicTableCell.text('5'),
+          BasicTableCell.text('한중형'),
+          BasicTableCell.text('medium@company.com'),
+          _createDepartmentCell('HR팀'),
+          BasicTableCell.status(
+            EmployeeStatus.training,
+            StatusConfigs.getEmployeeConfig(EmployeeStatus.training),
+          ),
+          BasicTableCell.status(
+            ProjectStatus.cancelled,
+            StatusConfigs.getProjectConfig(ProjectStatus.cancelled),
+          ),
+          BasicTableCell.text('2023-05-12'),
+        ],
+      ),
+    ];
   }
 
   /// 고정된 샘플 데이터 생성 (다양한 상태 보여주기용)
@@ -278,6 +406,7 @@ class SampleData {
     return original
         .map((row) => BasicTableRow(
               index: row.index,
+              height: row.height, // 높이도 복사
               cells: row.cells
                   .map((cell) => BasicTableCell(
                         data: cell.data,

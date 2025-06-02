@@ -115,6 +115,13 @@ class _BasicTableState extends State<BasicTable> {
   /// 현재 행 데이터 반환 (더 이상 변환 불필요)
   List<BasicTableRow> get _currentRows => widget.rows;
 
+  /// 전체 테이블 데이터의 높이를 계산 (개별 행 높이 고려)
+  double _calculateTotalDataHeight() {
+    return _currentRows.fold(0.0, (total, row) {
+      return total + row.getEffectiveHeight(_currentTheme.dataRowTheme.height);
+    });
+  }
+
   /// 컬럼 순서가 바뀔 때 호출되는 함수 - 외부 콜백만 호출
   void _handleColumnReorder(int oldIndex, int newIndex) {
     // 외부 콜백 호출 (외부에서 데이터 관리)
@@ -181,9 +188,8 @@ class _BasicTableState extends State<BasicTable> {
         // 실제 콘텐츠 너비: 최소 너비와 사용 가능한 너비 중 큰 값
         final double contentWidth = max(minTableWidth, availableWidth);
 
-        // 테이블 데이터 높이 계산
-        final double tableDataHeight =
-            theme.dataRowTheme.height * currentRows.length;
+        // 테이블 데이터 높이 계산 (개별 행 높이 고려)
+        final double tableDataHeight = _calculateTotalDataHeight();
 
         // 스크롤바를 위한 전체 콘텐츠 높이
         final double totalContentHeight =

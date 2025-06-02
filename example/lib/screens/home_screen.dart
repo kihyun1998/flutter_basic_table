@@ -26,6 +26,9 @@ class _HomeScreenState extends State<HomeScreen> {
   late List<BasicTableColumn> originalTableColumns;
   late List<BasicTableRow> originalTableRows;
 
+  // 현재 데이터 모드
+  bool _useVariableHeight = false;
+
   @override
   void initState() {
     super.initState();
@@ -36,11 +39,23 @@ class _HomeScreenState extends State<HomeScreen> {
   void _initializeData() {
     // 샘플 데이터 가져오기
     tableColumns = SampleData.columns;
-    tableRows = SampleData.generateRows();
+    tableRows = _useVariableHeight
+        ? SampleData.generateRowsWithVariableHeight()
+        : SampleData.generateRows();
 
     // 백업 데이터 생성
     originalTableColumns = SampleData.deepCopyColumns(tableColumns);
     originalTableRows = SampleData.deepCopyRows(tableRows);
+  }
+
+  /// 데이터 모드 전환
+  void _toggleHeightMode() {
+    setState(() {
+      _useVariableHeight = !_useVariableHeight;
+      selectedRows.clear(); // 선택 상태 초기화
+      columnSortStates.clear(); // 정렬 상태 초기화
+      _initializeData(); // 데이터 재초기화
+    });
   }
 
   /// 행 선택/해제 콜백
@@ -189,18 +204,54 @@ class _HomeScreenState extends State<HomeScreen> {
     _showDialog('선택된 항목', '선택된 행들의 인덱스:\n${selectedRows.toList()..sort()}');
   }
 
+  /// 높이 정보 표시
+  void _showHeightInfo() {
+    final heightInfo = StringBuffer();
+    heightInfo.writeln('📏 행별 높이 정보:');
+    heightInfo.writeln('');
+
+    for (int i = 0; i < tableRows.length && i < 10; i++) {
+      // 처음 10개만 표시
+      final row = tableRows[i];
+      final effectiveHeight = row.getEffectiveHeight(45.0); // 기본 테마 높이 45px
+      final hasCustom = row.hasCustomHeight ? ' (커스텀)' : ' (테마 기본값)';
+      heightInfo.writeln('Row ${i + 1}: ${effectiveHeight}px$hasCustom');
+    }
+
+    if (tableRows.length > 10) {
+      heightInfo.writeln('... (총 ${tableRows.length}개 행)');
+    }
+
+    _showDialog('높이 정보', heightInfo.toString());
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Custom Table Demo - 상태 정렬 테스트'),
+        title: Text(_useVariableHeight
+            ? 'Basic Table Demo - 가변 높이 모드'
+            : 'Basic Table Demo - 기본 높이 모드'),
         backgroundColor: Colors.grey[200],
         foregroundColor: Colors.black87,
+        actions: [
+          IconButton(
+            onPressed: _showHeightInfo,
+            icon: const Icon(Icons.info),
+            tooltip: '높이 정보',
+          ),
+          IconButton(
+            onPressed: _toggleHeightMode,
+            icon: Icon(
+                _useVariableHeight ? Icons.view_agenda : Icons.view_stream),
+            tooltip: _useVariableHeight ? '기본 높이로 전환' : '가변 높이로 전환',
+          ),
+        ],
       ),
       backgroundColor: Colors.grey[50],
       body: Column(
         children: [
-          // 선택 상태 + 컬럼 순서 표시 카드
+          // 선택 상태 + 컬럼 순서 + 높이 모드 표시 카드
           _buildInfoCard(),
 
           // 테이블 카드
@@ -231,15 +282,29 @@ class _HomeScreenState extends State<HomeScreen> {
                       fontWeight: FontWeight.w500,
                       color: Colors.black87),
                 ),
-                if (selectedRows.isNotEmpty)
-                  ElevatedButton(
-                    onPressed: _showSelectedItems,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.black87,
-                      foregroundColor: Colors.white,
+                Row(
+                  children: [
+                    if (selectedRows.isNotEmpty)
+                      ElevatedButton(
+                        onPressed: _showSelectedItems,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.black87,
+                          foregroundColor: Colors.white,
+                        ),
+                        child: const Text('선택 항목 보기'),
+                      ),
+                    const SizedBox(width: 8),
+                    ElevatedButton(
+                      onPressed: _toggleHeightMode,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor:
+                            _useVariableHeight ? Colors.orange : Colors.blue,
+                        foregroundColor: Colors.white,
+                      ),
+                      child: Text(_useVariableHeight ? '기본 높이 모드' : '가변 높이 모드'),
                     ),
-                    child: const Text('선택 항목 보기'),
-                  ),
+                  ],
+                ),
               ],
             ),
             const SizedBox(height: 8),
@@ -249,6 +314,27 @@ class _HomeScreenState extends State<HomeScreen> {
                 fontSize: 14,
                 color: Colors.grey[600],
               ),
+            ),
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                Icon(
+                  _useVariableHeight ? Icons.height : Icons.horizontal_rule,
+                  size: 16,
+                  color: Colors.grey[600],
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  _useVariableHeight
+                      ? '가변 높이 모드: 행마다 다른 높이 적용됨'
+                      : '기본 높이 모드: 모든 행이 동일한 높이',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey[600],
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ],
             ),
           ],
         ),

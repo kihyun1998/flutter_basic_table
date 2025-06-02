@@ -7,19 +7,25 @@ class BasicTableRow {
   final List<BasicTableCell> cells;
   final int index;
 
+  /// 개별 행의 높이 (null이면 테마 높이 사용)
+  final double? height;
+
   const BasicTableRow({
     required this.cells,
     required this.index,
+    this.height,
   });
 
   /// String 리스트로부터 BasicTableRow 생성 (하위 호환성)
   factory BasicTableRow.fromStrings({
     required List<String> cells,
     required int index,
+    double? height,
   }) {
     return BasicTableRow(
       cells: cells.map((str) => BasicTableCell.fromString(str)).toList(),
       index: index,
+      height: height,
     );
   }
 
@@ -27,6 +33,7 @@ class BasicTableRow {
   factory BasicTableRow.text({
     required List<String> texts,
     required int index,
+    double? height,
     TextStyle? style,
     Color? backgroundColor,
     Alignment? alignment,
@@ -43,6 +50,20 @@ class BasicTableRow {
               ))
           .toList(),
       index: index,
+      height: height,
+    );
+  }
+
+  /// 높이가 설정된 행 생성 (편의 메서드)
+  factory BasicTableRow.withHeight({
+    required List<BasicTableCell> cells,
+    required int index,
+    required double height,
+  }) {
+    return BasicTableRow(
+      cells: cells,
+      index: index,
+      height: height,
     );
   }
 
@@ -60,11 +81,20 @@ class BasicTableRow {
     return cells.map((cell) => cell.displayText ?? '').toList();
   }
 
+  /// 현재 행의 실제 높이 반환 (개별 높이가 있으면 그것을, 없으면 테마 높이)
+  double getEffectiveHeight(double themeHeight) {
+    return height ?? themeHeight;
+  }
+
+  /// 커스텀 높이가 설정되어 있는지 확인
+  bool get hasCustomHeight => height != null;
+
   /// 새로운 셀을 추가한 복사본 반환
   BasicTableRow addCell(BasicTableCell cell) {
     return BasicTableRow(
       cells: [...cells, cell],
       index: index,
+      height: height,
     );
   }
 
@@ -78,6 +108,7 @@ class BasicTableRow {
     return BasicTableRow(
       cells: newCells,
       index: index,
+      height: height,
     );
   }
 
@@ -91,6 +122,16 @@ class BasicTableRow {
     return BasicTableRow(
       cells: newCells,
       index: index,
+      height: height,
+    );
+  }
+
+  /// 높이를 변경한 복사본 반환
+  BasicTableRow withNewHeight(double? newHeight) {
+    return BasicTableRow(
+      cells: cells,
+      index: index,
+      height: newHeight,
     );
   }
 
@@ -114,6 +155,7 @@ class BasicTableRow {
     return BasicTableRow(
       cells: newCells,
       index: index,
+      height: height, // 높이 정보 유지
     );
   }
 
@@ -132,10 +174,12 @@ class BasicTableRow {
   BasicTableRow copyWith({
     List<BasicTableCell>? cells,
     int? index,
+    double? height,
   }) {
     return BasicTableRow(
       cells: cells ?? this.cells,
       index: index ?? this.index,
+      height: height ?? this.height,
     );
   }
 
@@ -144,17 +188,18 @@ class BasicTableRow {
     if (identical(this, other)) return true;
     return other is BasicTableRow &&
         other.index == index &&
+        other.height == height &&
         _listEquals(other.cells, cells);
   }
 
   @override
   int get hashCode {
-    return Object.hash(index, Object.hashAll(cells));
+    return Object.hash(index, height, Object.hashAll(cells));
   }
 
   @override
   String toString() {
-    return 'BasicTableRow(index: $index, cells: $cells)';
+    return 'BasicTableRow(index: $index, height: $height, cells: $cells)';
   }
 
   // List 비교를 위한 헬퍼 함수

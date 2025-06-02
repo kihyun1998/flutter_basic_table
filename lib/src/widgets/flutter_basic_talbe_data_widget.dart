@@ -52,6 +52,13 @@ class BasicTableData extends StatelessWidget {
     }
   }
 
+  /// 전체 테이블 데이터의 높이를 계산합니다 (개별 행 높이 고려)
+  double calculateTotalDataHeight() {
+    return rows.fold(0.0, (total, row) {
+      return total + row.getEffectiveHeight(theme.dataRowTheme.height);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final List<double> columnWidths = _calculateColumnWidths();
@@ -116,6 +123,11 @@ class _DataRow extends StatefulWidget {
 class _DataRowState extends State<_DataRow> {
   bool _isHovered = false;
 
+  /// 현재 행의 실제 높이를 계산합니다
+  double get _effectiveRowHeight {
+    return widget.row.getEffectiveHeight(widget.theme.dataRowTheme.height);
+  }
+
   @override
   Widget build(BuildContext context) {
     Color backgroundColor;
@@ -134,7 +146,7 @@ class _DataRowState extends State<_DataRow> {
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
       child: Container(
-        height: widget.theme.dataRowTheme.height,
+        height: _effectiveRowHeight, // 개별 행 높이 적용
         decoration: BoxDecoration(
           color: backgroundColor,
           border: Border(
@@ -165,6 +177,7 @@ class _DataRowState extends State<_DataRow> {
               if (widget.theme.checkboxTheme.enabled)
                 _CheckboxCell(
                   width: widget.checkboxWidth,
+                  height: _effectiveRowHeight, // 행 높이 전달
                   theme: widget.theme,
                   isSelected: widget.isSelected,
                   onChanged: (selected) {
@@ -187,6 +200,7 @@ class _DataRowState extends State<_DataRow> {
                 return _DataCell(
                   cell: cell,
                   width: cellWidth,
+                  height: _effectiveRowHeight, // 행 높이 전달
                   theme: widget.theme,
                   column: column,
                 );
@@ -202,12 +216,14 @@ class _DataRowState extends State<_DataRow> {
 /// 체크박스 셀 위젯
 class _CheckboxCell extends StatelessWidget {
   final double width;
+  final double height; // 행 높이 추가
   final BasicTableThemeData theme;
   final bool isSelected;
   final void Function(bool selected)? onChanged;
 
   const _CheckboxCell({
     required this.width,
+    required this.height,
     required this.theme,
     required this.isSelected,
     this.onChanged,
@@ -223,7 +239,7 @@ class _CheckboxCell extends StatelessWidget {
       },
       child: Container(
         width: width,
-        height: theme.dataRowTheme.height,
+        height: height, // 개별 행 높이 적용
         color: Colors.transparent, // 클릭 영역 확보
         child: Padding(
           padding: theme.checkboxTheme.padding ?? EdgeInsets.zero,
@@ -248,12 +264,14 @@ class _CheckboxCell extends StatelessWidget {
 class _DataCell extends StatelessWidget {
   final BasicTableCell cell;
   final double width;
+  final double height; // 행 높이 추가
   final BasicTableThemeData theme;
   final BasicTableColumn? column;
 
   const _DataCell({
     required this.cell,
     required this.width,
+    required this.height,
     required this.theme,
     this.column,
   });
@@ -289,7 +307,7 @@ class _DataCell extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: width,
-      height: theme.dataRowTheme.height,
+      height: height, // 개별 행 높이 적용
       decoration: BoxDecoration(
         color: _getEffectiveBackgroundColor(),
         border: Border(
