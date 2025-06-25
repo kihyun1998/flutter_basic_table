@@ -3,9 +3,11 @@ import 'package:flutter_basic_table/flutter_basic_table.dart';
 
 import '../../themes/table_theme.dart';
 
-/// 테이블을 담는 카드 위젯
+/// 테이블을 담는 카드 위젯 (Map 기반)
 class TableCardWidget extends StatelessWidget {
-  final List<BasicTableColumn> visibleColumns;
+  /// 보이는 컬럼 Map
+  final Map<String, BasicTableColumn> visibleColumns;
+
   final List<BasicTableRow> visibleRows;
   final Set<int> selectedRows;
   final ColumnSortManager sortManager;
@@ -17,7 +19,10 @@ class TableCardWidget extends StatelessWidget {
   final void Function(int index) onRowTap;
   final void Function(int index) onRowDoubleTap;
   final void Function(int index) onRowSecondaryTap;
-  final void Function(int oldIndex, int newIndex) onColumnReorder;
+
+  /// 새로운 시그니처: columnId와 newOrder 기반
+  final void Function(String columnId, int newOrder) onColumnReorder;
+
   final void Function(int columnIndex, ColumnSortState sortState) onColumnSort;
   final void Function(String columnId, ColumnSortState sortState)
       onColumnSortById;
@@ -62,8 +67,15 @@ class TableCardWidget extends StatelessWidget {
       return _buildEmptyState('표시할 데이터가 없습니다.');
     }
 
+    // 디버그 정보 출력
+    final sortedColumns = BasicTableColumn.mapToSortedList(visibleColumns);
+    debugPrint(
+        '🎨 TableCard rendering: ${sortedColumns.length} columns, ${visibleRows.length} rows');
+    debugPrint(
+        '📋 Column order: ${sortedColumns.map((c) => '${c.name}(${c.order})').join(' → ')}');
+
     return BasicTable(
-      columns: visibleColumns,
+      columns: visibleColumns, // Map 직접 전달
       rows: visibleRows,
       theme: AppTableTheme.monochrome,
       selectedRows: selectedRows,
@@ -73,7 +85,7 @@ class TableCardWidget extends StatelessWidget {
       onRowDoubleTap: onRowDoubleTap,
       onRowSecondaryTap: onRowSecondaryTap,
       doubleClickTime: const Duration(milliseconds: 250),
-      onColumnReorder: onColumnReorder,
+      onColumnReorder: onColumnReorder, // 새로운 시그니처 (columnId, newOrder)
       onColumnSort: onColumnSort,
       onColumnSortById: onColumnSortById,
       sortManager: sortManager,
@@ -99,6 +111,16 @@ class TableCardWidget extends StatelessWidget {
               fontSize: 16,
               color: Colors.grey[600],
               height: 1.5,
+            ),
+          ),
+          const SizedBox(height: 8),
+          // 디버그 정보 표시
+          Text(
+            'Map 기반 테이블 (${visibleColumns.length} 컬럼)',
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.grey[500],
+              fontStyle: FontStyle.italic,
             ),
           ),
         ],

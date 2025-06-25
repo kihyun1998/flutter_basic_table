@@ -11,6 +11,14 @@ flutter_basic_table/
     │   │   ├── enums.dart
     │   │   └── status_configs.dart
     │   ├── screens/
+    │   │   ├── controllers/
+    │   │   │   └── table_state_controller.dart
+    │   │   ├── utils/
+    │   │   │   └── table_data_helper.dart
+    │   │   ├── widgets/
+    │   │   │   ├── info_card_widget.dart
+    │   │   │   ├── table_card_widget.dart
+    │   │   │   └── visibility_control_card_widget.dart
     │   │   └── home_screen.dart
     │   ├── themes/
     │   │   └── table_theme.dart
@@ -55,6 +63,12 @@ flutter_basic_table/
 
 ## CHANGELOG.md
 ```md
+## 1.0.2
+### Example Improvements
+- Added column visibility feature with FilterChip controls
+- Improved code structure with separated components
+- Enhanced UI and state management
+
 ## 1.0.1
 ### Fixed
 - Resolved issues with column reordering, ensuring drag-and-drop functionality works correctly across all platforms.
@@ -683,54 +697,53 @@ class StatusConfigs {
 }
 
 ```
-## example/lib/screens/home_screen.dart
+## example/lib/screens/controllers/table_state_controller.dart
 ```dart
-// example/lib/screens/home_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_basic_table/flutter_basic_table.dart';
 
-import '../data/sample_data.dart';
-import '../themes/table_theme.dart';
+import '../../data/sample_data.dart';
 
-/// 메인 테이블 화면
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
-
-  @override
-  State<HomeScreen> createState() => _HomeScreenState();
-}
-
-class _HomeScreenState extends State<HomeScreen> {
-  // 상태 관리
+/// 테이블의 모든 상태를 관리하는 컨트롤러
+class TableStateController extends ChangeNotifier {
+  // 상태 변수들
   Set<int> selectedRows = {};
-
-  // 새로운 ID 기반 정렬 관리자 (기존 Map 대신 사용)
   late ColumnSortManager sortManager;
-
-  // 테이블 데이터
-  late List<BasicTableColumn> tableColumns;
-  late List<BasicTableRow> tableRows;
-
-  // 백업 데이터 (정렬 해제시 복원용)
+  late List<BasicTableColumn> allTableColumns;
+  late List<BasicTableRow> allTableRows;
   late List<BasicTableColumn> originalTableColumns;
   late List<BasicTableRow> originalTableRows;
-
-  // 현재 데이터 모드
   bool _useVariableHeight = false;
+  Set<String> hiddenColumnIds = {};
 
-  @override
-  void initState() {
-    super.initState();
-    sortManager = ColumnSortManager(); // 새로운 정렬 관리자 초기화
-    _initializeData();
+  // Getters
+  bool get useVariableHeight => _useVariableHeight;
+
+  List<BasicTableColumn> get visibleColumns => allTableColumns
+      .where((col) => !hiddenColumnIds.contains(col.effectiveId))
+      .toList();
+
+  List<int> get visibleColumnIndices {
+    final indices = <int>[];
+    for (int i = 0; i < allTableColumns.length; i++) {
+      if (!hiddenColumnIds.contains(allTableColumns[i].effectiveId)) {
+        indices.add(i);
+      }
+    }
+    return indices;
   }
 
-  /// 데이터 초기화 및 백업 생성
-  void _initializeData() {
-    // 컬럼에 고유 ID 추가 (name을 ID로 사용)
-    tableColumns = SampleData.columns
+  /// 생성자
+  TableStateController() {
+    sortManager = ColumnSortManager();
+    initializeData();
+  }
+
+  /// 데이터 초기화
+  void initializeData() {
+    allTableColumns = SampleData.columns
         .map((col) => BasicTableColumn(
-              id: col.name, // 명시적으로 ID 설정 (name과 동일)
+              id: col.name,
               name: col.name,
               minWidth: col.minWidth,
               maxWidth: col.maxWidth,
@@ -740,193 +753,428 @@ class _HomeScreenState extends State<HomeScreen> {
             ))
         .toList();
 
-    tableRows = _useVariableHeight
+    allTableRows = _useVariableHeight
         ? SampleData.generateRowsWithVariableHeight()
         : SampleData.generateRows();
 
-    // 백업 데이터 생성
-    originalTableColumns = SampleData.deepCopyColumns(tableColumns);
-    originalTableRows = SampleData.deepCopyRows(tableRows);
-
-    // 정렬 상태 초기화
+    originalTableColumns = SampleData.deepCopyColumns(allTableColumns);
+    originalTableRows = SampleData.deepCopyRows(allTableRows);
     sortManager.clearAll();
   }
 
-  /// 데이터 모드 전환
-  void _toggleHeightMode() {
-    setState(() {
-      _useVariableHeight = !_useVariableHeight;
-      selectedRows.clear(); // 선택 상태 초기화
-      _initializeData(); // 데이터 재초기화
-    });
+  /// 높이 모드 전환
+  void toggleHeightMode() {
+    _useVariableHeight = !_useVariableHeight;
+    selectedRows.clear();
+    hiddenColumnIds.clear();
+    initializeData();
+    notifyListeners();
   }
 
-  /// 행 선택/해제 콜백
-  void onRowSelectionChanged(int index, bool selected) {
-    setState(() {
-      if (selected) {
-        selectedRows.add(index);
-      } else {
-        selectedRows.remove(index);
+  /// 컬럼 visibility 토글
+  void toggleColumnVisibility(String columnId) {
+    if (hiddenColumnIds.contains(columnId)) {
+      hiddenColumnIds.remove(columnId);
+    } else {
+      hiddenColumnIds.add(columnId);
+
+      // 숨기는 컬럼이 현재 정렬 중이면 정렬 해제
+      if (sortManager.currentSortedColumnId == columnId) {
+        resetToOriginalState();
       }
-    });
+    }
+
+    selectedRows.clear(); // 인덱스가 바뀔 수 있으므로
+    notifyListeners();
+
+    debugPrint(
+        'Column $columnId visibility toggled. Hidden columns: $hiddenColumnIds');
+  }
+
+  /// 모든 컬럼 보이기
+  void showAllColumns() {
+    hiddenColumnIds.clear();
+    selectedRows.clear();
+    notifyListeners();
+    debugPrint('All columns are now visible');
+  }
+
+  /// 원본 상태로 복원
+  void resetToOriginalState() {
+    allTableRows = SampleData.deepCopyRows(originalTableRows);
+    allTableColumns = List.from(originalTableColumns);
+    sortManager.clearAll();
+    notifyListeners();
+  }
+
+  /// 행 선택/해제
+  void updateRowSelection(int index, bool selected) {
+    if (selected) {
+      selectedRows.add(index);
+    } else {
+      selectedRows.remove(index);
+    }
+    notifyListeners();
 
     debugPrint(
         'Row $index ${selected ? 'selected' : 'deselected'}. Total selected: ${selectedRows.length}');
   }
 
-  /// 전체 선택/해제 콜백
-  void onSelectAllChanged(bool selectAll) {
-    setState(() {
-      if (selectAll) {
-        selectedRows =
-            Set.from(List.generate(tableRows.length, (index) => index));
-      } else {
-        selectedRows.clear();
-      }
-    });
+  /// 전체 선택/해제
+  void updateSelectAll(bool selectAll, int totalRows) {
+    if (selectAll) {
+      selectedRows = Set.from(List.generate(totalRows, (index) => index));
+    } else {
+      selectedRows.clear();
+    }
+    notifyListeners();
 
     debugPrint(
         '${selectAll ? 'Select all' : 'Deselect all'}. Total selected: ${selectedRows.length}');
   }
 
-  /// 행 클릭 콜백
-  void onRowTap(int index) {
-    debugPrint('Row $index tapped');
+  /// 컬럼 정렬
+  void updateColumnSort(int visibleColumnIndex, ColumnSortState sortState) {
+    // 보이는 컬럼 인덱스를 원본 컬럼 인덱스로 변환
+    final originalColumnIndex = visibleColumnIndices[visibleColumnIndex];
+    final String columnId = allTableColumns[originalColumnIndex].effectiveId;
+
+    // 정렬 관리자 업데이트
+    sortManager.setSortState(columnId, sortState);
+
+    if (sortState != ColumnSortState.none) {
+      _sortTableData(originalColumnIndex, sortState);
+    } else {
+      resetToOriginalState();
+    }
+
+    notifyListeners();
+    debugPrint('Column sort: visible column $visibleColumnIndex -> $sortState');
   }
 
-  /// 행 더블클릭 콜백
-  void onRowDoubleTap(int index) {
-    debugPrint('Row $index double-tapped');
-    _showDialog('더블클릭!', '$index번 행을 더블클릭했습니다.');
-  }
-
-  /// 행 우클릭 콜백
-  void onRowSecondaryTap(int index) {
-    debugPrint('Row $index right-clicked');
-    _showDialog('우클릭!', '$index번 행을 우클릭했습니다.');
-  }
-
-  /// 컬럼 정렬 콜백 (기존 방식 - 하위 호환성)
-  void onColumnSort(int columnIndex, ColumnSortState sortState) {
-    setState(() {
-      // 정렬 관리자 업데이트 (정렬 정보 추적을 위해)
-      if (columnIndex >= 0 && columnIndex < tableColumns.length) {
-        final String columnId = tableColumns[columnIndex].effectiveId;
-        sortManager.setSortState(columnId, sortState);
-      }
-
-      if (sortState != ColumnSortState.none) {
-        _sortTableData(columnIndex, sortState);
-      } else {
-        // 원래 상태로 완전히 복원 (데이터 + 컬럼 순서 모두)
-        tableRows = SampleData.deepCopyRows(originalTableRows);
-        tableColumns = List.from(originalTableColumns); // 원본 컬럼 순서도 복원
-        sortManager.clearAll(); // 정렬 상태 초기화
-      }
-    });
-
-    debugPrint('Column sort: column $columnIndex -> $sortState');
-
-    // 디버그: 정렬 후 상태 확인
-    debugPrint('🔍 Sort states after column sort:');
-    sortManager.printDebugInfo(tableColumns);
-  }
-
-  /// ID 기반 컬럼 정렬 콜백 (새로운 방식)
-  void onColumnSortById(String columnId, ColumnSortState sortState) {
+  /// ID 기반 컬럼 정렬
+  void updateColumnSortById(String columnId, ColumnSortState sortState) {
     debugPrint('🆔 Column sort by ID: $columnId -> $sortState');
 
-    // 컬럼 인덱스 찾기
-    int columnIndex = -1;
-    for (int i = 0; i < tableColumns.length; i++) {
-      if (tableColumns[i].effectiveId == columnId) {
-        columnIndex = i;
+    // 보이는 컬럼에서 해당 ID의 인덱스 찾기
+    int visibleColumnIndex = -1;
+    for (int i = 0; i < visibleColumns.length; i++) {
+      if (visibleColumns[i].effectiveId == columnId) {
+        visibleColumnIndex = i;
         break;
       }
     }
 
-    if (columnIndex >= 0) {
-      // 기존 로직과 동일하게 처리
-      onColumnSort(columnIndex, sortState);
+    if (visibleColumnIndex >= 0) {
+      updateColumnSort(visibleColumnIndex, sortState);
     }
   }
 
-  /// 컬럼 순서 변경 콜백
-  void onColumnReorder(int oldIndex, int newIndex) {
-    setState(() {
-      // newIndex 보정
-      if (newIndex > oldIndex) {
-        newIndex -= 1;
-      }
+  /// 컬럼 순서 변경
+  void updateColumnReorder(int oldVisibleIndex, int newVisibleIndex) {
+    // newIndex 보정
+    if (newVisibleIndex > oldVisibleIndex) {
+      newVisibleIndex -= 1;
+    }
 
-      debugPrint('🔄 Column reorder: $oldIndex -> $newIndex');
-      debugPrint('🔄 BEFORE reorder:');
-      debugPrint(
-          '   Column names: ${tableColumns.map((c) => c.name).join(', ')}');
-      debugPrint(
-          '   Column IDs: ${tableColumns.map((c) => c.effectiveId).join(', ')}');
-      sortManager.printDebugInfo(tableColumns);
+    debugPrint(
+        '🔄 Column reorder: $oldVisibleIndex -> $newVisibleIndex (visible columns)');
 
-      // 컬럼 순서 변경
-      final BasicTableColumn movedColumn = tableColumns.removeAt(oldIndex);
-      tableColumns.insert(newIndex, movedColumn);
+    // 보이는 컬럼 인덱스를 원본 인덱스로 변환
+    final originalOldIndex = visibleColumnIndices[oldVisibleIndex];
+    final originalNewIndex = visibleColumnIndices[newVisibleIndex];
 
-      // 모든 행의 데이터도 재정렬
-      tableRows =
-          tableRows.map((row) => row.reorderCells(oldIndex, newIndex)).toList();
+    debugPrint('🔄 Original indices: $originalOldIndex -> $originalNewIndex');
 
-      // 원본 데이터도 함께 업데이트 (정렬 해제시 현재 컬럼 순서 유지)
-      final BasicTableColumn movedOriginalColumn =
-          originalTableColumns.removeAt(oldIndex);
-      originalTableColumns.insert(newIndex, movedOriginalColumn);
+    // 원본 컬럼 순서 변경
+    final BasicTableColumn movedColumn =
+        allTableColumns.removeAt(originalOldIndex);
+    allTableColumns.insert(originalNewIndex, movedColumn);
 
-      originalTableRows = originalTableRows
-          .map((row) => row.reorderCells(oldIndex, newIndex))
-          .toList();
+    // 모든 행의 데이터도 재정렬
+    allTableRows = allTableRows
+        .map((row) => _reorderRowCells(row, originalOldIndex, originalNewIndex))
+        .toList();
 
-      debugPrint('🔄 AFTER reorder:');
-      debugPrint(
-          '   Column names: ${tableColumns.map((c) => c.name).join(', ')}');
-      debugPrint(
-          '   Column IDs: ${tableColumns.map((c) => c.effectiveId).join(', ')}');
-      sortManager.printDebugInfo(tableColumns);
-    });
+    // 원본 데이터도 함께 업데이트
+    final BasicTableColumn movedOriginalColumn =
+        originalTableColumns.removeAt(originalOldIndex);
+    originalTableColumns.insert(originalNewIndex, movedOriginalColumn);
 
-    debugPrint('Column order changed: $oldIndex -> $newIndex');
+    originalTableRows = originalTableRows
+        .map((row) => _reorderRowCells(row, originalOldIndex, originalNewIndex))
+        .toList();
 
-    // 현재 컬럼 순서 출력
-    final columnNames = tableColumns.map((col) => col.name).join(', ');
-    debugPrint('New column order: $columnNames');
+    notifyListeners();
+    debugPrint(
+        '🔄 AFTER reorder: ${visibleColumns.map((c) => c.name).join(', ')}');
   }
 
-  /// 테이블 데이터 정렬
-  void _sortTableData(int columnIndex, ColumnSortState sortState) {
-    if (columnIndex >= tableColumns.length) return;
+  /// 현재 정렬 상태를 보이는 컬럼 기준 인덱스 맵으로 변환
+  Map<int, ColumnSortState> getCurrentSortStates() {
+    final Map<int, ColumnSortState> indexMap = {};
 
-    tableRows.sort((a, b) {
-      final String valueA = a.getComparableValue(columnIndex);
-      final String valueB = b.getComparableValue(columnIndex);
+    for (int i = 0; i < visibleColumns.length; i++) {
+      final String columnId = visibleColumns[i].effectiveId;
+      final ColumnSortState state = sortManager.getSortState(columnId);
 
-      // 숫자인지 확인해서 숫자면 숫자로 정렬, 아니면 문자열로 정렬
-      final numA = a.getNumericValue(columnIndex);
-      final numB = b.getNumericValue(columnIndex);
+      if (state != ColumnSortState.none) {
+        indexMap[i] = state;
+      }
+    }
+
+    return indexMap;
+  }
+
+  /// 테이블 데이터 정렬 (내부 메서드)
+  void _sortTableData(int originalColumnIndex, ColumnSortState sortState) {
+    if (originalColumnIndex >= allTableColumns.length) return;
+
+    allTableRows.sort((a, b) {
+      final String valueA = a.cells[originalColumnIndex].displayText ?? '';
+      final String valueB = b.cells[originalColumnIndex].displayText ?? '';
+
+      // 숫자 파싱 시도
+      final numA = num.tryParse(valueA);
+      final numB = num.tryParse(valueB);
 
       int comparison;
       if (numA != null && numB != null) {
-        // 둘 다 숫자면 숫자로 비교
         comparison = numA.compareTo(numB);
       } else {
-        // 문자열로 비교
         comparison = valueA.compareTo(valueB);
       }
 
-      // 내림차순이면 결과 반전
       return sortState == ColumnSortState.descending ? -comparison : comparison;
     });
   }
 
-  /// 다이얼로그 표시 헬퍼
+  /// 행의 셀 순서 변경 (내부 메서드)
+  BasicTableRow _reorderRowCells(
+      BasicTableRow row, int oldIndex, int newIndex) {
+    if (oldIndex < 0 ||
+        oldIndex >= row.cells.length ||
+        newIndex < 0 ||
+        newIndex >= row.cells.length ||
+        oldIndex == newIndex) {
+      return row;
+    }
+
+    final newCells = List<BasicTableCell>.from(row.cells);
+    final BasicTableCell movedCell = newCells.removeAt(oldIndex);
+    newCells.insert(newIndex, movedCell);
+
+    return BasicTableRow(
+      cells: newCells,
+      index: row.index,
+      height: row.height,
+    );
+  }
+}
+
+```
+## example/lib/screens/home_screen.dart
+```dart
+import 'package:flutter/material.dart';
+import 'package:flutter_basic_table/flutter_basic_table.dart';
+
+import 'controllers/table_state_controller.dart';
+import 'utils/table_data_helper.dart';
+import 'widgets/info_card_widget.dart';
+import 'widgets/table_card_widget.dart';
+import 'widgets/visibility_control_card_widget.dart';
+
+/// 메인 테이블 화면 - 간소화된 버전
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  late TableStateController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TableStateController();
+    _controller.addListener(_onStateChanged);
+  }
+
+  @override
+  void dispose() {
+    _controller.removeListener(_onStateChanged);
+    _controller.dispose();
+    super.dispose();
+  }
+
+  /// 상태 변경 리스너
+  void _onStateChanged() {
+    setState(() {}); // UI 업데이트
+  }
+
+  /// 보이는 행들 계산 (캐시된 getter처럼 사용)
+  List<BasicTableRow> get _visibleRows {
+    return TableDataHelper.createVisibleRows(
+      _controller.allTableRows,
+      _controller.visibleColumnIndices,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: _buildAppBar(),
+      backgroundColor: Colors.grey[50],
+      body: Column(
+        children: [
+          // 정보 표시 카드
+          InfoCardWidget(
+            selectedRowCount: _controller.selectedRows.length,
+            visibleColumns: _controller.visibleColumns,
+            allColumns: _controller.allTableColumns,
+            sortManager: _controller.sortManager,
+            hiddenColumnIds: _controller.hiddenColumnIds,
+            useVariableHeight: _controller.useVariableHeight,
+            onShowSelectedItems: _showSelectedItems,
+            onShowSortInfo: _showSortInfo,
+            onToggleHeightMode: _controller.toggleHeightMode,
+          ),
+
+          // 컬럼 visibility 제어 카드
+          VisibilityControlCardWidget(
+            allColumns: _controller.allTableColumns,
+            hiddenColumnIds: _controller.hiddenColumnIds,
+            onToggleVisibility: _controller.toggleColumnVisibility,
+            onShowAllColumns: _controller.showAllColumns,
+            onShowVisibilityInfo: _showVisibilityInfo,
+          ),
+
+          // 테이블 카드
+          TableCardWidget(
+            visibleColumns: _controller.visibleColumns,
+            visibleRows: _visibleRows,
+            selectedRows: _controller.selectedRows,
+            sortManager: _controller.sortManager,
+            columnSortStates: _controller.getCurrentSortStates(),
+            onRowSelectionChanged: _onRowSelectionChanged,
+            onSelectAllChanged: _onSelectAllChanged,
+            onRowTap: _onRowTap,
+            onRowDoubleTap: _onRowDoubleTap,
+            onRowSecondaryTap: _onRowSecondaryTap,
+            onColumnReorder: _controller.updateColumnReorder,
+            onColumnSort: _controller.updateColumnSort,
+            onColumnSortById: _controller.updateColumnSortById,
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// AppBar 빌드
+  PreferredSizeWidget _buildAppBar() {
+    return AppBar(
+      title: Text(_controller.useVariableHeight
+          ? 'Basic Table Demo - 가변 높이 모드'
+          : 'Basic Table Demo - 기본 높이 모드'),
+      backgroundColor: Colors.grey[200],
+      foregroundColor: Colors.black87,
+      actions: [
+        IconButton(
+          onPressed: _showSortInfo,
+          icon: const Icon(Icons.sort),
+          tooltip: '정렬 정보',
+        ),
+        IconButton(
+          onPressed: _showVisibilityInfo,
+          icon: const Icon(Icons.visibility),
+          tooltip: 'Visibility 정보',
+        ),
+        IconButton(
+          onPressed: _showHeightInfo,
+          icon: const Icon(Icons.info),
+          tooltip: '높이 정보',
+        ),
+        IconButton(
+          onPressed: _controller.toggleHeightMode,
+          icon: Icon(_controller.useVariableHeight
+              ? Icons.view_agenda
+              : Icons.view_stream),
+          tooltip: _controller.useVariableHeight ? '기본 높이로 전환' : '가변 높이로 전환',
+        ),
+      ],
+    );
+  }
+
+  // ===================
+  // 이벤트 핸들러들
+  // ===================
+
+  /// 행 선택/해제 핸들러
+  void _onRowSelectionChanged(int index, bool selected) {
+    _controller.updateRowSelection(index, selected);
+  }
+
+  /// 전체 선택/해제 핸들러
+  void _onSelectAllChanged(bool selectAll) {
+    _controller.updateSelectAll(selectAll, _visibleRows.length);
+  }
+
+  /// 행 클릭 핸들러
+  void _onRowTap(int index) {
+    debugPrint('Row $index tapped');
+  }
+
+  /// 행 더블클릭 핸들러
+  void _onRowDoubleTap(int index) {
+    debugPrint('Row $index double-tapped');
+    _showDialog('더블클릭!', '$index번 행을 더블클릭했습니다.');
+  }
+
+  /// 행 우클릭 핸들러
+  void _onRowSecondaryTap(int index) {
+    debugPrint('Row $index right-clicked');
+    _showDialog('우클릭!', '$index번 행을 우클릭했습니다.');
+  }
+
+  // ===================
+  // 다이얼로그 표시 메서드들
+  // ===================
+
+  /// 선택된 항목 표시
+  void _showSelectedItems() {
+    final content =
+        TableDataHelper.generateSelectedItemsInfo(_controller.selectedRows);
+    _showDialog('선택된 항목', content);
+  }
+
+  /// 정렬 정보 표시
+  void _showSortInfo() {
+    final content = TableDataHelper.generateSortInfo(
+      _controller.sortManager,
+      _controller.visibleColumns,
+    );
+    _showDialog('정렬 정보', content);
+  }
+
+  /// Visibility 정보 표시
+  void _showVisibilityInfo() {
+    final content = TableDataHelper.generateVisibilityInfo(
+      _controller.allTableColumns,
+      _controller.visibleColumns,
+      _controller.hiddenColumnIds,
+    );
+    _showDialog('Visibility 정보', content);
+  }
+
+  /// 높이 정보 표시
+  void _showHeightInfo() {
+    final content = TableDataHelper.generateHeightInfo(_visibleRows);
+    _showDialog('높이 정보', content);
+  }
+
+  /// 공통 다이얼로그 표시 헬퍼
   void _showDialog(String title, String content) {
     showDialog(
       context: context,
@@ -942,35 +1190,48 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
+}
 
-  /// 선택된 항목 보기
-  void _showSelectedItems() {
-    _showDialog('선택된 항목', '선택된 행들의 인덱스:\n${selectedRows.toList()..sort()}');
+```
+## example/lib/screens/utils/table_data_helper.dart
+```dart
+import 'package:flutter_basic_table/flutter_basic_table.dart';
+
+/// 테이블 데이터 처리를 위한 유틸리티 클래스
+class TableDataHelper {
+  TableDataHelper._(); // private 생성자 (유틸리티 클래스)
+
+  /// 보이는 셀들만 포함한 행들 생성
+  static List<BasicTableRow> createVisibleRows(
+    List<BasicTableRow> allRows,
+    List<int> visibleColumnIndices,
+  ) {
+    return allRows
+        .map((row) => _createFilteredRow(row, visibleColumnIndices))
+        .toList();
   }
 
-  /// 높이 정보 표시
-  void _showHeightInfo() {
-    final heightInfo = StringBuffer();
-    heightInfo.writeln('📏 행별 높이 정보:');
-    heightInfo.writeln('');
+  /// 특정 인덱스들의 셀만 포함한 새로운 행 생성
+  static BasicTableRow _createFilteredRow(
+      BasicTableRow originalRow, List<int> indices) {
+    final filteredCells = <BasicTableCell>[];
 
-    for (int i = 0; i < tableRows.length && i < 10; i++) {
-      // 처음 10개만 표시
-      final row = tableRows[i];
-      final effectiveHeight = row.getEffectiveHeight(45.0); // 기본 테마 높이 45px
-      final hasCustom = row.hasCustomHeight ? ' (커스텀)' : ' (테마 기본값)';
-      heightInfo.writeln('Row ${i + 1}: ${effectiveHeight}px$hasCustom');
+    for (final index in indices) {
+      if (index >= 0 && index < originalRow.cells.length) {
+        filteredCells.add(originalRow.cells[index]);
+      }
     }
 
-    if (tableRows.length > 10) {
-      heightInfo.writeln('... (총 ${tableRows.length}개 행)');
-    }
-
-    _showDialog('높이 정보', heightInfo.toString());
+    return BasicTableRow(
+      cells: filteredCells,
+      index: originalRow.index,
+      height: originalRow.height, // 높이 정보 유지
+    );
   }
 
-  /// 정렬 상태 정보 표시
-  void _showSortInfo() {
+  /// 정렬 상태 정보를 문자열로 생성
+  static String generateSortInfo(
+      ColumnSortManager sortManager, List<BasicTableColumn> visibleColumns) {
     final sortInfo = StringBuffer();
     sortInfo.writeln('🔍 정렬 상태 정보:');
     sortInfo.writeln('');
@@ -979,19 +1240,19 @@ class _HomeScreenState extends State<HomeScreen> {
       sortInfo.writeln('현재 정렬된 컬럼: ${sortManager.currentSortedColumnId}');
 
       final currentIndex =
-          sortManager.getCurrentSortedColumnIndex(tableColumns);
+          sortManager.getCurrentSortedColumnIndex(visibleColumns);
       if (currentIndex != null) {
-        sortInfo.writeln('현재 위치: $currentIndex번 컬럼');
-        sortInfo.writeln('컬럼명: ${tableColumns[currentIndex].name}');
+        sortInfo.writeln('보이는 컬럼 위치: $currentIndex번');
+        sortInfo.writeln('컬럼명: ${visibleColumns[currentIndex].name}');
       }
     } else {
       sortInfo.writeln('현재 정렬된 컬럼이 없습니다.');
     }
 
     sortInfo.writeln('');
-    sortInfo.writeln('📋 전체 컬럼 정보:');
-    for (int i = 0; i < tableColumns.length; i++) {
-      final column = tableColumns[i];
+    sortInfo.writeln('📋 보이는 컬럼 정보:');
+    for (int i = 0; i < visibleColumns.length; i++) {
+      final column = visibleColumns[i];
       final state = sortManager.getSortState(column.effectiveId);
       final stateIcon = state == ColumnSortState.ascending
           ? '↑'
@@ -1002,52 +1263,98 @@ class _HomeScreenState extends State<HomeScreen> {
           .writeln('  [$i] ${column.name} (${column.effectiveId}) $stateIcon');
     }
 
-    _showDialog('정렬 정보', sortInfo.toString());
+    return sortInfo.toString();
   }
+
+  /// Visibility 상태 정보를 문자열로 생성
+  static String generateVisibilityInfo(
+    List<BasicTableColumn> allColumns,
+    List<BasicTableColumn> visibleColumns,
+    Set<String> hiddenColumnIds,
+  ) {
+    final visibilityInfo = StringBuffer();
+    visibilityInfo.writeln('👁️ 컬럼 Visibility 정보:');
+    visibilityInfo.writeln('');
+
+    visibilityInfo.writeln('보이는 컬럼: ${visibleColumns.length}개');
+    visibilityInfo.writeln('숨겨진 컬럼: ${hiddenColumnIds.length}개');
+    visibilityInfo.writeln('');
+
+    visibilityInfo.writeln('📋 전체 컬럼 상태:');
+    for (int i = 0; i < allColumns.length; i++) {
+      final column = allColumns[i];
+      final isVisible = !hiddenColumnIds.contains(column.effectiveId);
+      final icon = isVisible ? '👁️' : '🙈';
+      visibilityInfo.writeln('  [$i] ${column.name} $icon');
+    }
+
+    if (hiddenColumnIds.isNotEmpty) {
+      visibilityInfo.writeln('');
+      visibilityInfo.writeln('숨겨진 컬럼들: ${hiddenColumnIds.join(', ')}');
+    }
+
+    return visibilityInfo.toString();
+  }
+
+  /// 높이 정보를 문자열로 생성
+  static String generateHeightInfo(List<BasicTableRow> visibleRows) {
+    final heightInfo = StringBuffer();
+    heightInfo.writeln('📏 행별 높이 정보:');
+    heightInfo.writeln('');
+
+    for (int i = 0; i < visibleRows.length && i < 10; i++) {
+      final row = visibleRows[i];
+      final effectiveHeight = row.getEffectiveHeight(45.0);
+      final hasCustom = row.hasCustomHeight ? ' (커스텀)' : ' (테마 기본값)';
+      heightInfo.writeln('Row ${i + 1}: ${effectiveHeight}px$hasCustom');
+    }
+
+    if (visibleRows.length > 10) {
+      heightInfo.writeln('... (총 ${visibleRows.length}개 행)');
+    }
+
+    return heightInfo.toString();
+  }
+
+  /// 선택된 항목 정보를 문자열로 생성
+  static String generateSelectedItemsInfo(Set<int> selectedRows) {
+    return '선택된 행들의 인덱스:\n${selectedRows.toList()..sort()}';
+  }
+}
+
+```
+## example/lib/screens/widgets/info_card_widget.dart
+```dart
+import 'package:flutter/material.dart';
+import 'package:flutter_basic_table/flutter_basic_table.dart';
+
+/// 테이블 상태 정보를 표시하는 카드 위젯
+class InfoCardWidget extends StatelessWidget {
+  final int selectedRowCount;
+  final List<BasicTableColumn> visibleColumns;
+  final List<BasicTableColumn> allColumns;
+  final ColumnSortManager sortManager;
+  final Set<String> hiddenColumnIds;
+  final bool useVariableHeight;
+  final VoidCallback onShowSelectedItems;
+  final VoidCallback onShowSortInfo;
+  final VoidCallback onToggleHeightMode;
+
+  const InfoCardWidget({
+    super.key,
+    required this.selectedRowCount,
+    required this.visibleColumns,
+    required this.allColumns,
+    required this.sortManager,
+    required this.hiddenColumnIds,
+    required this.useVariableHeight,
+    required this.onShowSelectedItems,
+    required this.onShowSortInfo,
+    required this.onToggleHeightMode,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(_useVariableHeight
-            ? 'Basic Table Demo - 가변 높이 모드'
-            : 'Basic Table Demo - 기본 높이 모드'),
-        backgroundColor: Colors.grey[200],
-        foregroundColor: Colors.black87,
-        actions: [
-          IconButton(
-            onPressed: _showSortInfo,
-            icon: const Icon(Icons.sort),
-            tooltip: '정렬 정보',
-          ),
-          IconButton(
-            onPressed: _showHeightInfo,
-            icon: const Icon(Icons.info),
-            tooltip: '높이 정보',
-          ),
-          IconButton(
-            onPressed: _toggleHeightMode,
-            icon: Icon(
-                _useVariableHeight ? Icons.view_agenda : Icons.view_stream),
-            tooltip: _useVariableHeight ? '기본 높이로 전환' : '가변 높이로 전환',
-          ),
-        ],
-      ),
-      backgroundColor: Colors.grey[50],
-      body: Column(
-        children: [
-          // 선택 상태 + 컬럼 순서 + 높이 모드 + 정렬 상태 표시 카드
-          _buildInfoCard(),
-
-          // 테이블 카드
-          _buildTableCard(),
-        ],
-      ),
-    );
-  }
-
-  /// 정보 표시 카드 위젯
-  Widget _buildInfoCard() {
     return Card(
       margin: const EdgeInsets.all(8.0),
       color: Colors.white,
@@ -1057,132 +1364,369 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // 상단 행: 선택된 행 개수와 버튼들
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  '선택된 행: ${selectedRows.length}개',
+                  '선택된 행: $selectedRowCount개',
                   style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.black87),
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.black87,
+                  ),
                 ),
-                Row(
-                  children: [
-                    if (selectedRows.isNotEmpty)
-                      ElevatedButton(
-                        onPressed: _showSelectedItems,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.black87,
-                          foregroundColor: Colors.white,
-                        ),
-                        child: const Text('선택 항목 보기'),
-                      ),
-                    const SizedBox(width: 8),
-                    ElevatedButton(
-                      onPressed: _showSortInfo,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: sortManager.hasSortedColumn
-                            ? Colors.green
-                            : Colors.grey,
-                        foregroundColor: Colors.white,
-                      ),
-                      child: const Text('정렬 정보'),
-                    ),
-                    const SizedBox(width: 8),
-                    ElevatedButton(
-                      onPressed: _toggleHeightMode,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor:
-                            _useVariableHeight ? Colors.orange : Colors.blue,
-                        foregroundColor: Colors.white,
-                      ),
-                      child: Text(_useVariableHeight ? '기본 높이 모드' : '가변 높이 모드'),
-                    ),
-                  ],
-                ),
+                _buildActionButtons(),
               ],
             ),
             const SizedBox(height: 8),
+
+            // 보이는 컬럼 정보
             Text(
-              '컬럼 순서: ${tableColumns.map((col) => col.name).join(' → ')}',
+              '보이는 컬럼: ${visibleColumns.map((col) => col.name).join(' → ')}',
               style: TextStyle(
                 fontSize: 14,
                 color: Colors.grey[600],
               ),
             ),
             const SizedBox(height: 4),
-            Row(
-              children: [
-                Icon(
-                  sortManager.hasSortedColumn
-                      ? Icons.sort
-                      : Icons.sort_outlined,
-                  size: 16,
-                  color: sortManager.hasSortedColumn
-                      ? Colors.green
-                      : Colors.grey[600],
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  sortManager.hasSortedColumn
-                      ? '정렬됨: ${sortManager.currentSortedColumnId}'
-                      : '정렬 없음',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: sortManager.hasSortedColumn
-                        ? Colors.green
-                        : Colors.grey[600],
-                    fontStyle: FontStyle.italic,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Icon(
-                  _useVariableHeight ? Icons.height : Icons.horizontal_rule,
-                  size: 16,
-                  color: Colors.grey[600],
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  _useVariableHeight ? '가변 높이 모드' : '기본 높이 모드',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[600],
-                    fontStyle: FontStyle.italic,
-                  ),
-                ),
-              ],
-            ),
+
+            // 상태 아이콘들과 정보
+            _buildStatusIcons(),
           ],
         ),
       ),
     );
   }
 
-  /// 테이블 카드 위젯
-  Widget _buildTableCard() {
+  /// 액션 버튼들 빌드
+  Widget _buildActionButtons() {
+    return Row(
+      children: [
+        // 선택 항목 보기 버튼
+        if (selectedRowCount > 0)
+          ElevatedButton(
+            onPressed: onShowSelectedItems,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.black87,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('선택 항목 보기'),
+          ),
+
+        if (selectedRowCount > 0) const SizedBox(width: 8),
+
+        // 정렬 정보 버튼
+        ElevatedButton(
+          onPressed: onShowSortInfo,
+          style: ElevatedButton.styleFrom(
+            backgroundColor:
+                sortManager.hasSortedColumn ? Colors.green : Colors.grey,
+            foregroundColor: Colors.white,
+          ),
+          child: const Text('정렬 정보'),
+        ),
+        const SizedBox(width: 8),
+
+        // 높이 모드 전환 버튼
+        ElevatedButton(
+          onPressed: onToggleHeightMode,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: useVariableHeight ? Colors.orange : Colors.blue,
+            foregroundColor: Colors.white,
+          ),
+          child: Text(useVariableHeight ? '기본 높이 모드' : '가변 높이 모드'),
+        ),
+      ],
+    );
+  }
+
+  /// 상태 아이콘들과 정보 빌드
+  Widget _buildStatusIcons() {
+    return Row(
+      children: [
+        // 정렬 상태 아이콘
+        Icon(
+          sortManager.hasSortedColumn ? Icons.sort : Icons.sort_outlined,
+          size: 16,
+          color: sortManager.hasSortedColumn ? Colors.green : Colors.grey[600],
+        ),
+        const SizedBox(width: 4),
+        Text(
+          sortManager.hasSortedColumn
+              ? '정렬됨: ${sortManager.currentSortedColumnId}'
+              : '정렬 없음',
+          style: TextStyle(
+            fontSize: 12,
+            color:
+                sortManager.hasSortedColumn ? Colors.green : Colors.grey[600],
+            fontStyle: FontStyle.italic,
+          ),
+        ),
+        const SizedBox(width: 16),
+
+        // Visibility 상태 아이콘
+        Icon(
+          hiddenColumnIds.isNotEmpty ? Icons.visibility_off : Icons.visibility,
+          size: 16,
+          color: Colors.grey[600],
+        ),
+        const SizedBox(width: 4),
+        Text(
+          '${visibleColumns.length}/${allColumns.length} 컬럼 표시',
+          style: TextStyle(
+            fontSize: 12,
+            color: Colors.grey[600],
+            fontStyle: FontStyle.italic,
+          ),
+        ),
+        const SizedBox(width: 16),
+
+        // 높이 모드 아이콘
+        Icon(
+          useVariableHeight ? Icons.height : Icons.horizontal_rule,
+          size: 16,
+          color: Colors.grey[600],
+        ),
+        const SizedBox(width: 4),
+        Text(
+          useVariableHeight ? '가변 높이 모드' : '기본 높이 모드',
+          style: TextStyle(
+            fontSize: 12,
+            color: Colors.grey[600],
+            fontStyle: FontStyle.italic,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+```
+## example/lib/screens/widgets/table_card_widget.dart
+```dart
+import 'package:flutter/material.dart';
+import 'package:flutter_basic_table/flutter_basic_table.dart';
+
+import '../../themes/table_theme.dart';
+
+/// 테이블을 담는 카드 위젯
+class TableCardWidget extends StatelessWidget {
+  final List<BasicTableColumn> visibleColumns;
+  final List<BasicTableRow> visibleRows;
+  final Set<int> selectedRows;
+  final ColumnSortManager sortManager;
+  final Map<int, ColumnSortState> columnSortStates;
+
+  // 콜백들
+  final void Function(int index, bool selected) onRowSelectionChanged;
+  final void Function(bool selectAll) onSelectAllChanged;
+  final void Function(int index) onRowTap;
+  final void Function(int index) onRowDoubleTap;
+  final void Function(int index) onRowSecondaryTap;
+  final void Function(int oldIndex, int newIndex) onColumnReorder;
+  final void Function(int columnIndex, ColumnSortState sortState) onColumnSort;
+  final void Function(String columnId, ColumnSortState sortState)
+      onColumnSortById;
+
+  const TableCardWidget({
+    super.key,
+    required this.visibleColumns,
+    required this.visibleRows,
+    required this.selectedRows,
+    required this.sortManager,
+    required this.columnSortStates,
+    required this.onRowSelectionChanged,
+    required this.onSelectAllChanged,
+    required this.onRowTap,
+    required this.onRowDoubleTap,
+    required this.onRowSecondaryTap,
+    required this.onColumnReorder,
+    required this.onColumnSort,
+    required this.onColumnSortById,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return Expanded(
       child: Card(
         margin: const EdgeInsets.all(8.0),
         color: Colors.white,
         elevation: 1,
-        child: BasicTable(
-          columns: tableColumns,
-          rows: tableRows,
-          theme: AppTableTheme.monochrome, // 테마 적용
-          selectedRows: selectedRows,
-          onRowSelectionChanged: onRowSelectionChanged,
-          onSelectAllChanged: onSelectAllChanged,
-          onRowTap: onRowTap,
-          onRowDoubleTap: onRowDoubleTap,
-          onRowSecondaryTap: onRowSecondaryTap,
-          doubleClickTime: const Duration(milliseconds: 250),
-          onColumnReorder: onColumnReorder,
-          onColumnSort: onColumnSort, // 기존 방식 (하위 호환성)
-          onColumnSortById: onColumnSortById, // 새로운 ID 기반 방식
-          sortManager: sortManager, // 정렬 관리자 전달
+        child: _buildTable(),
+      ),
+    );
+  }
+
+  /// 테이블 빌드
+  Widget _buildTable() {
+    // 빈 데이터 체크
+    if (visibleColumns.isEmpty) {
+      return _buildEmptyState('표시할 컬럼이 없습니다.\n컬럼을 선택해주세요.');
+    }
+
+    if (visibleRows.isEmpty) {
+      return _buildEmptyState('표시할 데이터가 없습니다.');
+    }
+
+    return BasicTable(
+      columns: visibleColumns,
+      rows: visibleRows,
+      theme: AppTableTheme.monochrome,
+      selectedRows: selectedRows,
+      onRowSelectionChanged: onRowSelectionChanged,
+      onSelectAllChanged: onSelectAllChanged,
+      onRowTap: onRowTap,
+      onRowDoubleTap: onRowDoubleTap,
+      onRowSecondaryTap: onRowSecondaryTap,
+      doubleClickTime: const Duration(milliseconds: 250),
+      onColumnReorder: onColumnReorder,
+      onColumnSort: onColumnSort,
+      onColumnSortById: onColumnSortById,
+      sortManager: sortManager,
+    );
+  }
+
+  /// 빈 상태 표시 위젯
+  Widget _buildEmptyState(String message) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.table_chart_outlined,
+            size: 64,
+            color: Colors.grey[400],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.grey[600],
+              height: 1.5,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+```
+## example/lib/screens/widgets/visibility_control_card_widget.dart
+```dart
+import 'package:flutter/material.dart';
+import 'package:flutter_basic_table/flutter_basic_table.dart';
+
+/// 컬럼 visibility 제어를 위한 카드 위젯
+class VisibilityControlCardWidget extends StatelessWidget {
+  final List<BasicTableColumn> allColumns;
+  final Set<String> hiddenColumnIds;
+  final void Function(String columnId) onToggleVisibility;
+  final VoidCallback onShowAllColumns;
+  final VoidCallback onShowVisibilityInfo;
+
+  const VisibilityControlCardWidget({
+    super.key,
+    required this.allColumns,
+    required this.hiddenColumnIds,
+    required this.onToggleVisibility,
+    required this.onShowAllColumns,
+    required this.onShowVisibilityInfo,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 8.0),
+      color: Colors.white,
+      elevation: 1,
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 헤더 행
+            _buildHeader(),
+            const SizedBox(height: 12),
+
+            // 컬럼 토글 칩들
+            _buildColumnChips(),
+          ],
         ),
       ),
+    );
+  }
+
+  /// 헤더 빌드 (제목과 액션 버튼들)
+  Widget _buildHeader() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        const Text(
+          '👁️ 컬럼 표시 설정',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+            color: Colors.black87,
+          ),
+        ),
+        Row(
+          children: [
+            // 모두 보이기 버튼
+            ElevatedButton(
+              onPressed: hiddenColumnIds.isNotEmpty ? onShowAllColumns : null,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('모두 보이기'),
+            ),
+            const SizedBox(width: 8),
+
+            // Visibility 정보 버튼
+            ElevatedButton(
+              onPressed: onShowVisibilityInfo,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Visibility 정보'),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  /// 컬럼 토글 칩들 빌드
+  Widget _buildColumnChips() {
+    return Wrap(
+      spacing: 8.0,
+      runSpacing: 4.0,
+      children: allColumns.map((column) {
+        final isVisible = !hiddenColumnIds.contains(column.effectiveId);
+
+        return FilterChip(
+          label: Text(column.name),
+          selected: isVisible,
+          onSelected: (_) => onToggleVisibility(column.effectiveId),
+          selectedColor: Colors.green.withOpacity(0.2),
+          checkmarkColor: Colors.green,
+          avatar: Icon(
+            isVisible ? Icons.visibility : Icons.visibility_off,
+            size: 18,
+            color: isVisible ? Colors.green : Colors.grey,
+          ),
+          // 선택되지 않았을 때의 스타일
+          backgroundColor: isVisible ? null : Colors.red.withOpacity(0.1),
+          side: isVisible
+              ? null
+              : BorderSide(color: Colors.red.withOpacity(0.3), width: 1),
+        );
+      }).toList(),
     );
   }
 }
@@ -5109,7 +5653,7 @@ class TooltipAbleText extends StatelessWidget {
 ```yaml
 name: flutter_basic_table
 description: A comprehensive and customizable table widget for Flutter with sorting, selection, theming, and interactive features.
-version: 1.0.1
+version: 1.0.2
 homepage: https://github.com/kihyun1998/flutter_basic_table
 repository: https://github.com/kihyun1998/flutter_basic_table
 issue_tracker: https://github.com/kihyun1998/flutter_basic_table/issues

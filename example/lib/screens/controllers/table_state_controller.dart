@@ -8,28 +8,49 @@ class TableStateController extends ChangeNotifier {
   // 상태 변수들
   Set<int> selectedRows = {};
   late ColumnSortManager sortManager;
-  late List<BasicTableColumn> allTableColumns;
+
+  /// 현재 테이블 컬럼 Map
+  late Map<String, BasicTableColumn> allTableColumns;
+
+  /// 현재 테이블 행 List
   late List<BasicTableRow> allTableRows;
-  late List<BasicTableColumn> originalTableColumns;
+
+  /// 백업용 원본 데이터
+  late Map<String, BasicTableColumn> originalTableColumns;
   late List<BasicTableRow> originalTableRows;
+
   bool _useVariableHeight = false;
   Set<String> hiddenColumnIds = {};
 
   // Getters
   bool get useVariableHeight => _useVariableHeight;
 
-  List<BasicTableColumn> get visibleColumns => allTableColumns
-      .where((col) => !hiddenColumnIds.contains(col.effectiveId))
-      .toList();
+  /// 보이는 컬럼 Map (숨겨진 컬럼 제외)
+  Map<String, BasicTableColumn> get visibleColumns {
+    final Map<String, BasicTableColumn> result = {};
 
-  List<int> get visibleColumnIndices {
-    final indices = <int>[];
-    for (int i = 0; i < allTableColumns.length; i++) {
-      if (!hiddenColumnIds.contains(allTableColumns[i].effectiveId)) {
-        indices.add(i);
+    for (final entry in allTableColumns.entries) {
+      if (!hiddenColumnIds.contains(entry.key)) {
+        result[entry.key] = entry.value;
       }
     }
-    return indices;
+
+    return result;
+  }
+
+  /// 보이는 컬럼을 order 기준으로 정렬한 리스트
+  List<BasicTableColumn> get visibleColumnsList {
+    return BasicTableColumn.mapToSortedList(visibleColumns);
+  }
+
+  /// 보이는 컬럼 ID 리스트 (order 순서)
+  List<String> get visibleColumnIds {
+    return visibleColumnsList.map((col) => col.id).toList();
+  }
+
+  /// 모든 컬럼을 order 기준으로 정렬한 리스트
+  List<BasicTableColumn> get allColumnsList {
+    return BasicTableColumn.mapToSortedList(allTableColumns);
   }
 
   /// 생성자
@@ -40,25 +61,23 @@ class TableStateController extends ChangeNotifier {
 
   /// 데이터 초기화
   void initializeData() {
-    allTableColumns = SampleData.columns
-        .map((col) => BasicTableColumn(
-              id: col.name,
-              name: col.name,
-              minWidth: col.minWidth,
-              maxWidth: col.maxWidth,
-              isResizable: col.isResizable,
-              tooltipFormatter: col.tooltipFormatter,
-              forceTooltip: col.forceTooltip,
-            ))
-        .toList();
+    // SampleData에서 Map 형태로 직접 가져오기
+    allTableColumns = Map<String, BasicTableColumn>.from(SampleData.columns);
 
     allTableRows = _useVariableHeight
         ? SampleData.generateRowsWithVariableHeight()
         : SampleData.generateRows();
 
+    // 백업 데이터 생성
     originalTableColumns = SampleData.deepCopyColumns(allTableColumns);
     originalTableRows = SampleData.deepCopyRows(allTableRows);
+
+    // 정렬 관리자 초기화
     sortManager.clearAll();
+
+    debugPrint(
+        '📊 Data initialized: ${allTableColumns.length} columns, ${allTableRows.length} rows');
+    SampleData.printColumnInfo();
   }
 
   /// 높이 모드 전환
@@ -68,26 +87,36 @@ class TableStateController extends ChangeNotifier {
     hiddenColumnIds.clear();
     initializeData();
     notifyListeners();
+
+    debugPrint('🔄 Height mode toggled: $_useVariableHeight');
   }
 
   /// 컬럼 visibility 토글
   void toggleColumnVisibility(String columnId) {
+    if (!allTableColumns.containsKey(columnId)) {
+      debugPrint('❌ Column not found: $columnId');
+      return;
+    }
+
     if (hiddenColumnIds.contains(columnId)) {
       hiddenColumnIds.remove(columnId);
+      debugPrint('👁️ Column shown: $columnId');
     } else {
       hiddenColumnIds.add(columnId);
+      debugPrint('🙈 Column hidden: $columnId');
 
       // 숨기는 컬럼이 현재 정렬 중이면 정렬 해제
       if (sortManager.currentSortedColumnId == columnId) {
         resetToOriginalState();
+        debugPrint('🔄 Sort reset due to hidden column: $columnId');
       }
     }
 
-    selectedRows.clear(); // 인덱스가 바뀔 수 있으므로
+    selectedRows.clear(); // 선택 상태 초기화
     notifyListeners();
 
     debugPrint(
-        'Column $columnId visibility toggled. Hidden columns: $hiddenColumnIds');
+        '📊 Visible columns: ${visibleColumnIds.length}/${allTableColumns.length}');
   }
 
   /// 모든 컬럼 보이기
@@ -95,15 +124,16 @@ class TableStateController extends ChangeNotifier {
     hiddenColumnIds.clear();
     selectedRows.clear();
     notifyListeners();
-    debugPrint('All columns are now visible');
+    debugPrint('👁️ All columns are now visible');
   }
 
   /// 원본 상태로 복원
   void resetToOriginalState() {
     allTableRows = SampleData.deepCopyRows(originalTableRows);
-    allTableColumns = List.from(originalTableColumns);
+    allTableColumns = Map<String, BasicTableColumn>.from(originalTableColumns);
     sortManager.clearAll();
     notifyListeners();
+    debugPrint('🔄 Reset to original state');
   }
 
   /// 행 선택/해제
@@ -116,7 +146,7 @@ class TableStateController extends ChangeNotifier {
     notifyListeners();
 
     debugPrint(
-        'Row $index ${selected ? 'selected' : 'deselected'}. Total selected: ${selectedRows.length}');
+        '✅ Row $index ${selected ? 'selected' : 'deselected'}. Total: ${selectedRows.length}');
   }
 
   /// 전체 선택/해제
@@ -129,109 +159,116 @@ class TableStateController extends ChangeNotifier {
     notifyListeners();
 
     debugPrint(
-        '${selectAll ? 'Select all' : 'Deselect all'}. Total selected: ${selectedRows.length}');
+        '📋 ${selectAll ? 'Select all' : 'Deselect all'}. Total: ${selectedRows.length}');
   }
 
-  /// 컬럼 정렬
+  /// 컬럼 정렬 (visible 인덱스 기반)
   void updateColumnSort(int visibleColumnIndex, ColumnSortState sortState) {
-    // 보이는 컬럼 인덱스를 원본 컬럼 인덱스로 변환
-    final originalColumnIndex = visibleColumnIndices[visibleColumnIndex];
-    final String columnId = allTableColumns[originalColumnIndex].effectiveId;
+    final visibleCols = visibleColumnsList;
+
+    if (visibleColumnIndex < 0 || visibleColumnIndex >= visibleCols.length) {
+      debugPrint('❌ Invalid visible column index: $visibleColumnIndex');
+      return;
+    }
+
+    final String columnId = visibleCols[visibleColumnIndex].id;
+    updateColumnSortById(columnId, sortState);
+  }
+
+  /// ID 기반 컬럼 정렬 (권장 방식)
+  void updateColumnSortById(String columnId, ColumnSortState sortState) {
+    if (!allTableColumns.containsKey(columnId)) {
+      debugPrint('❌ Column not found for sort: $columnId');
+      return;
+    }
+
+    debugPrint('🔄 Column sort: $columnId -> $sortState');
 
     // 정렬 관리자 업데이트
     sortManager.setSortState(columnId, sortState);
 
     if (sortState != ColumnSortState.none) {
-      _sortTableData(originalColumnIndex, sortState);
+      _sortTableData(columnId, sortState);
     } else {
       resetToOriginalState();
     }
 
     notifyListeners();
-    debugPrint('Column sort: visible column $visibleColumnIndex -> $sortState');
   }
 
-  /// ID 기반 컬럼 정렬
-  void updateColumnSortById(String columnId, ColumnSortState sortState) {
-    debugPrint('🆔 Column sort by ID: $columnId -> $sortState');
-
-    // 보이는 컬럼에서 해당 ID의 인덱스 찾기
-    int visibleColumnIndex = -1;
-    for (int i = 0; i < visibleColumns.length; i++) {
-      if (visibleColumns[i].effectiveId == columnId) {
-        visibleColumnIndex = i;
-        break;
-      }
+  /// 컬럼 순서 변경 (columnId와 newOrder 기반)
+  void updateColumnReorder(String columnId, int newOrder) {
+    if (!allTableColumns.containsKey(columnId)) {
+      debugPrint('❌ Column not found for reorder: $columnId');
+      return;
     }
 
-    if (visibleColumnIndex >= 0) {
-      updateColumnSort(visibleColumnIndex, sortState);
-    }
-  }
+    final oldOrder = allTableColumns[columnId]!.order;
 
-  /// 컬럼 순서 변경
-  void updateColumnReorder(int oldVisibleIndex, int newVisibleIndex) {
-    // newIndex 보정
-    if (newVisibleIndex > oldVisibleIndex) {
-      newVisibleIndex -= 1;
+    if (oldOrder == newOrder) {
+      debugPrint('ℹ️ Column $columnId already at order $newOrder');
+      return;
     }
 
     debugPrint(
-        '🔄 Column reorder: $oldVisibleIndex -> $newVisibleIndex (visible columns)');
+        '🔄 Column reorder: $columnId from order $oldOrder to $newOrder');
 
-    // 보이는 컬럼 인덱스를 원본 인덱스로 변환
-    final originalOldIndex = visibleColumnIndices[oldVisibleIndex];
-    final originalNewIndex = visibleColumnIndices[newVisibleIndex];
-
-    debugPrint('🔄 Original indices: $originalOldIndex -> $originalNewIndex');
-
-    // 원본 컬럼 순서 변경
-    final BasicTableColumn movedColumn =
-        allTableColumns.removeAt(originalOldIndex);
-    allTableColumns.insert(originalNewIndex, movedColumn);
-
-    // 모든 행의 데이터도 재정렬
-    allTableRows = allTableRows
-        .map((row) => _reorderRowCells(row, originalOldIndex, originalNewIndex))
-        .toList();
+    // 컬럼 순서 재정렬
+    allTableColumns =
+        BasicTableColumn.reorderColumn(allTableColumns, columnId, newOrder);
 
     // 원본 데이터도 함께 업데이트
-    final BasicTableColumn movedOriginalColumn =
-        originalTableColumns.removeAt(originalOldIndex);
-    originalTableColumns.insert(originalNewIndex, movedOriginalColumn);
+    originalTableColumns = BasicTableColumn.reorderColumn(
+        originalTableColumns, columnId, newOrder);
 
-    originalTableRows = originalTableRows
-        .map((row) => _reorderRowCells(row, originalOldIndex, originalNewIndex))
-        .toList();
+    // 행 데이터는 Map 기반이므로 순서 변경이 불필요!
+    // 렌더링시 order에 따라 자동으로 정렬됨
 
     notifyListeners();
+
     debugPrint(
-        '🔄 AFTER reorder: ${visibleColumns.map((c) => c.name).join(', ')}');
+        '✅ Column reorder completed. New order: ${visibleColumnIds.join(' → ')}');
   }
 
-  /// 현재 정렬 상태를 보이는 컬럼 기준 인덱스 맵으로 변환
-  Map<int, ColumnSortState> getCurrentSortStates() {
-    final Map<int, ColumnSortState> indexMap = {};
+  /// visible 인덱스 기반 컬럼 순서 변경 (하위 호환성)
+  void updateColumnReorderByIndex(int oldVisibleIndex, int newVisibleIndex) {
+    final visibleCols = visibleColumnsList;
 
-    for (int i = 0; i < visibleColumns.length; i++) {
-      final String columnId = visibleColumns[i].effectiveId;
-      final ColumnSortState state = sortManager.getSortState(columnId);
-
-      if (state != ColumnSortState.none) {
-        indexMap[i] = state;
-      }
+    if (oldVisibleIndex < 0 ||
+        oldVisibleIndex >= visibleCols.length ||
+        newVisibleIndex < 0 ||
+        newVisibleIndex >= visibleCols.length) {
+      debugPrint(
+          '❌ Invalid reorder indices: $oldVisibleIndex -> $newVisibleIndex');
+      return;
     }
 
-    return indexMap;
+    final columnId = visibleCols[oldVisibleIndex].id;
+
+    // newIndex를 실제 order로 변환
+    // visible 컬럼들 중에서의 새로운 위치를 전체 컬럼 순서로 매핑
+    final newOrder = newVisibleIndex;
+
+    updateColumnReorder(columnId, newOrder);
+  }
+
+  /// 현재 정렬 상태를 visible 인덱스 기준 Map으로 변환 (하위 호환성)
+  Map<int, ColumnSortState> getCurrentSortStates() {
+    return sortManager.toIndexMap(visibleColumnsList);
   }
 
   /// 테이블 데이터 정렬 (내부 메서드)
-  void _sortTableData(int originalColumnIndex, ColumnSortState sortState) {
-    if (originalColumnIndex >= allTableColumns.length) return;
+  void _sortTableData(String columnId, ColumnSortState sortState) {
+    if (!allTableColumns.containsKey(columnId)) {
+      debugPrint('❌ Cannot sort: column $columnId not found');
+      return;
+    }
+
+    debugPrint('📊 Sorting data by column: $columnId ($sortState)');
 
     allTableRows.sort((a, b) {
-      final String valueA = a.cells[originalColumnIndex].displayText ?? '';
-      final String valueB = b.cells[originalColumnIndex].displayText ?? '';
+      final String valueA = a.getComparableValue(columnId);
+      final String valueB = b.getComparableValue(columnId);
 
       // 숫자 파싱 시도
       final numA = num.tryParse(valueA);
@@ -246,27 +283,90 @@ class TableStateController extends ChangeNotifier {
 
       return sortState == ColumnSortState.descending ? -comparison : comparison;
     });
+
+    debugPrint('✅ Sort completed');
   }
 
-  /// 행의 셀 순서 변경 (내부 메서드)
-  BasicTableRow _reorderRowCells(
-      BasicTableRow row, int oldIndex, int newIndex) {
-    if (oldIndex < 0 ||
-        oldIndex >= row.cells.length ||
-        newIndex < 0 ||
-        newIndex >= row.cells.length ||
-        oldIndex == newIndex) {
-      return row;
+  /// 데이터 유효성 검사
+  bool validateData() {
+    // 컬럼 중복 ID 검사
+    final columnIds = allTableColumns.keys.toSet();
+    if (columnIds.length != allTableColumns.length) {
+      debugPrint('❌ Duplicate column IDs detected');
+      return false;
     }
 
-    final newCells = List<BasicTableCell>.from(row.cells);
-    final BasicTableCell movedCell = newCells.removeAt(oldIndex);
-    newCells.insert(newIndex, movedCell);
+    // 컬럼 order 연속성 검사
+    final orders = allTableColumns.values.map((col) => col.order).toList()
+      ..sort();
+    for (int i = 0; i < orders.length; i++) {
+      if (orders[i] != i) {
+        debugPrint('❌ Column order gap detected at index $i');
+        return false;
+      }
+    }
 
-    return BasicTableRow(
-      cells: newCells,
-      index: row.index,
-      height: row.height,
-    );
+    // 행 데이터 일관성 검사
+    for (final row in allTableRows) {
+      if (!row.isValid()) {
+        debugPrint('❌ Invalid row data at index ${row.index}');
+        return false;
+      }
+    }
+
+    debugPrint('✅ Data validation passed');
+    return true;
+  }
+
+  /// 컬럼 order 정규화 (개발시 유용)
+  void normalizeColumnOrders() {
+    allTableColumns = BasicTableColumn.normalizeOrders(allTableColumns);
+    originalTableColumns =
+        BasicTableColumn.normalizeOrders(originalTableColumns);
+    notifyListeners();
+    debugPrint('🔧 Column orders normalized');
+  }
+
+  /// 디버그 정보 출력
+  void printDebugInfo() {
+    debugPrint('🔍 === TableStateController Debug Info ===');
+    debugPrint('📊 Total columns: ${allTableColumns.length}');
+    debugPrint('👁️ Visible columns: ${visibleColumns.length}');
+    debugPrint(
+        '🙈 Hidden columns: ${hiddenColumnIds.length} (${hiddenColumnIds.join(', ')})');
+    debugPrint('📋 Total rows: ${allTableRows.length}');
+    debugPrint('✅ Selected rows: ${selectedRows.length}');
+    debugPrint('🔄 Variable height: $_useVariableHeight');
+
+    sortManager.printDebugInfoFromMap(allTableColumns);
+
+    debugPrint('📝 Visible column order: ${visibleColumnIds.join(' → ')}');
+    debugPrint('🔍 === End Debug Info ===');
+  }
+
+  /// 컬럼별 통계 정보
+  Map<String, dynamic> getColumnStats(String columnId) {
+    if (!allTableColumns.containsKey(columnId)) return {};
+
+    final values = allTableRows
+        .map((row) => row.getComparableValue(columnId))
+        .where((value) => value.isNotEmpty)
+        .toList();
+
+    return {
+      'total_rows': allTableRows.length,
+      'non_empty_values': values.length,
+      'empty_values': allTableRows.length - values.length,
+      'unique_values': values.toSet().length,
+      'sample_values': values.take(5).toList(),
+    };
+  }
+
+  @override
+  void dispose() {
+    // 정리 작업
+    selectedRows.clear();
+    hiddenColumnIds.clear();
+    super.dispose();
   }
 }

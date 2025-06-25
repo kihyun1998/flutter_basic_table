@@ -6,14 +6,19 @@ import '../../flutter_basic_table.dart';
 
 /// 테이블 헤더를 렌더링하는 위젯
 class BasicTableHeader extends StatelessWidget {
+  /// order 기준으로 정렬된 컬럼 리스트
   final List<BasicTableColumn> columns;
+
   final double totalWidth;
   final double availableWidth;
   final BasicTableThemeData theme;
   final double checkboxWidth;
   final bool? headerCheckboxState;
   final VoidCallback? onHeaderCheckboxChanged;
-  final void Function(int oldIndex, int newIndex)? onColumnReorder;
+
+  /// 컬럼 순서 변경 콜백 (columnId, newOrder 기반)
+  final void Function(String columnId, int newOrder)? onColumnReorder;
+
   final void Function(int columnIndex, ColumnSortState sortState)? onColumnSort;
   final Map<int, ColumnSortState>? columnSortStates;
 
@@ -103,7 +108,7 @@ class _ReorderableHeaderRow extends StatelessWidget {
   final List<BasicTableColumn> columns;
   final List<double> columnWidths;
   final BasicTableThemeData theme;
-  final void Function(int oldIndex, int newIndex) onReorder;
+  final void Function(String columnId, int newOrder) onReorder;
   final void Function(int columnIndex, ColumnSortState sortState)? onColumnSort;
   final Map<int, ColumnSortState>? columnSortStates;
 
@@ -116,19 +121,53 @@ class _ReorderableHeaderRow extends StatelessWidget {
     this.columnSortStates,
   });
 
+  /// 드래그 앤 드롭 완료시 호출되는 함수
+  void _handleReorder(int oldIndex, int newIndex) {
+    // newIndex 보정 (ReorderableListView의 기본 동작)
+    if (newIndex > oldIndex) {
+      newIndex -= 1;
+    }
+
+    if (oldIndex == newIndex) return;
+
+    // 이동할 컬럼의 정보
+    final targetColumn = columns[oldIndex];
+    final targetOrder = targetColumn.order;
+
+    // 새로운 위치에서의 order 계산
+    int newOrder;
+
+    if (newIndex == 0) {
+      // 맨 앞으로 이동
+      newOrder = 0;
+    } else if (newIndex >= columns.length - 1) {
+      // 맨 뒤로 이동
+      newOrder = columns.length - 1;
+    } else {
+      // 중간으로 이동 - 목적지 인덱스의 order 사용
+      newOrder = newIndex;
+    }
+
+    debugPrint('🔄 Header reorder: ${targetColumn.name} (${targetColumn.id}) '
+        'from order $targetOrder to order $newOrder');
+
+    // 외부 콜백 호출 (columnId와 newOrder로)
+    onReorder(targetColumn.id, newOrder);
+  }
+
   @override
   Widget build(BuildContext context) {
     return ReorderableListView(
       scrollDirection: Axis.horizontal,
       buildDefaultDragHandles: false, // 기본 드래그 핸들 비활성화
-      onReorder: onReorder,
+      onReorder: _handleReorder,
       children: List.generate(columns.length, (index) {
         final column = columns[index];
         final width = columnWidths[index];
         final sortState = columnSortStates?[index] ?? ColumnSortState.none;
 
         return ReorderableDragStartListener(
-          key: ValueKey('header_$index'), // 각 아이템에 고유 key 필요
+          key: ValueKey('header_${column.id}'), // 컬럼 ID 기반 고유 key
           index: index,
           child: _HeaderCell(
             column: column,
@@ -309,14 +348,21 @@ class _HeaderCell extends StatelessWidget {
                     ),
                   ),
 
-                /// 컬럼 이름
+                // 컬럼 이름 + 디버그 정보
                 Expanded(
                   child: TooltipAbleText(
-                    text: column.name,
+                    text:
+                        '${column.name} (${column.order})', // order 정보 추가 (디버그용)
                     style: theme.headerTheme.textStyle,
                     tooltipTheme: theme.tooltipTheme,
                     tooltipPosition: TooltipPosition.bottom,
                     overflow: TextOverflow.ellipsis,
+                    forceTooltip: true, // 디버그 정보 표시
+                    tooltipFormatter: (value) => '''컬럼 정보:
+ID: ${column.id}
+Order: ${column.order}
+Min Width: ${column.minWidth}
+Resizable: ${column.isResizable}''',
                   ),
                 ),
 
@@ -335,7 +381,7 @@ class _HeaderCell extends StatelessWidget {
       final nextState = _getNextSortState();
       onSort!(columnIndex, nextState);
       debugPrint(
-          'Header tapped: ${column.name}, sort: $sortState -> $nextState');
+          'Header tapped: ${column.name} (${column.id}), sort: $sortState -> $nextState');
     }
   }
 }

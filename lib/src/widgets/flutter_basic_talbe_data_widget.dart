@@ -8,7 +8,10 @@ import '../../flutter_basic_table.dart';
 /// 테이블 데이터를 렌더링하는 위젯
 class BasicTableData extends StatelessWidget {
   final List<BasicTableRow> rows;
-  final List<BasicTableColumn> columns;
+
+  /// order 기준으로 정렬된 컬럼 리스트
+  final List<BasicTableColumn> sortedColumns;
+
   final double availableWidth;
   final BasicTableThemeData theme;
   final ScrollController verticalController;
@@ -23,7 +26,7 @@ class BasicTableData extends StatelessWidget {
   const BasicTableData({
     super.key,
     required this.rows,
-    required this.columns,
+    required this.sortedColumns,
     required this.availableWidth,
     required this.theme,
     required this.verticalController,
@@ -36,19 +39,24 @@ class BasicTableData extends StatelessWidget {
     this.doubleClickTime = const Duration(milliseconds: 300),
   });
 
+  /// 정렬된 컬럼 ID 리스트
+  List<String> get _sortedColumnIds {
+    return sortedColumns.map((col) => col.id).toList();
+  }
+
   /// 각 컬럼의 실제 렌더링 너비를 계산합니다.
   /// 헤더와 동일한 로직을 사용합니다.
   List<double> _calculateColumnWidths() {
     // 체크박스를 제외한 사용 가능한 너비
     final double availableForColumns = availableWidth - checkboxWidth;
     final double totalMinWidth =
-        columns.fold(0.0, (sum, col) => sum + col.minWidth);
+        sortedColumns.fold(0.0, (sum, col) => sum + col.minWidth);
 
     if (totalMinWidth >= availableForColumns) {
-      return columns.map((col) => col.minWidth).toList();
+      return sortedColumns.map((col) => col.minWidth).toList();
     } else {
       final double expansionRatio = availableForColumns / totalMinWidth;
-      return columns.map((col) => col.minWidth * expansionRatio).toList();
+      return sortedColumns.map((col) => col.minWidth * expansionRatio).toList();
     }
   }
 
@@ -72,11 +80,11 @@ class BasicTableData extends StatelessWidget {
 
         return _DataRow(
           row: row,
+          sortedColumns: sortedColumns,
           columnWidths: columnWidths,
           theme: theme,
           checkboxWidth: checkboxWidth,
           isSelected: isSelected,
-          columns: columns,
           onSelectionChanged: onRowSelectionChanged,
           onRowTap: onRowTap,
           onRowDoubleTap: onRowDoubleTap,
@@ -91,11 +99,11 @@ class BasicTableData extends StatelessWidget {
 /// 개별 데이터 행 위젯
 class _DataRow extends StatefulWidget {
   final BasicTableRow row;
+  final List<BasicTableColumn> sortedColumns;
   final List<double> columnWidths;
   final BasicTableThemeData theme;
   final double checkboxWidth;
   final bool isSelected;
-  final List<BasicTableColumn> columns;
   final void Function(int index, bool selected)? onSelectionChanged;
   final void Function(int index)? onRowTap;
   final void Function(int index)? onRowDoubleTap;
@@ -104,11 +112,11 @@ class _DataRow extends StatefulWidget {
 
   const _DataRow({
     required this.row,
+    required this.sortedColumns,
     required this.columnWidths,
     required this.theme,
     required this.checkboxWidth,
     required this.isSelected,
-    required this.columns,
     this.onSelectionChanged,
     this.onRowTap,
     this.onRowDoubleTap,
@@ -128,6 +136,12 @@ class _DataRowState extends State<_DataRow> {
     return widget.row.getEffectiveHeight(widget.theme.dataRowTheme.height);
   }
 
+  /// 정렬된 컬럼 순서에 따라 셀 리스트 생성 (캐싱 가능)
+  List<BasicTableCell> get _sortedCells {
+    return widget.row
+        .getSortedCells(widget.sortedColumns.map((col) => col.id).toList());
+  }
+
   @override
   Widget build(BuildContext context) {
     Color backgroundColor;
@@ -141,6 +155,8 @@ class _DataRowState extends State<_DataRow> {
       backgroundColor =
           widget.theme.dataRowTheme.backgroundColor ?? Colors.white;
     }
+
+    final sortedCells = _sortedCells;
 
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
@@ -185,24 +201,22 @@ class _DataRowState extends State<_DataRow> {
                   },
                 ),
 
-              // 데이터 셀들
-              ...List.generate(widget.row.cells.length, (cellIndex) {
-                final cell = cellIndex < widget.row.cells.length
-                    ? widget.row.cells[cellIndex]
-                    : BasicTableCell.text('');
-                final cellWidth = cellIndex < widget.columnWidths.length
-                    ? widget.columnWidths[cellIndex]
+              // 데이터 셀들 (정렬된 순서로)
+              ...List.generate(widget.sortedColumns.length, (columnIndex) {
+                final column = widget.sortedColumns[columnIndex];
+                final cell = sortedCells[columnIndex]; // 이미 정렬된 셀 사용
+                final cellWidth = columnIndex < widget.columnWidths.length
+                    ? widget.columnWidths[columnIndex]
                     : 100.0;
-                final column = cellIndex < widget.columns.length
-                    ? widget.columns[cellIndex]
-                    : null;
 
                 return _DataCell(
                   cell: cell,
+                  column: column,
                   width: cellWidth,
                   height: _effectiveRowHeight, // 행 높이 전달
                   theme: widget.theme,
-                  column: column,
+                  // 디버그 정보 추가
+                  debugInfo: 'Row${widget.row.index}_Col${column.id}',
                 );
               }),
             ],
@@ -263,17 +277,19 @@ class _CheckboxCell extends StatelessWidget {
 /// 개별 데이터 셀 위젯
 class _DataCell extends StatelessWidget {
   final BasicTableCell cell;
+  final BasicTableColumn column;
   final double width;
   final double height; // 행 높이 추가
   final BasicTableThemeData theme;
-  final BasicTableColumn? column;
+  final String? debugInfo; // 디버그 정보 추가
 
   const _DataCell({
     required this.cell,
+    required this.column,
     required this.width,
     required this.height,
     required this.theme,
-    this.column,
+    this.debugInfo,
   });
 
   /// 테마 스타일과 셀 개별 스타일을 병합 (셀 스타일이 우선)
@@ -377,6 +393,7 @@ class _DataCell extends StatelessWidget {
         ),
       );
     } else {
+      // 컬럼 설정 기반 tooltip (+ 디버그 정보)
       return TooltipAbleText(
         text: displayText,
         style: _getEffectiveTextStyle(),
@@ -384,10 +401,23 @@ class _DataCell extends StatelessWidget {
         tooltipPosition: TooltipPosition.top,
         overflow: TextOverflow.ellipsis,
         maxLines: 1,
-        tooltipFormatter: column?.tooltipFormatter,
-        forceTooltip: column?.forceTooltip ?? false,
+        tooltipFormatter:
+            column.tooltipFormatter ?? _getDebugTooltipFormatter(),
+        forceTooltip: column.forceTooltip,
       );
     }
+  }
+
+  /// 디버그용 tooltip 포맷터
+  String Function(String value)? _getDebugTooltipFormatter() {
+    if (debugInfo == null) return null;
+
+    return (value) => '''셀 정보:
+값: $value
+위치: $debugInfo
+컬럼: ${column.name} (${column.id})
+순서: ${column.order}
+크기: ${width.toStringAsFixed(1)}px''';
   }
 
   /// 셀 레벨 이벤트가 있는지 확인

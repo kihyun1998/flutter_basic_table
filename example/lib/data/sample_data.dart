@@ -8,43 +8,84 @@ import '../models/status_configs.dart';
 class SampleData {
   SampleData._(); // private 생성자 (유틸리티 클래스)
 
-  /// 테이블 컬럼 정의
-  static List<BasicTableColumn> get columns => [
+  /// 테이블 컬럼 정의 (Map 구조)
+  static Map<String, BasicTableColumn> get columns => {
         // ID 컬럼: tooltip 없음 (기본)
-        const BasicTableColumn(name: 'ID', minWidth: 60.0),
+        'id': BasicTableColumn(
+          id: 'id',
+          name: 'ID',
+          order: 0,
+          minWidth: 60.0,
+        ),
 
         // 이름 컬럼: overflow 시에만 기본 tooltip
-        const BasicTableColumn(name: '이름', minWidth: 120.0),
+        'name': BasicTableColumn(
+          id: 'name',
+          name: '이름',
+          order: 1,
+          minWidth: 120.0,
+        ),
 
         // 이메일 컬럼: overflow 시에만 tooltip이지만 커스텀 메시지
-        BasicTableColumn(
+        'email': BasicTableColumn(
+          id: 'email',
           name: '이메일',
+          order: 2,
           minWidth: 200.0,
           tooltipFormatter: (value) => '📧 이메일 주소: $value\n클릭하면 메일을 보낼 수 있습니다',
         ),
 
         // 부서 컬럼: 항상 tooltip 표시 + 부서별 커스텀 메시지
-        BasicTableColumn(
+        'department': BasicTableColumn(
+          id: 'department',
           name: '부서',
+          order: 3,
           minWidth: 100.0,
           forceTooltip: true, // 항상 tooltip 표시
           tooltipFormatter: (value) => _getDepartmentTooltip(value),
         ),
 
         // 직원상태 컬럼: 기본 동작 (상태 위젯이므로)
-        const BasicTableColumn(name: '직원상태', minWidth: 100.0),
+        'employee_status': BasicTableColumn(
+          id: 'employee_status',
+          name: '직원상태',
+          order: 4,
+          minWidth: 100.0,
+        ),
 
         // 프로젝트상태 컬럼: 기본 동작
-        const BasicTableColumn(name: '프로젝트상태', minWidth: 120.0),
+        'project_status': BasicTableColumn(
+          id: 'project_status',
+          name: '프로젝트상태',
+          order: 5,
+          minWidth: 120.0,
+        ),
 
         // 가입일 컬럼: 항상 tooltip 표시 + 날짜 포맷팅
-        BasicTableColumn(
+        'join_date': BasicTableColumn(
+          id: 'join_date',
           name: '가입일',
+          order: 6,
           minWidth: 100.0,
           forceTooltip: true, // 항상 tooltip 표시
           tooltipFormatter: (value) => _formatDateTooltip(value),
         ),
-      ];
+      };
+
+  /// 컬럼 ID 리스트 (order 순서)
+  static List<String> get columnIds {
+    final sortedColumns = BasicTableColumn.mapToSortedList(columns);
+    return sortedColumns.map((col) => col.id).toList();
+  }
+
+  /// 특정 컬럼 가져오기
+  static BasicTableColumn getColumn(String columnId) {
+    final column = columns[columnId];
+    if (column == null) {
+      throw ArgumentError('Column not found: $columnId');
+    }
+    return column;
+  }
 
   /// 부서별 커스텀 tooltip 메시지
   static String _getDepartmentTooltip(String department) {
@@ -142,110 +183,111 @@ class SampleData {
       BasicTableRow.withHeight(
         index: 0,
         height: 30.0,
-        cells: [
-          BasicTableCell.text('1'),
-          BasicTableCell.text('김소형', style: const TextStyle(fontSize: 11)),
-          BasicTableCell.text('small@company.com'),
-          _createDepartmentCell('개발팀'),
-          BasicTableCell.status(
+        cells: {
+          'id': BasicTableCell.text('1'),
+          'name':
+              BasicTableCell.text('김소형', style: const TextStyle(fontSize: 11)),
+          'email': BasicTableCell.text('small@company.com'),
+          'department': _createDepartmentCell('개발팀'),
+          'employee_status': BasicTableCell.status(
             EmployeeStatus.active,
             StatusConfigs.getEmployeeConfig(EmployeeStatus.active),
           ),
-          BasicTableCell.status(
+          'project_status': BasicTableCell.status(
             ProjectStatus.inProgress,
             StatusConfigs.getProjectConfig(ProjectStatus.inProgress),
           ),
-          BasicTableCell.text('2023-01-15'),
-        ],
+          'join_date': BasicTableCell.text('2023-01-15'),
+        },
       ),
 
       // 보통 높이 (45px - 기본값)
       BasicTableRow(
         index: 1,
-        cells: [
-          BasicTableCell.text('2'),
-          BasicTableCell.text('이보통'),
-          BasicTableCell.text('normal@company.com'),
-          _createDepartmentCell('디자인팀'),
-          BasicTableCell.status(
+        cells: {
+          'id': BasicTableCell.text('2'),
+          'name': BasicTableCell.text('이보통'),
+          'email': BasicTableCell.text('normal@company.com'),
+          'department': _createDepartmentCell('디자인팀'),
+          'employee_status': BasicTableCell.status(
             EmployeeStatus.active,
             StatusConfigs.getEmployeeConfig(EmployeeStatus.active),
           ),
-          BasicTableCell.status(
+          'project_status': BasicTableCell.status(
             ProjectStatus.review,
             StatusConfigs.getProjectConfig(ProjectStatus.review),
           ),
-          BasicTableCell.text('2023-02-20'),
-        ],
+          'join_date': BasicTableCell.text('2023-02-20'),
+        },
       ),
 
       // 큰 높이 (70px)
       BasicTableRow.withHeight(
         index: 2,
         height: 70.0,
-        cells: [
-          BasicTableCell.text('3'),
-          BasicTableCell.text('박대형',
+        cells: {
+          'id': BasicTableCell.text('3'),
+          'name': BasicTableCell.text('박대형',
               style:
                   const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-          BasicTableCell.text('large@company.com'),
-          _createDepartmentCell('마케팅팀'),
-          BasicTableCell.status(
+          'email': BasicTableCell.text('large@company.com'),
+          'department': _createDepartmentCell('마케팅팀'),
+          'employee_status': BasicTableCell.status(
             EmployeeStatus.active,
             StatusConfigs.getEmployeeConfig(EmployeeStatus.active),
           ),
-          BasicTableCell.status(
+          'project_status': BasicTableCell.status(
             ProjectStatus.completed,
             StatusConfigs.getProjectConfig(ProjectStatus.completed),
           ),
-          BasicTableCell.text('2023-03-10'),
-        ],
+          'join_date': BasicTableCell.text('2023-03-10'),
+        },
       ),
 
       // 매우 큰 높이 (100px)
       BasicTableRow.withHeight(
         index: 3,
         height: 100.0,
-        cells: [
-          BasicTableCell.text('4'),
-          BasicTableCell.text('최거대',
+        cells: {
+          'id': BasicTableCell.text('4'),
+          'name': BasicTableCell.text('최거대',
               style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                   color: Colors.red)),
-          BasicTableCell.text('huge@company.com'),
-          _createDepartmentCell('영업팀'),
-          BasicTableCell.status(
+          'email': BasicTableCell.text('huge@company.com'),
+          'department': _createDepartmentCell('영업팀'),
+          'employee_status': BasicTableCell.status(
             EmployeeStatus.active,
             StatusConfigs.getEmployeeConfig(EmployeeStatus.active),
           ),
-          BasicTableCell.status(
+          'project_status': BasicTableCell.status(
             ProjectStatus.planning,
             StatusConfigs.getProjectConfig(ProjectStatus.planning),
           ),
-          BasicTableCell.text('2023-04-05'),
-        ],
+          'join_date': BasicTableCell.text('2023-04-05'),
+        },
       ),
 
       // 중간 높이 (60px)
       BasicTableRow.withHeight(
         index: 4,
         height: 60.0,
-        cells: [
-          BasicTableCell.text('5'),
-          BasicTableCell.text('한중형'),
-          BasicTableCell.text('medium@company.com'),
-          _createDepartmentCell('HR팀'),
-          BasicTableCell.status(
+        cells: {
+          'id': BasicTableCell.text('5'),
+          'name': BasicTableCell.text('한중형'),
+          'email': BasicTableCell.text('medium@company.com'),
+          'department': _createDepartmentCell('HR팀'),
+          'employee_status': BasicTableCell.status(
             EmployeeStatus.training,
             StatusConfigs.getEmployeeConfig(EmployeeStatus.training),
           ),
-          BasicTableCell.status(
+          'project_status': BasicTableCell.status(
             ProjectStatus.cancelled,
             StatusConfigs.getProjectConfig(ProjectStatus.cancelled),
           ),
-          BasicTableCell.text('2023-05-12'),
-        ],
+          'join_date': BasicTableCell.text('2023-05-12'),
+        },
       ),
     ];
   }
@@ -255,96 +297,99 @@ class SampleData {
     return [
       BasicTableRow(
         index: 0,
-        cells: [
-          BasicTableCell.text('1'),
-          BasicTableCell.text('김철수',
+        cells: {
+          'id': BasicTableCell.text('1'),
+          'name': BasicTableCell.text('김철수',
               style: const TextStyle(
                   fontWeight: FontWeight.bold, color: Colors.blue)),
-          BasicTableCell.text('kim.cheolsu@company.com'), // 더 긴 이메일로 변경
-          _createDepartmentCell('개발팀'),
-          BasicTableCell.status(
+          'email':
+              BasicTableCell.text('kim.cheolsu@company.com'), // 더 긴 이메일로 변경
+          'department': _createDepartmentCell('개발팀'),
+          'employee_status': BasicTableCell.status(
             EmployeeStatus.active,
             StatusConfigs.getEmployeeConfig(EmployeeStatus.active),
           ),
-          BasicTableCell.status(
+          'project_status': BasicTableCell.status(
             ProjectStatus.inProgress,
             StatusConfigs.getProjectConfig(ProjectStatus.inProgress),
             onTap: () => debugPrint('프로젝트 상태 클릭!'),
           ),
-          BasicTableCell.text('2023-01-15'),
-        ],
+          'join_date': BasicTableCell.text('2023-01-15'),
+        },
       ),
       BasicTableRow(
         index: 1,
-        cells: [
-          BasicTableCell.text('2'),
-          BasicTableCell.text('이영희'),
-          BasicTableCell.text('lee.younghee.designer@company.com'), // 더 긴 이메일
-          _createDepartmentCell('디자인팀'),
-          BasicTableCell.status(
+        cells: {
+          'id': BasicTableCell.text('2'),
+          'name': BasicTableCell.text('이영희'),
+          'email': BasicTableCell.text(
+              'lee.younghee.designer@company.com'), // 더 긴 이메일
+          'department': _createDepartmentCell('디자인팀'),
+          'employee_status': BasicTableCell.status(
             EmployeeStatus.onLeave,
             StatusConfigs.getEmployeeConfig(EmployeeStatus.onLeave),
           ),
-          BasicTableCell.status(
+          'project_status': BasicTableCell.status(
             ProjectStatus.review,
             StatusConfigs.getProjectConfig(ProjectStatus.review),
           ),
-          BasicTableCell.text('2023-02-20'),
-        ],
+          'join_date': BasicTableCell.text('2023-02-20'),
+        },
       ),
       BasicTableRow(
         index: 2,
-        cells: [
-          BasicTableCell.text('3'),
-          BasicTableCell.text('박민수'),
-          BasicTableCell.text('park.minsu.marketing@company.com'), // 더 긴 이메일
-          _createDepartmentCell('마케팅팀'),
-          BasicTableCell.status(
+        cells: {
+          'id': BasicTableCell.text('3'),
+          'name': BasicTableCell.text('박민수'),
+          'email': BasicTableCell.text(
+              'park.minsu.marketing@company.com'), // 더 긴 이메일
+          'department': _createDepartmentCell('마케팅팀'),
+          'employee_status': BasicTableCell.status(
             EmployeeStatus.inactive,
             StatusConfigs.getEmployeeConfig(EmployeeStatus.inactive),
           ),
-          BasicTableCell.status(
+          'project_status': BasicTableCell.status(
             ProjectStatus.cancelled,
             StatusConfigs.getProjectConfig(ProjectStatus.cancelled),
           ),
-          BasicTableCell.text('2023-03-10'),
-        ],
+          'join_date': BasicTableCell.text('2023-03-10'),
+        },
       ),
       BasicTableRow(
         index: 3,
-        cells: [
-          BasicTableCell.text('4'),
-          BasicTableCell.text('정수진'),
-          BasicTableCell.text('jung.sujin.sales@company.com'),
-          _createDepartmentCell('영업팀'),
-          BasicTableCell.status(
+        cells: {
+          'id': BasicTableCell.text('4'),
+          'name': BasicTableCell.text('정수진'),
+          'email': BasicTableCell.text('jung.sujin.sales@company.com'),
+          'department': _createDepartmentCell('영업팀'),
+          'employee_status': BasicTableCell.status(
             EmployeeStatus.training,
             StatusConfigs.getEmployeeConfig(EmployeeStatus.training),
           ),
-          BasicTableCell.status(
+          'project_status': BasicTableCell.status(
             ProjectStatus.planning,
             StatusConfigs.getProjectConfig(ProjectStatus.planning),
           ),
-          BasicTableCell.text('2023-04-05'),
-        ],
+          'join_date': BasicTableCell.text('2023-04-05'),
+        },
       ),
       BasicTableRow(
         index: 4,
-        cells: [
-          BasicTableCell.text('5'),
-          BasicTableCell.text('최동혁'),
-          BasicTableCell.text('choi.donghyuk.hr@company.com'),
-          _createDepartmentCell('HR팀'),
-          BasicTableCell.status(
+        cells: {
+          'id': BasicTableCell.text('5'),
+          'name': BasicTableCell.text('최동혁'),
+          'email': BasicTableCell.text('choi.donghyuk.hr@company.com'),
+          'department': _createDepartmentCell('HR팀'),
+          'employee_status': BasicTableCell.status(
             EmployeeStatus.pending,
             StatusConfigs.getEmployeeConfig(EmployeeStatus.pending),
           ),
-          BasicTableCell.status(
+          'project_status': BasicTableCell.status(
             ProjectStatus.completed,
             StatusConfigs.getProjectConfig(ProjectStatus.completed),
           ),
-          BasicTableCell.text('2023-05-12'),
-        ],
+          'join_date': BasicTableCell.text('2023-05-12'),
+        },
       ),
     ];
   }
@@ -361,24 +406,24 @@ class SampleData {
 
       rows.add(BasicTableRow(
         index: realIndex,
-        cells: [
-          BasicTableCell.text('${realIndex + 1}'),
-          BasicTableCell.text('사용자${realIndex + 1}'),
-          BasicTableCell.text(
+        cells: {
+          'id': BasicTableCell.text('${realIndex + 1}'),
+          'name': BasicTableCell.text('사용자${realIndex + 1}'),
+          'email': BasicTableCell.text(
               'user${realIndex + 1}.very.long.email@company.com'), // 더 긴 이메일
-          _createDepartmentCell(department),
-          BasicTableCell.status(
+          'department': _createDepartmentCell(department),
+          'employee_status': BasicTableCell.status(
             employeeStatuses[realIndex % employeeStatuses.length],
             StatusConfigs.getEmployeeConfig(
                 employeeStatuses[realIndex % employeeStatuses.length]),
           ),
-          BasicTableCell.status(
+          'project_status': BasicTableCell.status(
             projectStatuses[realIndex % projectStatuses.length],
             StatusConfigs.getProjectConfig(
                 projectStatuses[realIndex % projectStatuses.length]),
           ),
-          BasicTableCell.text(_generateDate(realIndex)),
-        ],
+          'join_date': BasicTableCell.text(_generateDate(realIndex)),
+        },
       ));
     }
 
@@ -407,37 +452,80 @@ class SampleData {
         .map((row) => BasicTableRow(
               index: row.index,
               height: row.height, // 높이도 복사
-              cells: row.cells
-                  .map((cell) => BasicTableCell(
-                        data: cell.data,
-                        widget: cell.widget,
-                        style: cell.style,
-                        backgroundColor: cell.backgroundColor,
-                        alignment: cell.alignment,
-                        padding: cell.padding,
-                        tooltip: cell.tooltip,
-                        enabled: cell.enabled,
-                        onTap: cell.onTap,
-                        onDoubleTap: cell.onDoubleTap,
-                        onSecondaryTap: cell.onSecondaryTap,
-                      ))
-                  .toList(),
+              cells: Map<String, BasicTableCell>.from(row.cells.map(
+                (key, cell) => MapEntry(
+                  key,
+                  BasicTableCell(
+                    data: cell.data,
+                    widget: cell.widget,
+                    style: cell.style,
+                    backgroundColor: cell.backgroundColor,
+                    alignment: cell.alignment,
+                    padding: cell.padding,
+                    tooltip: cell.tooltip,
+                    enabled: cell.enabled,
+                    onTap: cell.onTap,
+                    onDoubleTap: cell.onDoubleTap,
+                    onSecondaryTap: cell.onSecondaryTap,
+                  ),
+                ),
+              )),
             ))
         .toList();
   }
 
   /// 컬럼 데이터의 딥 카피 생성 (백업용)
-  static List<BasicTableColumn> deepCopyColumns(
-      List<BasicTableColumn> original) {
-    return original
-        .map((col) => BasicTableColumn(
-              name: col.name,
-              minWidth: col.minWidth,
-              maxWidth: col.maxWidth,
-              isResizable: col.isResizable,
-              tooltipFormatter: col.tooltipFormatter,
-              forceTooltip: col.forceTooltip,
-            ))
-        .toList();
+  static Map<String, BasicTableColumn> deepCopyColumns(
+      Map<String, BasicTableColumn> original) {
+    return original.map(
+      (key, col) => MapEntry(
+        key,
+        BasicTableColumn(
+          id: col.id,
+          name: col.name,
+          order: col.order,
+          minWidth: col.minWidth,
+          maxWidth: col.maxWidth,
+          isResizable: col.isResizable,
+          tooltipFormatter: col.tooltipFormatter,
+          forceTooltip: col.forceTooltip,
+        ),
+      ),
+    );
   }
+
+  /// 컬럼 순서 변경 테스트 헬퍼
+  static Map<String, BasicTableColumn> reorderColumnForTest(
+    String columnId,
+    int newOrder,
+  ) {
+    return BasicTableColumn.reorderColumn(columns, columnId, newOrder);
+  }
+
+  /// 디버그용 컬럼 정보 출력
+  static void printColumnInfo() {
+    print('📋 SampleData Columns Info:');
+    final sortedColumns = BasicTableColumn.mapToSortedList(columns);
+
+    for (final column in sortedColumns) {
+      print(
+          '  [${column.order}] ${column.name} (${column.id}) - ${column.minWidth}px');
+    }
+
+    print('Total columns: ${columns.length}');
+    print('Column IDs: ${columnIds.join(', ')}');
+  }
+
+  /// 특정 행의 특정 컬럼 값 조회 헬퍼
+  static String? getCellValue(BasicTableRow row, String columnId) {
+    return row.getCell(columnId)?.displayText;
+  }
+
+  /// 컬럼 존재 여부 확인
+  static bool hasColumn(String columnId) {
+    return columns.containsKey(columnId);
+  }
+
+  /// 모든 컬럼 ID 반환
+  static Set<String> get allColumnIds => columns.keys.toSet();
 }
