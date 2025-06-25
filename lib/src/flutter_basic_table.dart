@@ -92,7 +92,7 @@ class BasicTable extends StatefulWidget {
     final columnsWithOrder = <BasicTableColumn>[];
     for (int i = 0; i < columns.length; i++) {
       final column = columns[i];
-      columnsWithOrder.add(column.copyWith(order: column.order ?? i));
+      columnsWithOrder.add(column.copyWith(order: column.order));
     }
 
     return BasicTable(
@@ -181,11 +181,6 @@ class _BasicTableState extends State<BasicTable> {
   List<BasicTableColumn> get _sortedColumns {
     _cachedSortedColumns ??= BasicTableColumn.mapToSortedList(widget.columns);
     return _cachedSortedColumns!;
-  }
-
-  /// 정렬된 컬럼 ID 리스트
-  List<String> get _sortedColumnIds {
-    return _sortedColumns.map((col) => col.id).toList();
   }
 
   @override

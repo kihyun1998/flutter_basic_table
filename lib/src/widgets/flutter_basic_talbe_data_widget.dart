@@ -39,11 +39,6 @@ class BasicTableData extends StatelessWidget {
     this.doubleClickTime = const Duration(milliseconds: 300),
   });
 
-  /// 정렬된 컬럼 ID 리스트
-  List<String> get _sortedColumnIds {
-    return sortedColumns.map((col) => col.id).toList();
-  }
-
   /// 각 컬럼의 실제 렌더링 너비를 계산합니다.
   /// 헤더와 동일한 로직을 사용합니다.
   List<double> _calculateColumnWidths() {
