@@ -66,3 +66,4 @@ example_makefile
 Podfile
 *.zip
 *.iml
+plan.md
