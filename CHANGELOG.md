@@ -1,5 +1,18 @@
 # Changelog
 
+## 2.0.1
+
+### ✨ Enhancements
+
+- **Improved API Usability:** Removed `required` keyword from theme class constructors, allowing for more flexible and partial theme customizations without needing to provide all parameters.
+- **Enhanced Documentation:** Added comprehensive English documentation for all public classes, constructors, parameters, and methods, including detailed explanations and usage examples for `BasicTable`, `BasicTableColumn`, `BasicTableRow`, `BasicTableCell`, `StatusConfig`, `ColumnSortManager`, and all theme-related classes. This significantly improves the clarity and ease of use for developers.
+
+### 🗑️ Deprecations
+
+- **Deprecated `BasicTable.fromColumnList`:** This factory constructor is now deprecated. Users should use the default constructor with a `Map<String, BasicTableColumn>` for column definitions.
+- **Deprecated `BasicTable.fromStringData`:** This factory constructor is now deprecated. Users should convert their string data to `List<BasicTableRow>` using `BasicTableRow.fromStrings` before passing it to the default `BasicTable` constructor.
+- **Deprecated `BasicTableConfig` class:** All configuration options previously managed by `BasicTableConfig` have been integrated directly into `BasicTableThemeData` and its sub-themes for a more unified and flexible theming approach.
+
 ## 2.0.0
 
 ### 🚨 BREAKING CHANGES
