@@ -1,13 +1,30 @@
 import 'package:flutter/material.dart';
 
-/// 체크박스 셀의 테마
+/// Defines the theme for the checkbox column and individual checkboxes within the [BasicTable].
 class BasicTableCheckboxCellTheme {
+  /// Whether the checkbox column is enabled and visible.
+  /// Defaults to `false`.
   final bool enabled;
+
+  /// The fixed width of the checkbox column.
+  /// Defaults to 60.0.
   final double columnWidth;
+
+  /// The padding around the checkbox within its cell.
+  /// Defaults to `EdgeInsets.all(8.0)`.
   final EdgeInsets? padding;
+
+  /// The color of the checkbox when it is checked.
+  /// If `null`, the Material default active color is used.
   final Color? activeColor;
+
+  /// The color of the checkmark icon when the checkbox is checked.
+  /// If `null`, the Material default check color is used.
   final Color? checkColor;
 
+  /// Creates a [BasicTableCheckboxCellTheme] instance.
+  ///
+  /// All parameters have default values.
   const BasicTableCheckboxCellTheme({
     this.enabled = false,
     this.columnWidth = 60.0,
@@ -16,6 +33,8 @@ class BasicTableCheckboxCellTheme {
     this.checkColor,
   });
 
+  /// Creates a copy of this [BasicTableCheckboxCellTheme] with the given fields replaced
+  /// with new values.
   BasicTableCheckboxCellTheme copyWith({
     bool? enabled,
     double? columnWidth,

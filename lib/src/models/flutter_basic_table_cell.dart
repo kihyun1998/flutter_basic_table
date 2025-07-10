@@ -4,47 +4,59 @@ import 'package:flutter_basic_table/src/widgets/generate_status_indicator.dart';
 
 import 'status_config.dart';
 
-/// 테이블 셀의 데이터와 스타일을 정의하는 모델
+/// Defines the data and styling for a single table cell.
 ///
-/// 각 셀은 다음 중 하나의 방식으로 표시될 수 있습니다:
-/// 1. [data] + [style] - 텍스트 데이터와 스타일
-/// 2. [widget] - 완전히 커스텀한 위젯
-///
-/// [widget]이 제공되면 [data]와 [style]은 무시됩니다.
+/// A cell can display either textual [data] with optional [style] and formatting,
+/// or a custom Flutter [widget]. If a [widget] is provided, [data] and [style]
+/// properties are ignored for rendering purposes.
 class BasicTableCell {
-  /// 셀에 표시할 데이터 (보통 String, 하지만 toString()이 가능한 모든 타입)
+  /// The data to be displayed in the cell. Typically a [String], but can be any
+  /// type that can be converted to a string using `toString()` for display or sorting.
   final dynamic data;
 
-  /// 커스텀 위젯 (제공되면 data와 style은 무시됨)
+  /// A custom Flutter widget to be displayed in the cell.
+  /// If provided, this widget will be rendered instead of [data] and [style].
   final Widget? widget;
 
-  /// 개별 셀의 텍스트 스타일 (테마보다 우선 적용)
+  /// The text style for the cell's [data]. This style overrides any theme-defined
+  /// text styles for this specific cell.
   final TextStyle? style;
 
-  /// 개별 셀의 배경색 (테마보다 우선 적용)
+  /// The background color for the cell. This color overrides any theme-defined
+  /// background colors for this specific cell.
   final Color? backgroundColor;
 
-  /// 개별 셀의 텍스트 정렬
+  /// The alignment of the cell's content within its boundaries.
   final Alignment? alignment;
 
-  /// 개별 셀의 패딩
+  /// The padding around the cell's content.
   final EdgeInsets? padding;
 
-  /// 개별 셀의 tooltip 메시지 (자동 감지 대신 강제 지정)
+  /// A specific tooltip message for this cell. If provided, this message will
+  /// be displayed as the tooltip, overriding any automatic tooltip generation
+  /// or column-level tooltip formatters.
   final String? tooltip;
 
-  /// 셀 클릭 가능 여부
+  /// A boolean indicating whether the cell is interactive (e.g., clickable).
+  /// If `false`, any `onTap`, `onDoubleTap`, or `onSecondaryTap` callbacks
+  /// will not be triggered for this cell.
+  /// Defaults to `true`.
   final bool enabled;
 
-  /// 셀 클릭 콜백 (행 클릭과 별개)
+  /// An optional callback function invoked when the cell is tapped.
+  /// This is separate from row-level tap callbacks.
   final VoidCallback? onTap;
 
-  /// 셀 더블클릭 콜백
+  /// An optional callback function invoked when the cell is double-tapped.
   final VoidCallback? onDoubleTap;
 
-  /// 셀 우클릭 콜백
+  /// An optional callback function invoked when the cell receives a secondary tap
+  /// (e.g., right-click on desktop).
   final VoidCallback? onSecondaryTap;
 
+  /// Creates a [BasicTableCell] instance.
+  ///
+  /// Requires either [data] or [widget] to be provided.
   const BasicTableCell({
     this.data,
     this.widget,
@@ -62,7 +74,9 @@ class BasicTableCell {
           'Either data or widget must be provided',
         );
 
-  /// 문자열 데이터로 간단한 셀 생성
+  /// Creates a [BasicTableCell] primarily for displaying text.
+  ///
+  /// [text] is the string content of the cell.
   factory BasicTableCell.text(
     String text, {
     TextStyle? style,
@@ -89,7 +103,9 @@ class BasicTableCell {
     );
   }
 
-  /// 커스텀 위젯으로 셀 생성
+  /// Creates a [BasicTableCell] for displaying a custom Flutter widget.
+  ///
+  /// [widget] is the custom widget to be rendered inside the cell.
   factory BasicTableCell.widget(
     Widget widget, {
     Color? backgroundColor,
@@ -112,7 +128,15 @@ class BasicTableCell {
     );
   }
 
-  /// Generic 상태 표시기로 셀 생성
+  /// Creates a [BasicTableCell] that displays a generic status indicator.
+  ///
+  /// This factory leverages [GenericStatusIndicator] to render a visual
+  /// representation of a status, configured by a [StatusConfig] object.
+  ///
+  /// [status] is an enum value representing the current status.
+  /// [config] defines the visual properties of the status indicator (color, text, icon, etc.).
+  /// [direction] specifies the layout direction of the status indicator (horizontal or vertical).
+  /// [mainAxisAlignment] and [crossAxisAlignment] control the alignment of elements within the indicator.
   factory BasicTableCell.status(
     Enum status,
     StatusConfig config, {
@@ -150,7 +174,9 @@ class BasicTableCell {
     );
   }
 
-  /// 가로 레이아웃 상태 표시기 셀 생성
+  /// Creates a [BasicTableCell] with a horizontally laid out status indicator.
+  ///
+  /// This is a convenience factory for [BasicTableCell.status] with `direction` set to `Axis.horizontal`.
   factory BasicTableCell.statusHorizontal(
     Enum status,
     StatusConfig config, {
@@ -182,7 +208,9 @@ class BasicTableCell {
     );
   }
 
-  /// 세로 레이아웃 상태 표시기 셀 생성
+  /// Creates a [BasicTableCell] with a vertically laid out status indicator.
+  ///
+  /// This is a convenience factory for [BasicTableCell.status] with `direction` set to `Axis.vertical`.
   factory BasicTableCell.statusVertical(
     Enum status,
     StatusConfig config, {
@@ -214,24 +242,31 @@ class BasicTableCell {
     );
   }
 
-  /// 기존 String 데이터와의 호환성을 위한 팩토리
+  /// Creates a [BasicTableCell] from a simple string data.
+  /// This factory is primarily for backward compatibility and convenience.
   factory BasicTableCell.fromString(String data) {
     return BasicTableCell(data: data);
   }
 
-  /// 표시될 텍스트를 반환 (정렬용 데이터 포함)
+  /// Returns the displayable text of the cell.
+  ///
+  /// If [data] is provided, its `toString()` representation is returned.
+  /// If only a [widget] is provided (and no [data]), returns `null`.
   String? get displayText {
     if (data != null) return data.toString();
-    // widget만 있고 data가 없으면 null
     return null;
   }
 
-  /// 실제로 위젯을 사용할지 여부
+  /// Returns `true` if this cell is configured to display a custom [widget],
+  /// `false` otherwise.
   bool get usesWidget => widget != null;
 
-  /// 텍스트를 사용할지 여부
+  /// Returns `true` if this cell is configured to display text [data] (and not a custom widget),
+  /// `false` otherwise.
   bool get usesText => widget == null && data != null;
 
+  /// Creates a copy of this [BasicTableCell] with the given fields replaced
+  /// with new values.
   BasicTableCell copyWith({
     dynamic data,
     Widget? widget,

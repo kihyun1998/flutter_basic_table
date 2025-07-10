@@ -4,24 +4,56 @@ import 'package:flutter_basic_table/src/widgets/tooltip_able_text_widget.dart';
 
 import '../../flutter_basic_table.dart';
 
-/// 테이블 헤더를 렌더링하는 위젯
+/// A widget that renders the table header row.
+///
+/// This widget is responsible for displaying column names, handling column
+/// reordering (if enabled), and managing sorting indicators.
 class BasicTableHeader extends StatelessWidget {
-  /// order 기준으로 정렬된 컬럼 리스트
+  /// The list of [BasicTableColumn] objects, sorted by their `order` property,
+  /// representing the columns to be displayed in the header.
   final List<BasicTableColumn> columns;
 
+  /// The total width allocated for the table header, including all columns and
+  /// the checkbox column (if enabled).
   final double totalWidth;
+
+  /// The available width for the table header within its parent constraints.
+  /// This is used to calculate responsive column widths.
   final double availableWidth;
+
+  /// The theme data for the entire table, providing styling for header cells,
+  /// checkboxes, and borders.
   final BasicTableThemeData theme;
+
+  /// The calculated width of the checkbox column. This will be 0 if checkboxes
+  /// are not enabled in the theme.
   final double checkboxWidth;
+
+  /// The current state of the header checkbox (select all/deselect all).
+  /// `true` for all selected, `false` for none selected, `null` for indeterminate (some selected).
   final bool? headerCheckboxState;
+
+  /// A callback function invoked when the header checkbox's state changes.
   final VoidCallback? onHeaderCheckboxChanged;
 
-  /// 컬럼 순서 변경 콜백 (columnId, newOrder 기반)
+  /// A callback function invoked when a column is reordered by dragging its header.
+  ///
+  /// Provides the `columnId` of the reordered column and its `newOrder` (visible index).
   final void Function(String columnId, int newOrder)? onColumnReorder;
 
+  /// A callback function invoked when a column header is tapped for sorting.
+  ///
+  /// Provides the `columnIndex` (visible index) and the new `sortState`.
+  /// It's recommended to use `onColumnSortById` on the `BasicTable` widget instead
+  /// for ID-based sorting.
   final void Function(int columnIndex, ColumnSortState sortState)? onColumnSort;
+
+  /// A map representing the current sorting states of columns, keyed by their
+  /// visible index. This is primarily for backward compatibility.
+  /// It's recommended to use [ColumnSortManager] for ID-based sorting.
   final Map<int, ColumnSortState>? columnSortStates;
 
+  /// Creates a [BasicTableHeader] instance.
   const BasicTableHeader({
     super.key,
     required this.columns,

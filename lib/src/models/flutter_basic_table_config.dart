@@ -1,4 +1,9 @@
-/// 테이블 설정을 관리하는 모델
+/// @Deprecated('This class is deprecated. Use BasicTableThemeData for table configuration and styling instead.')
+/// A model for managing general table settings.
+///
+/// This class is deprecated. All configuration options have been moved to
+/// [BasicTableThemeData] and its sub-themes for a more unified and flexible
+/// theming approach. Please use [BasicTableThemeData] to configure your table.
 class BasicTableConfig {
   final double headerHeight;
   final double rowHeight;
@@ -6,26 +11,27 @@ class BasicTableConfig {
   final bool showVerticalScrollbar;
   final bool enableHeaderSorting;
   final bool enableHeaderReorder;
-  final bool showDragHandles; // 드래그 핸들 표시 여부 추가
+  final bool showDragHandles;
 
-  // 스크롤바 관련 옵션들
+  // Scrollbar related options
   final bool scrollbarHoverOnly;
   final double scrollbarOpacity;
   final Duration scrollbarAnimationDuration;
   final double scrollbarWidth;
 
-  // 체크박스 관련 옵션들
+  // Checkbox related options
   final bool showCheckboxColumn;
   final double checkboxColumnWidth;
 
+  /// @Deprecated('This constructor is deprecated. Use BasicTableThemeData for table configuration and styling instead.')
   const BasicTableConfig({
     this.headerHeight = 48.0,
     this.rowHeight = 40.0,
     this.showHorizontalScrollbar = true,
     this.showVerticalScrollbar = true,
     this.enableHeaderSorting = false,
-    this.enableHeaderReorder = false, // 기본값 false
-    this.showDragHandles = true, // 기본값 true (reorder 활성화시에만 표시)
+    this.enableHeaderReorder = false,
+    this.showDragHandles = true,
     this.scrollbarHoverOnly = true,
     this.scrollbarOpacity = 0.8,
     this.scrollbarAnimationDuration = const Duration(milliseconds: 200),
@@ -34,14 +40,15 @@ class BasicTableConfig {
     this.checkboxColumnWidth = 60.0,
   });
 
+  /// @Deprecated('This method is deprecated. Use BasicTableThemeData for table configuration and styling instead.')
   BasicTableConfig copyWith({
     double? headerHeight,
     double? rowHeight,
     bool? showHorizontalScrollbar,
     bool? showVerticalScrollbar,
     bool? enableHeaderSorting,
-    bool? enableHeaderReorder, // 추가
-    bool? showDragHandles, // 추가
+    bool? enableHeaderReorder,
+    bool? showDragHandles,
     bool? scrollbarHoverOnly,
     double? scrollbarOpacity,
     Duration? scrollbarAnimationDuration,

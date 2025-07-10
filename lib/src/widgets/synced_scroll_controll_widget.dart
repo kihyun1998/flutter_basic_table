@@ -1,15 +1,35 @@
-import 'package:flutter/material.dart';
-
-/// 여러 ScrollController를 동기화해주는 위젯
-/// 수직/수평 스크롤을 각각 메인 컨트롤러와 스크롤바 컨트롤러로 동기화합니다.
+/// A widget that synchronizes multiple [ScrollController]s.
+///
+/// This is particularly useful for scenarios where different scrollable widgets
+/// (e.g., a main content area and its corresponding scrollbar) need to scroll
+/// in unison. It manages both vertical and horizontal scroll synchronization.
 class SyncedScrollControllers extends StatefulWidget {
+  /// Creates a [SyncedScrollControllers] instance.
+  ///
+  /// The [builder] function is required and provides the synchronized scroll
+  /// controllers to its child widgets.
+  ///
+  /// [scrollController]: An optional external [ScrollController] for the main vertical scrollable area.
+  ///   If not provided, an internal controller will be created.
+  /// [verticalScrollbarController]: An optional external [ScrollController] for the vertical scrollbar.
+  ///   If not provided, an internal controller will be created.
+  /// [horizontalScrollController]: An optional external [ScrollController] for the main horizontal scrollable area.
+  ///   If not provided, an internal controller will be created.
+  /// [horizontalScrollbarController]: An optional external [ScrollController] for the horizontal scrollbar.
+  ///   If not provided, an internal controller will be created.
+  ///
+  /// The `builder` function provides the following controllers:
+  /// - `verticalDataController`: The primary controller for vertical scrolling of data.
+  /// - `verticalScrollbarController`: The controller for the vertical scrollbar.
+  /// - `horizontalMainController`: The primary controller for horizontal scrolling (shared by header and data).
+  /// - `horizontalScrollbarController`: The controller for the horizontal scrollbar.
   const SyncedScrollControllers({
     super.key,
     required this.builder,
     this.scrollController,
     this.verticalScrollbarController,
-    this.horizontalScrollController,
     this.horizontalScrollbarController,
+    this.horizontalScrollController,
   });
 
   final ScrollController? scrollController;
@@ -17,6 +37,13 @@ class SyncedScrollControllers extends StatefulWidget {
   final ScrollController? horizontalScrollController;
   final ScrollController? horizontalScrollbarController;
 
+  /// A builder function that provides the synchronized [ScrollController]s.
+  ///
+  /// [context]: The build context.
+  /// [verticalDataController]: The primary controller for vertical scrolling of data.
+  /// [verticalScrollbarController]: The controller for the vertical scrollbar.
+  /// [horizontalMainController]: The primary controller for horizontal scrolling (shared by header and data).
+  /// [horizontalScrollbarController]: The controller for the horizontal scrollbar.
   final Widget Function(
     BuildContext context,
     ScrollController verticalDataController,

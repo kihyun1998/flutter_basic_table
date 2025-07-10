@@ -5,24 +5,54 @@ import 'package:flutter_basic_table/src/widgets/tooltip_able_text_widget.dart';
 
 import '../../flutter_basic_table.dart';
 
-/// 테이블 데이터를 렌더링하는 위젯
+/// A widget responsible for rendering the data rows of the [BasicTable].
+///
+/// This widget builds a scrollable list of data rows, handling their layout,
+/// selection states, and interactions.
 class BasicTableData extends StatelessWidget {
+  /// The list of [BasicTableRow] objects to be displayed in the table.
   final List<BasicTableRow> rows;
 
-  /// order 기준으로 정렬된 컬럼 리스트
+  /// The list of [BasicTableColumn] objects, sorted by their `order` property,
+  /// which defines the structure and order of columns in the data rows.
   final List<BasicTableColumn> sortedColumns;
 
+  /// The available width for the data area of the table.
+  /// This is used to calculate responsive column widths.
   final double availableWidth;
+
+  /// The theme data for the entire table, providing styling for data rows,
+  /// checkboxes, and cell borders.
   final BasicTableThemeData theme;
+
+  /// The [ScrollController] for vertical scrolling of the data rows.
   final ScrollController verticalController;
+
+  /// The calculated width of the checkbox column. This will be 0 if checkboxes
+  /// are not enabled in the theme.
   final double checkboxWidth;
+
+  /// A [Set] of row indices (int) that are currently selected.
   final Set<int> selectedRows;
+
+  /// An optional callback function that is invoked when the selection state
+  /// of a single row changes (e.g., when a row's checkbox is toggled).
+  /// It provides the row's index and its new selection state.
   final void Function(int index, bool selected)? onRowSelectionChanged;
+
+  /// An optional callback function that is invoked when a table row is tapped.
+  /// It provides the index of the tapped row.
   final void Function(int index)? onRowTap;
-  final void Function(int index)? onRowDoubleTap;
+
+  /// An optional callback function that is invoked when a table row is double-tapped.
+  /// It provides the index of the double-tapped row.
   final void Function(int index)? onRowSecondaryTap;
+
+  /// The maximum duration between two taps for them to be considered a double-tap.
+  /// Defaults to 300 milliseconds.
   final Duration doubleClickTime;
 
+  /// Creates a [BasicTableData] instance.
   const BasicTableData({
     super.key,
     required this.rows,

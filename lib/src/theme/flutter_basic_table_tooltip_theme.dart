@@ -1,21 +1,59 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_basic_table/src/enum/tooltip_position.dart';
 
-/// CustomTooltip의 테마 데이터
+/// Defines the theme for custom tooltips displayed within the [BasicTable].
 class BasicTableTooltipTheme {
+  /// The background color of the tooltip.
+  /// Defaults to `Colors.black87`.
   final Color? backgroundColor;
+
+  /// The color of the text within the tooltip.
+  /// Defaults to `Colors.white`.
   final Color? textColor;
+
+  /// The font size of the text within the tooltip.
+  /// Defaults to 12.0.
   final double? fontSize;
+
+  /// The font weight of the text within the tooltip.
+  /// Defaults to `FontWeight.normal`.
   final FontWeight? fontWeight;
+
+  /// The padding around the content inside the tooltip.
+  /// Defaults to `EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0)`.
   final EdgeInsets? padding;
+
+  /// The empty space that surrounds the tooltip.
+  /// Defaults to `EdgeInsets.all(0)`.
   final EdgeInsets? margin;
+
+  /// The border radius for the tooltip's background.
+  /// Defaults to `BorderRadius.circular(4.0)`.
   final BorderRadius? borderRadius;
+
+  /// A list of shadows to be cast behind the tooltip.
+  /// Defaults to a subtle black shadow.
   final List<BoxShadow>? boxShadow;
+
+  /// The vertical distance between the tooltip and the widget it's attached to.
+  /// Defaults to 24.0.
   final double? verticalOffset;
+
+  /// The duration of the delay before the tooltip is shown.
+  /// Defaults to `Duration(milliseconds: 500)`.
   final Duration? waitDuration;
+
+  /// The duration for which the tooltip remains visible after it is shown.
+  /// Defaults to `Duration(milliseconds: 1500)`.
   final Duration? showDuration;
+
+  /// The preferred position of the tooltip relative to its child.
+  /// Defaults to [TooltipPosition.auto], which lets Flutter decide the best position.
   final TooltipPosition preferredPosition;
 
+  /// Creates a [BasicTableTooltipTheme] instance.
+  ///
+  /// All parameters have default values.
   const BasicTableTooltipTheme({
     this.backgroundColor = Colors.black87,
     this.textColor = Colors.white,
@@ -37,6 +75,8 @@ class BasicTableTooltipTheme {
     this.preferredPosition = TooltipPosition.auto,
   });
 
+  /// Creates a copy of this [BasicTableTooltipTheme] with the given fields replaced
+  /// with new values.
   BasicTableTooltipTheme copyWith({
     Color? backgroundColor,
     Color? textColor,
@@ -86,7 +126,7 @@ class BasicTableTooltipTheme {
   }
 
   @override
-  int get hashCode {
+  int get hashCode() {
     return Object.hash(
       backgroundColor,
       textColor,

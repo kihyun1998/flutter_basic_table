@@ -1,20 +1,34 @@
-/// 컬럼 정렬 상태를 나타내는 enum
+/// Represents the sorting state of a table column.
 enum ColumnSortState {
-  none, // 정렬 안됨 (원래 상태)
-  ascending, // 오름차순
-  descending, // 내림차순
+  /// No sorting applied (default state).
+  none,
+
+  /// Sorted in ascending order.
+  ascending,
+
+  /// Sorted in descending order.
+  descending,
 }
 
-/// 정렬 정보를 담는 모델
+/// A model to hold information about a column's sorting state.
+///
+/// This class is primarily used for internal state management or for backward
+/// compatibility with index-based sorting.
 class ColumnSortInfo {
+  /// The visible index of the column.
   final int columnIndex;
+
+  /// The sorting state of the column.
   final ColumnSortState state;
 
+  /// Creates a [ColumnSortInfo] instance.
   const ColumnSortInfo({
     required this.columnIndex,
     required this.state,
   });
 
+  /// Creates a copy of this [ColumnSortInfo] with the given fields replaced
+  /// with new values.
   ColumnSortInfo copyWith({
     int? columnIndex,
     ColumnSortState? state,

@@ -1,6 +1,11 @@
-/// Tooltip 위치 enum
+/// Defines the preferred position of a tooltip relative to its child widget.
 enum TooltipPosition {
+  /// Positions the tooltip above the child widget.
   top,
+
+  /// Positions the tooltip below the child widget.
   bottom,
-  auto, // 자동으로 공간에 따라 결정
+
+  /// Automatically determines the best position (top or bottom) based on available space.
+  auto,
 }

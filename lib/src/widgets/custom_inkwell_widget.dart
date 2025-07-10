@@ -2,18 +2,36 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
-/// 커스텀 InkWell 위젯
-/// 더블클릭 활성화 시에도 일반 클릭이 지연되지 않으며, 우클릭도 지원합니다.
+/// A custom [InkWell] widget that provides enhanced tap, double-tap, and secondary-tap
+/// functionalities without delaying single taps when double-tap is enabled.
 class CustomInkWell extends StatefulWidget {
+  /// The widget below this widget in the tree.
   final Widget child;
+
+  /// Called when the user taps this [CustomInkWell].
   final VoidCallback? onTap;
+
+  /// Called when the user double-taps this [CustomInkWell].
   final VoidCallback? onDoubleTap;
-  final VoidCallback? onSecondaryTap; // 우클릭
+
+  /// Called when the user performs a secondary tap (e.g., right-click on desktop)
+  /// on this [CustomInkWell].
+  final VoidCallback? onSecondaryTap;
+
+  /// The maximum duration between two taps for them to be considered a double-tap.
+  /// Defaults to 300 milliseconds.
   final Duration doubleClickTime;
+
+  /// The color of the ink splash when the [CustomInkWell] is tapped.
   final Color? splashColor;
+
+  /// The highlight color of the [CustomInkWell] when it's pressed.
   final Color? highlightColor;
+
+  /// The border radius of the ink splash and highlight.
   final BorderRadius? borderRadius;
 
+  /// Creates a [CustomInkWell] instance.
   const CustomInkWell({
     super.key,
     required this.child,

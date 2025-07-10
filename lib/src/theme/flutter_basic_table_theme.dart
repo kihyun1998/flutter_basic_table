@@ -6,16 +6,72 @@ import 'package:flutter_basic_table/src/theme/flutter_basic_table_scrollbar_them
 import 'package:flutter_basic_table/src/theme/flutter_basic_table_selection_theme.dart';
 import 'package:flutter_basic_table/src/theme/flutter_basic_table_tooltip_theme.dart';
 
-/// BasicTable의 모든 스타일과 설정을 담는 테마 데이터
+/// A comprehensive theme data class for customizing the appearance and behavior of the [BasicTable].
+///
+/// This class aggregates various sub-themes, allowing for granular control over
+/// different parts of the table, such as headers, data rows, checkboxes, scrollbars,
+/// borders, and tooltips.
+///
+/// Example Usage:
+/// ```dart
+/// BasicTableThemeData(
+///   headerTheme: BasicTableHeaderCellTheme(
+///     backgroundColor: Colors.blueGrey[800],
+///     textStyle: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+///     enableSorting: true,
+///     enableReorder: true,
+///   ),
+///   dataRowTheme: BasicTableDataRowTheme(
+///     backgroundColor: Colors.white,
+///     textStyle: TextStyle(color: Colors.black87),
+///     height: 48.0,
+///     border: BorderSide(color: Colors.grey[300]!, width: 0.5),
+///   ),
+///   checkboxTheme: BasicTableCheckboxCellTheme(
+///     enabled: true,
+///     activeColor: Colors.green,
+///   ),
+///   scrollbarTheme: BasicTableScrollbarTheme(
+///     showHorizontal: true,
+///     showVertical: true,
+///     hoverOnly: true,
+///     color: Colors.blue.withOpacity(0.7),
+///   ),
+///   borderTheme: BasicTableBorderTheme(
+///     tableBorder: BorderSide(color: Colors.grey[400]!, width: 1.0),
+///   ),
+///   tooltipTheme: BasicTableTooltipTheme(
+///     backgroundColor: Colors.deepPurple,
+///     textColor: Colors.white,
+///     fontSize: 13.0,
+///   ),
+/// );
+/// ```
 class BasicTableThemeData {
+  /// Theme settings for the table header cells.
   final BasicTableHeaderCellTheme headerTheme;
+
+  /// Theme settings for the table data rows.
   final BasicTableDataRowTheme dataRowTheme;
+
+  /// Theme settings for the table's checkbox column and individual checkboxes.
   final BasicTableCheckboxCellTheme checkboxTheme;
+
+  /// Theme settings for row selection and hover states.
   final BasicTableSelectionTheme selectionTheme;
+
+  /// Theme settings for the table's scrollbars.
   final BasicTableScrollbarTheme scrollbarTheme;
+
+  /// Theme settings for the table's borders.
   final BasicTableBorderTheme borderTheme;
+
+  /// Theme settings for tooltips displayed within the table.
   final BasicTableTooltipTheme tooltipTheme;
 
+  /// Creates a [BasicTableThemeData] instance.
+  ///
+  /// All parameters have default values, allowing for partial customization.
   const BasicTableThemeData({
     this.headerTheme = const BasicTableHeaderCellTheme(),
     this.dataRowTheme = const BasicTableDataRowTheme(),

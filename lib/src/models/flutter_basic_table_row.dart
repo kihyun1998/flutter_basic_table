@@ -2,23 +2,36 @@ import 'package:flutter/material.dart';
 
 import 'flutter_basic_table_cell.dart';
 
-/// 테이블 행 데이터를 나타내는 모델
+/// A model representing a single row of data in the table.
+///
+/// Each row contains a collection of [BasicTableCell] objects, keyed by their
+/// corresponding column IDs. It also provides methods for accessing, manipulating,
+/// and transforming cell data within the row.
 class BasicTableRow {
-  /// 컬럼 ID를 키로 하는 셀 데이터 Map
+  /// A [Map] where keys are column IDs (String) and values are [BasicTableCell]
+  /// objects representing the data for each cell in this row.
   final Map<String, BasicTableCell> cells;
 
+  /// The unique index of this row within the table. This is typically the
+  /// 0-based position of the row in the original data list.
   final int index;
 
-  /// 개별 행의 높이 (null이면 테마 높이 사용)
+  /// An optional custom height for this specific row.
+  /// If `null`, the row will use the default height defined in [BasicTableThemeData.dataRowTheme.height].
   final double? height;
 
+  /// Creates a [BasicTableRow] with the specified cells and index.
   const BasicTableRow({
     required this.cells,
     required this.index,
     this.height,
   });
 
-  /// Map과 String 리스트로부터 BasicTableRow 생성
+  /// Creates a [BasicTableRow] from a [Map] of string data.
+  ///
+  /// Each entry in `cellTexts` represents a cell, where the key is the column ID
+  /// and the value is the string content of the cell. These strings are converted
+  /// into [BasicTableCell] objects using [BasicTableCell.fromString].
   factory BasicTableRow.fromStrings({
     required Map<String, String> cellTexts,
     required int index,
@@ -37,7 +50,12 @@ class BasicTableRow {
     );
   }
 
-  /// 순서가 있는 컬럼 리스트와 텍스트 리스트로 생성 (순서 기반)
+  /// Creates a [BasicTableRow] from an ordered list of column IDs and cell texts.
+  ///
+  /// This factory is useful when the order of cell data corresponds directly
+  /// to a predefined list of column IDs.
+  ///
+  /// Throws an [AssertionError] if `columnIds` and `cellTexts` do not have the same length.
   factory BasicTableRow.fromOrderedStrings({
     required List<String> columnIds,
     required List<String> cellTexts,
@@ -60,7 +78,10 @@ class BasicTableRow {
     );
   }
 
-  /// 편의 생성자 - 텍스트 셀들로 구성
+  /// Creates a [BasicTableRow] composed entirely of text cells.
+  ///
+  /// This factory allows applying a common style, background color, alignment,
+  /// and padding to all text cells within the row.
   factory BasicTableRow.text({
     required Map<String, String> cellTexts,
     required int index,
@@ -89,7 +110,7 @@ class BasicTableRow {
     );
   }
 
-  /// 높이가 설정된 행 생성 (편의 메서드)
+  /// Creates a [BasicTableRow] with a predefined custom height.
   factory BasicTableRow.withHeight({
     required Map<String, BasicTableCell> cells,
     required int index,
@@ -102,21 +123,28 @@ class BasicTableRow {
     );
   }
 
-  /// 셀 개수 반환
+  /// Returns the number of cells in this row.
   int get cellCount => cells.length;
 
-  /// 특정 컬럼 ID의 셀 반환 (안전한 접근)
+  /// Retrieves a [BasicTableCell] by its `columnId`.
+  ///
+  /// Returns `null` if no cell exists for the given `columnId`.
   BasicTableCell? getCell(String columnId) {
     return cells[columnId];
   }
 
-  /// 특정 컬럼 ID의 셀 반환 (기본값 제공)
+  /// Retrieves a [BasicTableCell] by its `columnId`, providing a default cell
+  /// if the specified `columnId` does not exist.
+  ///
+  /// If `defaultCell` is not provided, an empty [BasicTableCell.text] is returned.
   BasicTableCell getCellOrDefault(String columnId,
       {BasicTableCell? defaultCell}) {
     return cells[columnId] ?? defaultCell ?? BasicTableCell.text('');
   }
 
-  /// 컬럼 순서에 따른 셀 텍스트 리스트 반환
+  /// Returns a [List] of string representations of cells, ordered by the provided `columnOrder`.
+  ///
+  /// If a cell for a given `columnId` does not exist, an empty string is used.
   List<String> getCellTexts(List<String> columnOrder) {
     return columnOrder.map((columnId) {
       final cell = cells[columnId];
@@ -124,7 +152,8 @@ class BasicTableRow {
     }).toList();
   }
 
-  /// 모든 셀의 텍스트를 Map으로 반환
+  /// Returns a [Map] containing the string representation of all cells in this row,
+  /// keyed by their column IDs.
   Map<String, String> get allCellTexts {
     final Map<String, String> result = {};
 
@@ -135,20 +164,26 @@ class BasicTableRow {
     return result;
   }
 
-  /// 현재 행의 실제 높이 반환 (개별 높이가 있으면 그것을, 없으면 테마 높이)
+  /// Calculates the effective height of the row.
+  ///
+  /// If a custom `height` is defined for this row, that value is returned.
+  /// Otherwise, the `themeHeight` (typically from [BasicTableThemeData.dataRowTheme.height])
+  /// is used.
   double getEffectiveHeight(double themeHeight) {
     return height ?? themeHeight;
   }
 
-  /// 커스텀 높이가 설정되어 있는지 확인
+  /// Returns `true` if this row has a custom height defined, `false` otherwise.
   bool get hasCustomHeight => height != null;
 
-  /// 특정 컬럼에 셀이 있는지 확인
+  /// Checks if a cell exists for the given `columnId` in this row.
   bool hasCell(String columnId) {
     return cells.containsKey(columnId);
   }
 
-  /// 새로운 셀을 추가한 복사본 반환
+  /// Returns a new [BasicTableRow] instance with an additional cell.
+  ///
+  /// If a cell with the given `columnId` already exists, it will be overwritten.
   BasicTableRow addCell(String columnId, BasicTableCell cell) {
     final newCells = Map<String, BasicTableCell>.from(cells);
     newCells[columnId] = cell;
@@ -160,7 +195,9 @@ class BasicTableRow {
     );
   }
 
-  /// 특정 컬럼의 셀을 교체한 복사본 반환
+  /// Returns a new [BasicTableRow] instance with a cell replaced at the specified `columnId`.
+  ///
+  /// If no cell exists for the `columnId`, it will be added.
   BasicTableRow replaceCell(String columnId, BasicTableCell newCell) {
     final newCells = Map<String, BasicTableCell>.from(cells);
     newCells[columnId] = newCell;
@@ -172,7 +209,9 @@ class BasicTableRow {
     );
   }
 
-  /// 특정 컬럼의 셀을 제거한 복사본 반환
+  /// Returns a new [BasicTableRow] instance with the cell at the specified `columnId` removed.
+  ///
+  /// If no cell exists for the `columnId`, the row remains unchanged.
   BasicTableRow removeCell(String columnId) {
     final newCells = Map<String, BasicTableCell>.from(cells);
     newCells.remove(columnId);
@@ -184,7 +223,9 @@ class BasicTableRow {
     );
   }
 
-  /// 여러 셀을 한번에 추가/교체한 복사본 반환
+  /// Returns a new [BasicTableRow] instance with multiple cells added or replaced.
+  ///
+  /// Existing cells with matching `columnId`s will be updated; new cells will be added.
   BasicTableRow updateCells(Map<String, BasicTableCell> newCells) {
     final updatedCells = Map<String, BasicTableCell>.from(cells);
     updatedCells.addAll(newCells);
@@ -196,7 +237,9 @@ class BasicTableRow {
     );
   }
 
-  /// 높이를 변경한 복사본 반환
+  /// Returns a new [BasicTableRow] instance with its height updated.
+  ///
+  /// If `newHeight` is `null`, the row will revert to using the theme's default height.
   BasicTableRow withNewHeight(double? newHeight) {
     return BasicTableRow(
       cells: cells,
@@ -205,19 +248,26 @@ class BasicTableRow {
     );
   }
 
-  /// 정렬을 위한 특정 컬럼의 비교 가능한 값 반환
+  /// Returns a comparable string value for a specific column, used primarily for sorting.
+  ///
+  /// This retrieves the `displayText` of the cell at the given `columnId`.
+  /// Returns an empty string if the cell or its display text is `null`.
   String getComparableValue(String columnId) {
     final cell = cells[columnId];
     return cell?.displayText ?? '';
   }
 
-  /// 정렬을 위한 특정 컬럼의 숫자 값 반환 (숫자가 아니면 null)
+  /// Returns the numeric value of a cell for a specific column, used for numeric sorting.
+  ///
+  /// Attempts to parse the cell's `displayText` as a number. Returns `null` if parsing fails.
   num? getNumericValue(String columnId) {
     final textValue = getComparableValue(columnId);
     return num.tryParse(textValue);
   }
 
-  /// 특정 컬럼들만 포함하는 새로운 행 생성 (필터링)
+  /// Returns a new [BasicTableRow] instance containing only the cells for the specified `columnIds`.
+  ///
+  /// Cells for `columnIds` not present in the original row will be omitted.
   BasicTableRow filterColumns(Set<String> columnIds) {
     final filteredCells = <String, BasicTableCell>{};
 
@@ -234,14 +284,20 @@ class BasicTableRow {
     );
   }
 
-  /// 컬럼 순서에 따라 정렬된 셀 리스트 반환 (렌더링용)
+  /// Returns a [List] of [BasicTableCell] objects, ordered according to the provided `columnOrder`.
+  ///
+  /// If a cell for a given `columnId` does not exist, an empty [BasicTableCell.text] is returned as a placeholder.
   List<BasicTableCell> getSortedCells(List<String> columnOrder) {
     return columnOrder.map((columnId) {
-      return cells[columnId] ?? BasicTableCell.text(''); // 없으면 빈 셀
+      return cells[columnId] ?? BasicTableCell.text(''); // Return empty cell if not found
     }).toList();
   }
 
-  /// 누락된 컬럼들을 기본 셀로 채운 복사본 반환
+  /// Returns a new [BasicTableRow] instance where any missing cells (i.e., cells
+  /// for `requiredColumnIds` that are not present in this row) are filled with
+  /// a `defaultCell`.
+  ///
+  /// If `defaultCell` is not provided, an empty [BasicTableCell.text] is used.
   BasicTableRow fillMissingColumns(Set<String> requiredColumnIds,
       {BasicTableCell? defaultCell}) {
     final newCells = Map<String, BasicTableCell>.from(cells);
@@ -260,13 +316,16 @@ class BasicTableRow {
     );
   }
 
-  /// 데이터 검증 - 중복 컬럼 ID 체크 등
+  /// Performs basic data validation for the row.
+  ///
+  /// Currently, it checks if the `cells` map is not empty. Additional validation
+  /// logic can be implemented here.
   bool isValid() {
-    // Map 자체가 중복 키를 허용하지 않으므로 기본적으로 유효
-    // 추가 검증 로직이 필요하면 여기에 구현
     return cells.isNotEmpty;
   }
 
+  /// Creates a copy of this [BasicTableRow] with the given fields replaced
+  /// with new values.
   BasicTableRow copyWith({
     Map<String, BasicTableCell>? cells,
     int? index,
@@ -298,7 +357,7 @@ class BasicTableRow {
     return 'BasicTableRow(index: $index, height: $height, cells: ${cells.keys.toList()})';
   }
 
-  // Map 비교를 위한 헬퍼 함수
+  // Helper function for deep comparison of maps
   bool _mapEquals<K, V>(Map<K, V> a, Map<K, V> b) {
     if (a.length != b.length) return false;
 

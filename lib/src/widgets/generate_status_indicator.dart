@@ -3,22 +3,31 @@ import 'package:flutter/material.dart';
 
 import '../models/status_config.dart';
 
-/// Generic 상태 표시기 위젯
-/// 사용자 정의 상태 타입과 StatusConfig를 받아서 렌더링합니다.
+/// A generic widget for displaying status indicators based on a [StatusConfig].
+///
+/// This widget can render a combination of a circle, an icon, and text to visually
+/// represent a given status, with flexible layout and styling options.
 class GenericStatusIndicator extends StatelessWidget {
-  /// 상태 값 (사용자 정의 enum 등)
+  /// The status value (e.g., an enum member) that this indicator represents.
   final Enum status;
 
-  /// 상태 설정 (색상, 텍스트, 스타일 등)
+  /// The configuration for the status indicator's appearance, including color,
+  /// text, icon, size, and spacing.
   final StatusConfig config;
 
-  /// 레이아웃 방향 (가로/세로)
+  /// The primary axis along which the circle/icon and text are laid out.
+  /// Defaults to [Axis.horizontal].
   final Axis direction;
 
-  /// 정렬 방식
+  /// How the children are aligned along the main axis.
+  /// Defaults to [MainAxisAlignment.start] for horizontal, [MainAxisAlignment.center] for vertical.
   final MainAxisAlignment mainAxisAlignment;
+
+  /// How the children are aligned along the cross axis.
+  /// Defaults to [CrossAxisAlignment.center].
   final CrossAxisAlignment crossAxisAlignment;
 
+  /// Creates a [GenericStatusIndicator] instance.
   const GenericStatusIndicator({
     super.key,
     required this.status,
@@ -28,7 +37,9 @@ class GenericStatusIndicator extends StatelessWidget {
     this.crossAxisAlignment = CrossAxisAlignment.center,
   });
 
-  /// 간단한 가로 레이아웃 팩토리
+  /// Creates a [GenericStatusIndicator] with a horizontal layout.
+  ///
+  /// This is a convenience factory for common horizontal status displays.
   factory GenericStatusIndicator.horizontal(
     Enum status,
     StatusConfig config, {
@@ -44,7 +55,9 @@ class GenericStatusIndicator extends StatelessWidget {
     );
   }
 
-  /// 세로 레이아웃 팩토리
+  /// Creates a [GenericStatusIndicator] with a vertical layout.
+  ///
+  /// This is a convenience factory for common vertical status displays.
   factory GenericStatusIndicator.vertical(
     Enum status,
     StatusConfig config, {
@@ -60,153 +73,13 @@ class GenericStatusIndicator extends StatelessWidget {
     );
   }
 
-  /// 원형 표시기 위젯
-  Widget _buildCircle() {
-    if (!config.hasCircle) return const SizedBox.shrink();
-
-    return Container(
-      width: config.circleSize,
-      height: config.circleSize,
-      decoration: BoxDecoration(
-        color: config.effectiveColor,
-        shape: BoxShape.circle,
-      ),
-    );
-  }
-
-  /// 아이콘 위젯
-  Widget _buildIcon() {
-    if (!config.hasIcon) return const SizedBox.shrink();
-
-    return Icon(
-      config.icon!,
-      size: config.iconSize ?? 16.0,
-      color: config.effectiveColor,
-    );
-  }
-
-  /// 텍스트 위젯
-  Widget _buildText() {
-    if (!config.hasText) return const SizedBox.shrink();
-
-    return Text(
-      config.text!,
-      style: config.textStyle ?? const TextStyle(fontSize: 13),
-    );
-  }
-
-  /// 간격 위젯
-  Widget _buildSpacing() {
-    // 표시할 요소가 2개 이상이고 spacing > 0일 때만 간격 추가
-    final hasMultipleElements = [
-          config.hasCircle,
-          config.hasIcon,
-          config.hasText,
-        ].where((has) => has).length >
-        1;
-
-    if (!hasMultipleElements || config.spacing <= 0) {
-      return const SizedBox.shrink();
-    }
-
-    return direction == Axis.horizontal
-        ? SizedBox(width: config.spacing)
-        : SizedBox(height: config.spacing);
-  }
-
-  /// 콘텐츠 위젯들을 빌드
-  List<Widget> _buildContentWidgets() {
-    final widgets = <Widget>[];
-
-    // 원형 또는 아이콘 추가
-    if (config.hasCircle) {
-      widgets.add(_buildCircle());
-    } else if (config.hasIcon) {
-      widgets.add(_buildIcon());
-    }
-
-    // 간격 추가 (앞에 요소가 있고 뒤에 텍스트가 있을 때)
-    if (widgets.isNotEmpty && config.hasText) {
-      widgets.add(_buildSpacing());
-    }
-
-    // 텍스트 추가
-    if (config.hasText) {
-      widgets.add(_buildText());
-    }
-
-    return widgets;
-  }
-
-  /// 배경 모양이 있는 콘텐츠 래핑
-  Widget _wrapWithShape(Widget child) {
-    if (!config.hasShape) return child;
-
-    return Container(
-      padding: config.padding,
-      decoration: ShapeDecoration(
-        color: config.effectiveColor,
-        shape: config.shape!,
-      ),
-      child: child,
-    );
-  }
-
-  /// 패딩이 있는 콘텐츠 래핑 (배경 모양이 없을 때)
-  Widget _wrapWithPadding(Widget child) {
-    if (!config.hasPadding || config.hasShape) return child;
-
-    return Padding(
-      padding: config.padding!,
-      child: child,
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final contentWidgets = _buildContentWidgets();
-
-    if (contentWidgets.isEmpty) {
-      return const SizedBox.shrink();
-    }
-
-    Widget content;
-
-    if (direction == Axis.horizontal) {
-      content = Row(
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: mainAxisAlignment,
-        crossAxisAlignment: crossAxisAlignment,
-        children: contentWidgets,
-      );
-    } else {
-      content = Column(
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: mainAxisAlignment,
-        crossAxisAlignment: crossAxisAlignment,
-        children: contentWidgets,
-      );
-    }
-
-    // 배경 모양이나 패딩 적용
-    content = _wrapWithShape(content);
-    content = _wrapWithPadding(content);
-
-    // 툴팁 적용
-    if (config.tooltip != null && config.tooltip!.isNotEmpty) {
-      content = Tooltip(
-        message: config.tooltip!,
-        child: content,
-      );
-    }
-
-    return content;
-  }
-}
-
-/// 편의를 위한 Enum 확장 메서드들
+  /// Extension methods for [Enum] to easily create [GenericStatusIndicator] widgets.
 extension GenericStatusIndicatorExtensions on Enum {
-  /// 이 상태 값으로 상태 표시기 생성
+  /// Creates a [GenericStatusIndicator] from this enum value and a [StatusConfig].
+  ///
+  /// [config] defines the visual properties of the status indicator.
+  /// [direction] specifies the layout direction (horizontal or vertical).
+  /// [mainAxisAlignment] and [crossAxisAlignment] control the alignment of elements.
   GenericStatusIndicator toStatusIndicator(
     StatusConfig config, {
     Axis direction = Axis.horizontal,
@@ -222,12 +95,12 @@ extension GenericStatusIndicatorExtensions on Enum {
     );
   }
 
-  /// 가로 레이아웃 상태 표시기 생성
+  /// Creates a horizontally laid out [GenericStatusIndicator] from this enum value.
   GenericStatusIndicator toHorizontalStatusIndicator(StatusConfig config) {
     return GenericStatusIndicator.horizontal(this, config);
   }
 
-  /// 세로 레이아웃 상태 표시기 생성
+  /// Creates a vertically laid out [GenericStatusIndicator] from this enum value.
   GenericStatusIndicator toVerticalStatusIndicator(StatusConfig config) {
     return GenericStatusIndicator.vertical(this, config);
   }

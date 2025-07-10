@@ -1,38 +1,47 @@
 import 'package:flutter/material.dart';
 
-/// 상태 표시기의 설정을 정의하는 클래스
-/// 사용자가 자신만의 상태 시스템을 구현할 때 사용합니다.
+/// Defines the configuration for a status indicator.
+///
+/// This class allows users to implement their own custom status systems
+/// by providing visual properties like color, text, icon, and shape.
 class StatusConfig {
-  /// 상태 표시 색상
+  /// The primary color associated with the status.
   final Color color;
 
-  /// 상태 텍스트 (null이면 텍스트 없음)
+  /// The text to display for the status. If `null` or empty, no text will be shown.
   final String? text;
 
-  /// 원형 표시기 크기
+  /// The size of the circular indicator. If `0`, the circle will not be drawn.
+  /// This is ignored if an `icon` is provided.
+  /// Must be non-negative.
   final double circleSize;
 
-  /// 텍스트 스타일
+  /// The text style for the status [text].
   final TextStyle? textStyle;
 
-  /// 아이콘 (원형 대신 아이콘 사용 가능)
+  /// An optional icon to display instead of a circle. If provided, [circleSize]
+  /// will be ignored.
   final IconData? icon;
 
-  /// 아이콘 크기
+  /// The size of the [icon]. Defaults to 16.0 if an icon is present.
   final double? iconSize;
 
-  /// 원형과 텍스트/아이콘 사이의 간격
+  /// The spacing between the circle/icon and the text.
+  /// Defaults to 6.0.
   final double spacing;
 
-  /// 툴팁 텍스트 (null이면 자동 툴팁 또는 툴팁 없음)
+  /// An optional tooltip text for the status indicator.
+  /// If `null`, no tooltip will be shown unless handled by a parent widget.
   final String? tooltip;
 
-  /// 배경 모양 (원형, 사각형, 라운드 사각형 등)
+  /// An optional shape to draw behind the status indicator content (e.g., a rounded rectangle for a badge).
+  /// If provided, the `color` will be used as the background color for this shape.
   final ShapeBorder? shape;
 
-  /// 배경 패딩
+  /// Optional padding around the content within the [shape].
   final EdgeInsets? padding;
 
+  /// Creates a [StatusConfig] instance with the specified properties.
   const StatusConfig({
     required this.color,
     this.text,
@@ -46,7 +55,7 @@ class StatusConfig {
     this.padding,
   }) : assert(circleSize >= 0, 'circleSize must be non-negative');
 
-  /// 간단한 원형 + 텍스트 설정
+  /// Creates a simple [StatusConfig] with a circular indicator and text.
   factory StatusConfig.simple({
     required Color color,
     required String text,
@@ -65,7 +74,7 @@ class StatusConfig {
     );
   }
 
-  /// 원형만 있는 설정 (텍스트 없음)
+  /// Creates a [StatusConfig] with only a circular indicator (no text).
   factory StatusConfig.circleOnly({
     required Color color,
     double circleSize = 8.0,
@@ -83,7 +92,7 @@ class StatusConfig {
     );
   }
 
-  /// 아이콘 + 텍스트 설정
+  /// Creates a [StatusConfig] with an icon and optional text.
   factory StatusConfig.withIcon({
     required Color color,
     required IconData icon,
@@ -103,11 +112,11 @@ class StatusConfig {
       spacing: spacing,
       tooltip: tooltip,
       padding: padding,
-      circleSize: 0, // 아이콘을 사용하므로 원형은 숨김
+      circleSize: 0, // Hide circle when using an icon
     );
   }
 
-  /// 텍스트만 있는 설정 (원형/아이콘 없음)
+  /// Creates a [StatusConfig] with only text (no circle or icon).
   factory StatusConfig.textOnly({
     required String text,
     required Color color,
@@ -121,12 +130,12 @@ class StatusConfig {
       textStyle: textStyle,
       tooltip: tooltip,
       padding: padding,
-      circleSize: 0, // 원형 숨김
-      spacing: 0, // 간격 없음
+      circleSize: 0, // Hide circle
+      spacing: 0, // No spacing needed
     );
   }
 
-  /// 배지 스타일 설정 (배경색이 있는 라운드 사각형)
+  /// Creates a [StatusConfig] styled as a badge, with a rounded rectangle background.
   factory StatusConfig.badge({
     required Color color,
     required String text,
@@ -137,7 +146,7 @@ class StatusConfig {
     String? tooltip,
   }) {
     return StatusConfig(
-      color: Colors.transparent, // 원형은 투명
+      color: Colors.transparent, // Transparent circle
       text: text,
       textStyle: TextStyle(
         color: textColor ?? Colors.white,
@@ -145,7 +154,7 @@ class StatusConfig {
         fontWeight: FontWeight.w500,
       ),
       tooltip: tooltip,
-      circleSize: 0, // 원형 숨김
+      circleSize: 0, // Hide circle
       spacing: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(borderRadius),
@@ -154,24 +163,28 @@ class StatusConfig {
     );
   }
 
-  /// 표시할 색상 계산 (아이콘이나 배지 배경색 등에 사용)
+  /// Returns the effective color to be used for the status indicator.
+  /// This is typically the [color] property itself.
   Color get effectiveColor => color;
 
-  /// 텍스트 표시 여부
+  /// Returns `true` if the status has text to display, `false` otherwise.
   bool get hasText => text != null && text!.isNotEmpty;
 
-  /// 원형 표시 여부
+  /// Returns `true` if a circular indicator should be displayed, `false` otherwise.
+  /// A circle is displayed only if `circleSize` is greater than 0 and no `icon` is provided.
   bool get hasCircle => circleSize > 0 && icon == null;
 
-  /// 아이콘 표시 여부
+  /// Returns `true` if an icon should be displayed, `false` otherwise.
   bool get hasIcon => icon != null;
 
-  /// 배경 모양 사용 여부
+  /// Returns `true` if a custom [shape] is defined for the background, `false` otherwise.
   bool get hasShape => shape != null;
 
-  /// 패딩 사용 여부
+  /// Returns `true` if custom [padding] is defined, `false` otherwise.
   bool get hasPadding => padding != null;
 
+  /// Creates a copy of this [StatusConfig] with the given fields replaced
+  /// with new values.
   StatusConfig copyWith({
     Color? color,
     String? text,

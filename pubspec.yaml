@@ -1,6 +1,6 @@
 name: flutter_basic_table
 description: A comprehensive and customizable table widget for Flutter with Map-based column management, sorting, selection, theming, and interactive features.
-version: 2.0.0
+version: 2.0.1
 homepage: https://github.com/kihyun1998/flutter_basic_table
 repository: https://github.com/kihyun1998/flutter_basic_table
 issue_tracker: https://github.com/kihyun1998/flutter_basic_table/issues
@@ -18,15 +18,6 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
-
-# Screenshots for pub.dev (add these files to your repository)
-# screenshots:
-#   - description: 'Map-based table with improved column management'
-#     path: screenshots/map_based_table.png
-#   - description: 'Advanced debugging and visualization features'
-#     path: screenshots/debug_features.png
-#   - description: 'Efficient column reordering and state management'
-#     path: screenshots/column_management.png
 
 topics:
   - table

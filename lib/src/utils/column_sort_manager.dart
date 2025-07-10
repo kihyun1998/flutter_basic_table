@@ -1,18 +1,28 @@
 import 'package:flutter_basic_table/flutter_basic_table.dart';
 
-/// 컬럼 정렬 상태를 ID 기반으로 관리하는 클래스
-/// 컬럼 순서가 바뀌어도 정렬 상태가 올바른 컬럼을 따라가도록 보장
+/// Manages the sorting state of columns based on their unique IDs.
+///
+/// This class ensures that sorting states persist correctly even if column
+/// order changes, as it tracks sorting by column ID rather than by visible index.
 class ColumnSortManager {
-  /// ID 기반 정렬 상태 저장소
+  /// Internal storage for column sorting states, keyed by column ID.
   final Map<String, ColumnSortState> _sortStates = {};
 
-  /// 현재 정렬 중인 컬럼 ID (한 번에 하나만 정렬 가능)
+  /// The ID of the column that is currently sorted. Only one column can be
+  /// sorted at a time. If no column is sorted, this will be `null`.
   String? _currentSortedColumnId;
 
-  /// 기본 생성자
+  /// Creates a new [ColumnSortManager] instance.
   ColumnSortManager();
 
-  /// 기존 인덱스 기반 Map에서 생성 (하위 호환성)
+  /// Creates a [ColumnSortManager] from an index-based map of sorting states.
+  ///
+  /// This factory is primarily for backward compatibility with older APIs
+  /// that managed sorting by visible column index.
+  ///
+  /// [indexMap]: A map where keys are visible column indices and values are their sort states.
+  /// [sortedColumns]: A list of [BasicTableColumn] objects, sorted by their `order`,
+  ///   representing the current visible order of columns.
   ColumnSortManager.fromIndexMap(
     Map<int, ColumnSortState> indexMap,
     List<BasicTableColumn> sortedColumns,
@@ -32,7 +42,11 @@ class ColumnSortManager {
     }
   }
 
-  /// Map<String, BasicTableColumn>에서 생성
+  /// Creates a [ColumnSortManager] from a map of [BasicTableColumn] objects
+  /// and an ID-based map of sorting states.
+  ///
+  /// [columns]: A map of all available [BasicTableColumn] objects, keyed by their IDs.
+  /// [sortStates]: A map where keys are column IDs and values are their sort states.
   ColumnSortManager.fromColumnMap(
     Map<String, BasicTableColumn> columns,
     Map<String, ColumnSortState> sortStates,
@@ -51,21 +65,36 @@ class ColumnSortManager {
     }
   }
 
-  /// 특정 컬럼의 정렬 상태 가져오기
+  /// Retrieves the sorting state for a specific column by its ID.
+  ///
+  /// Returns [ColumnSortState.none] if the column is not found or has no active sorting state.
   ColumnSortState getSortState(String columnId) {
     return _sortStates[columnId] ?? ColumnSortState.none;
   }
 
-  /// 특정 인덱스의 컬럼 정렬 상태 가져오기 (하위 호환성)
+  /// Retrieves the sorting state for a column at a given visible index.
+  ///
+  /// This method is for backward compatibility. It's recommended to use
+  /// [getSortState] with the column ID directly.
+  ///
+  /// [index]: The visible index of the column.
+  /// [sortedColumns]: A list of [BasicTableColumn] objects, sorted by their `order`.
   ColumnSortState getSortStateByIndex(
       int index, List<BasicTableColumn> sortedColumns) {
     if (index < 0 || index >= sortedColumns.length) return ColumnSortState.none;
     return getSortState(sortedColumns[index].id);
   }
 
-  /// 컬럼의 정렬 상태 설정
+  /// Sets the sorting state for a specific column by its ID.
+  ///
+  /// When a column's state is set to anything other than [ColumnSortState.none],
+  /// all other columns' sorting states are automatically reset to [ColumnSortState.none],
+  /// ensuring only one column is sorted at a time.
+  ///
+  /// [columnId]: The ID of the column to update.
+  /// [state]: The new [ColumnSortState] for the column.
   void setSortState(String columnId, ColumnSortState state) {
-    // 다른 컬럼의 정렬 해제 (한 번에 하나만 정렬)
+    // Reset sorting for all other columns (only one column can be sorted at a time)
     if (state != ColumnSortState.none) {
       _clearAllSortStates();
       _currentSortedColumnId = columnId;
@@ -76,30 +105,45 @@ class ColumnSortManager {
     _sortStates[columnId] = state;
   }
 
-  /// 인덱스로 정렬 상태 설정 (하위 호환성)
+  /// Sets the sorting state for a column at a given visible index.
+  ///
+  /// This method is for backward compatibility. It's recommended to use
+  /// [setSortState] with the column ID directly.
+  ///
+  /// [index]: The visible index of the column.
+  /// [state]: The new [ColumnSortState] for the column.
+  /// [sortedColumns]: A list of [BasicTableColumn] objects, sorted by their `order`.
   void setSortStateByIndex(
       int index, ColumnSortState state, List<BasicTableColumn> sortedColumns) {
     if (index < 0 || index >= sortedColumns.length) return;
     setSortState(sortedColumns[index].id, state);
   }
 
-  /// 모든 정렬 상태 초기화
+  /// Resets all column sorting states to [ColumnSortState.none] and clears
+  /// the currently sorted column.
   void clearAll() {
     _sortStates.clear();
     _currentSortedColumnId = null;
   }
 
-  /// 내부적으로 모든 정렬 상태를 none으로 설정
+  /// Internal helper to set all existing sorting states to [ColumnSortState.none].
   void _clearAllSortStates() {
     for (final key in _sortStates.keys) {
       _sortStates[key] = ColumnSortState.none;
     }
   }
 
-  /// 현재 정렬 중인 컬럼 ID
+  /// Returns the ID of the column that is currently sorted.
+  /// Returns `null` if no column is sorted.
   String? get currentSortedColumnId => _currentSortedColumnId;
 
-  /// 현재 정렬 중인 컬럼의 visible 인덱스 (하위 호환성)
+  /// Returns the visible index of the currently sorted column.
+  ///
+  /// This method is for backward compatibility. It's recommended to use
+  /// [currentSortedColumnId] directly.
+  ///
+  /// [sortedColumns]: A list of [BasicTableColumn] objects, sorted by their `order`.
+  /// Returns `null` if no column is sorted or the sorted column is not found in the provided list.
   int? getCurrentSortedColumnIndex(List<BasicTableColumn> sortedColumns) {
     if (_currentSortedColumnId == null) return null;
 
@@ -111,22 +155,26 @@ class ColumnSortManager {
     return null;
   }
 
-  /// Map에서 현재 정렬 중인 컬럼 찾기
+  /// Retrieves the [BasicTableColumn] object that is currently sorted.
+  ///
+  /// [columns]: A map of all available [BasicTableColumn] objects, keyed by their IDs.
+  /// Returns `null` if no column is sorted or the sorted column is not found in the provided map.
   BasicTableColumn? getCurrentSortedColumn(
       Map<String, BasicTableColumn> columns) {
     if (_currentSortedColumnId == null) return null;
     return columns[_currentSortedColumnId];
   }
 
-  /// 정렬 상태가 있는지 확인
+  /// Returns `true` if any column is currently sorted, `false` otherwise.
   bool get hasSortedColumn => _currentSortedColumnId != null;
 
-  /// 모든 정렬 상태를 ID 기반 Map으로 반환
+  /// Returns a new map containing all stored sorting states, keyed by column ID.
   Map<String, ColumnSortState> get allSortStates {
     return Map<String, ColumnSortState>.from(_sortStates);
   }
 
-  /// 활성 정렬 상태만 반환 (none이 아닌 것들)
+  /// Returns a new map containing only the active sorting states (i.e., states not [ColumnSortState.none]),
+  /// keyed by column ID.
   Map<String, ColumnSortState> get activeSortStates {
     final Map<String, ColumnSortState> result = {};
 
@@ -139,7 +187,12 @@ class ColumnSortManager {
     return result;
   }
 
-  /// 인덱스 기반 Map으로 변환 (하위 호환성)
+  /// Converts the ID-based sorting states to an index-based map.
+  ///
+  /// This method is for backward compatibility. It's recommended to use
+  /// the ID-based states directly.
+  ///
+  /// [sortedColumns]: A list of [BasicTableColumn] objects, sorted by their `order`.
   Map<int, ColumnSortState> toIndexMap(List<BasicTableColumn> sortedColumns) {
     final Map<int, ColumnSortState> indexMap = {};
 
@@ -155,14 +208,21 @@ class ColumnSortManager {
     return indexMap;
   }
 
-  /// Map 기반 컬럼에서 인덱스 Map으로 변환
+  /// Converts the ID-based sorting states to an index-based map, given a map of columns.
+  ///
+  /// This method is for backward compatibility. It's recommended to use
+  /// the ID-based states directly.
+  ///
+  /// [columns]: A map of all available [BasicTableColumn] objects, keyed by their IDs.
   Map<int, ColumnSortState> toIndexMapFromColumnMap(
       Map<String, BasicTableColumn> columns) {
     final sortedColumns = BasicTableColumn.mapToSortedList(columns);
     return toIndexMap(sortedColumns);
   }
 
-  /// 특정 컬럼들만 필터링된 정렬 상태 반환
+  /// Returns a new map containing sorting states only for the specified `columnIds`.
+  ///
+  /// [columnIds]: A set of column IDs to filter the sorting states by.
   Map<String, ColumnSortState> getFilteredSortStates(Set<String> columnIds) {
     final Map<String, ColumnSortState> result = {};
 
@@ -175,7 +235,11 @@ class ColumnSortManager {
     return result;
   }
 
-  /// 컬럼 visibility에 따른 정렬 상태 정리
+  /// Removes sorting states for columns that are no longer visible (i.e., their IDs
+  /// are not present in `visibleColumnIds`).
+  ///
+  /// If the currently sorted column becomes hidden, its sorting state is also cleared.
+  /// [visibleColumnIds]: A set of IDs for currently visible columns.
   void cleanupHiddenColumns(Set<String> visibleColumnIds) {
     final keysToRemove = <String>[];
 
@@ -188,23 +252,26 @@ class ColumnSortManager {
     for (final key in keysToRemove) {
       _sortStates.remove(key);
 
-      // 현재 정렬 중인 컬럼이 숨겨진 경우 초기화
+      // If the currently sorted column is hidden, clear it
       if (_currentSortedColumnId == key) {
         _currentSortedColumnId = null;
       }
     }
   }
 
-  /// 정렬 상태 유효성 검사
+  /// Validates if all stored sorting states correspond to existing columns.
+  ///
+  /// [columns]: A map of all available [BasicTableColumn] objects, keyed by their IDs.
+  /// Returns `true` if all sorting states are valid, `false` otherwise.
   bool isValid(Map<String, BasicTableColumn> columns) {
-    // 모든 정렬 상태의 컬럼 ID가 실제 컬럼에 존재하는지 확인
+    // Check if all column IDs in sort states exist in the actual columns
     for (final columnId in _sortStates.keys) {
       if (!columns.containsKey(columnId)) {
         return false;
       }
     }
 
-    // 현재 정렬 중인 컬럼이 실제 존재하는지 확인
+    // Check if the currently sorted column exists
     if (_currentSortedColumnId != null &&
         !columns.containsKey(_currentSortedColumnId)) {
       return false;
@@ -213,7 +280,9 @@ class ColumnSortManager {
     return true;
   }
 
-  /// 무효한 정렬 상태 정리
+  /// Cleans up any invalid sorting states (i.e., states for non-existent columns).
+  ///
+  /// [columns]: A map of all available [BasicTableColumn] objects, keyed by their IDs.
   void cleanup(Map<String, BasicTableColumn> columns) {
     final keysToRemove = <String>[];
 
@@ -227,14 +296,16 @@ class ColumnSortManager {
       _sortStates.remove(key);
     }
 
-    // 현재 정렬 중인 컬럼이 무효한 경우 초기화
+    // If the currently sorted column is invalid, clear it
     if (_currentSortedColumnId != null &&
         !columns.containsKey(_currentSortedColumnId)) {
       _currentSortedColumnId = null;
     }
   }
 
-  /// 디버그용 정보 출력 (List 기반)
+  /// Prints debug information about the current sorting states, based on a sorted list of columns.
+  ///
+  /// [sortedColumns]: A list of [BasicTableColumn] objects, sorted by their `order`.
   void printDebugInfo(List<BasicTableColumn> sortedColumns) {
     print('🔍 ColumnSortManager Debug Info:');
     print('   Current sorted column: $_currentSortedColumnId');
@@ -246,19 +317,21 @@ class ColumnSortManager {
     }
   }
 
-  /// 디버그용 정보 출력 (Map 기반)
+  /// Prints debug information about the current sorting states, based on a map of columns.
+  ///
+  /// [columns]: A map of all available [BasicTableColumn] objects, keyed by their IDs.
   void printDebugInfoFromMap(Map<String, BasicTableColumn> columns) {
     final sortedColumns = BasicTableColumn.mapToSortedList(columns);
     printDebugInfo(sortedColumns);
   }
 
-  /// 현재 상태를 간단한 요약으로 출력
+  /// Prints a summary of the current sorting state.
   void printSummary() {
     print(
         '🔍 Sort Summary: ${_currentSortedColumnId ?? 'None'} (${_sortStates.length} states)');
   }
 
-  /// 복사본 생성
+  /// Creates a deep copy of this [ColumnSortManager] instance.
   ColumnSortManager copy() {
     final manager = ColumnSortManager();
     manager._sortStates.addAll(_sortStates);
@@ -266,12 +339,15 @@ class ColumnSortManager {
     return manager;
   }
 
-  /// 다른 ColumnSortManager와 병합
+  /// Merges the sorting states from another [ColumnSortManager] into this one.
+  ///
+  /// This operation clears the current states of this manager and then copies
+  /// all states from the `other` manager.
   void mergeWith(ColumnSortManager other) {
-    // 기존 상태 초기화
+    // Clear existing states
     clearAll();
 
-    // other의 상태 복사
+    // Copy states from other
     _sortStates.addAll(other._sortStates);
     _currentSortedColumnId = other._currentSortedColumnId;
   }
@@ -281,7 +357,10 @@ class ColumnSortManager {
     return 'ColumnSortManager(currentSorted: $_currentSortedColumnId, states: $_sortStates)';
   }
 
-  /// JSON과 유사한 형태로 직렬화 (Map 반환)
+  /// Serializes the [ColumnSortManager] instance to a JSON-like map.
+  ///
+  /// Returns a [Map] containing the `currentSortedColumnId` and a map of `sortStates`
+  /// where [ColumnSortState] enums are represented by their names.
   Map<String, dynamic> toJson() {
     return {
       'currentSortedColumnId': _currentSortedColumnId,
@@ -289,7 +368,9 @@ class ColumnSortManager {
     };
   }
 
-  /// JSON에서 복원
+  /// Deserializes a [ColumnSortManager] instance from a JSON-like map.
+  ///
+  /// [json]: A map containing `currentSortedColumnId` and `sortStates`.
   factory ColumnSortManager.fromJson(Map<String, dynamic> json) {
     final manager = ColumnSortManager();
 

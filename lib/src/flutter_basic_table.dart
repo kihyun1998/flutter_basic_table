@@ -8,10 +8,180 @@ import 'widgets/flutter_basic_table_header_widget.dart';
 import 'widgets/flutter_basic_talbe_data_widget.dart';
 import 'widgets/synced_scroll_controll_widget.dart';
 
-/// 커스텀 테이블 위젯
-/// 동기화된 스크롤과 반응형 컬럼 너비를 지원합니다.
-/// 스크롤바는 테이블 위에 오버레이로 표시됩니다.
-/// 모든 데이터는 외부에서 정의되어야 합니다.
+/// A highly customizable and feature-rich table widget for Flutter.
+///
+/// `BasicTable` provides synchronized scrolling, responsive column widths,
+/// and a flexible API for managing columns, rows, and their interactions.
+/// It supports sorting, column reordering, row selection, and extensive theming.
+///
+/// All data (columns and rows) must be defined externally and passed to the widget.
+///
+/// Example Usage:
+/// ```dart
+/// import 'package:flutter/material.dart';
+/// import 'package:flutter_basic_table/flutter_basic_table.dart';
+///
+/// enum MyStatus { active, inactive, pending }
+///
+/// class MyTableScreen extends StatefulWidget {
+///   const MyTableScreen({super.key});
+///
+///   @override
+///   State<MyTableScreen> createState() => _MyTableScreenState();
+/// }
+///
+/// class _MyTableScreenState extends State<MyTableScreen> {
+///   // Define columns using a Map for better management and reordering.
+///   final Map<String, BasicTableColumn> _columns = {
+///     'id': BasicTableColumn(id: 'id', name: 'ID', order: 0, minWidth: 50),
+///     'name': BasicTableColumn(id: 'name', name: 'Name', order: 1, minWidth: 150),
+///     'age': BasicTableColumn(id: 'age', name: 'Age', order: 2, minWidth: 80),
+///     'status': BasicTableColumn(
+///       id: 'status',
+///       name: 'Status',
+///       order: 3,
+///       minWidth: 120,
+///       // Custom tooltip for status column
+///       tooltipFormatter: (value) => 'Current status: \$value',
+///     ),
+///     'action': BasicTableColumn(id: 'action', name: 'Action', order: 4, minWidth: 100),
+///   };
+///
+///   // Sample data for rows.
+///   List<BasicTableRow> _rows = [];
+///
+///   // Keep track of selected rows.
+///   Set<int> _selectedRows = {};
+///
+///   // Manage sorting state.
+///   final ColumnSortManager _sortManager = ColumnSortManager();
+///
+///   @override
+///   void initState() {
+///     super.initState();
+///     _generateSampleData();
+///   }
+///
+///   void _generateSampleData() {
+///     _rows = List.generate(20, (rowIndex) {
+///       final status = MyStatus.values[rowIndex % MyStatus.values.length];
+///       final statusConfig = {
+///         MyStatus.active: StatusConfig.badge(color: Colors.green, text: 'Active'),
+///         MyStatus.inactive: StatusConfig.badge(color: Colors.red, text: 'Inactive'),
+///         MyStatus.pending: StatusConfig.badge(color: Colors.orange, text: 'Pending'),
+///       }[status]!;
+///
+///       return BasicTableRow(
+///         index: rowIndex,
+///         cells: {
+///           'id': BasicTableCell.text((rowIndex + 1).toString()),
+///           'name': BasicTableCell.text('User ${rowIndex + 1}'),
+///           'age': BasicTableCell.text((20 + rowIndex).toString()),
+///           'status': BasicTableCell.status(status, statusConfig),
+///           'action': BasicTableCell.widget(
+///             ElevatedButton(
+///               onPressed: () {
+///                 ScaffoldMessenger.of(context).showSnackBar(
+///                   SnackBar(content: Text('Action for row \$rowIndex')),
+///                 );
+///               },
+///               child: const Text('Do Something'),
+///             ),
+///           ),
+///         },
+///         height: rowIndex % 2 == 0 ? 50.0 : 60.0, // Example of custom row height
+///       );
+///     });
+///     _applySorting(); // Apply initial sorting if any
+///   }
+///
+///   void _applySorting() {
+///     if (_sortManager.hasSortedColumn) {
+///       final sortedColumnId = _sortManager.currentSortedColumnId!;
+///       final sortState = _sortManager.getSortState(sortedColumnId);
+///
+///       _rows.sort((a, b) {
+///         final aValue = a.getComparableValue(sortedColumnId);
+///         final bValue = b.getComparableValue(sortedColumnId);
+///
+///         int compareResult = aValue.compareTo(bValue);
+///         if (sortState == ColumnSortState.descending) {
+///           compareResult = -compareResult;
+///         }
+///         return compareResult;
+///       });
+///     }
+///     setState(() {});
+///   }
+///
+///   @override
+///   Widget build(BuildContext context) {
+///     return Scaffold(
+///       appBar: AppBar(title: const Text('Basic Table Example')),
+///       body: Padding(
+///         padding: const EdgeInsets.all(16.0),
+///         child: BasicTable(
+///           columns: _columns,
+///           rows: _rows,
+///           theme: BasicTableThemeData(
+///             headerTheme: BasicTableHeaderCellTheme(
+///               enableSorting: true, // Enable sorting on headers
+///               enableReorder: true, // Enable column reordering
+///             ),
+///             checkboxTheme: BasicTableCheckboxCellTheme(
+///               enabled: true, // Enable row selection checkboxes
+///             ),
+///             dataRowTheme: BasicTableDataRowTheme(
+///               backgroundColor: Colors.blue.withOpacity(0.02),
+///               textStyle: const TextStyle(color: Colors.deepPurple),
+///             ),
+///           ),
+///           selectedRows: _selectedRows,
+///           onRowSelectionChanged: (index, selected) {
+///             setState(() {
+///               if (selected) {
+///                 _selectedRows.add(index);
+///               } else {
+///                 _selectedRows.remove(index);
+///               }
+///             });
+///           },
+///           onSelectAllChanged: (selectAll) {
+///             setState(() {
+///               if (selectAll) {
+///                 _selectedRows = Set<int>.from(
+///                     _rows.map((row) => row.index));
+///               } else {
+///                 _selectedRows.clear();
+///               }
+///             });
+///           },
+///           onRowTap: (index) {
+///             ScaffoldMessenger.of(context).showSnackBar(
+///               SnackBar(content: Text('Row \$index tapped!')),
+///             );
+///           },
+///           onRowDoubleTap: (index) {
+///             ScaffoldMessenger.of(context).showSnackBar(
+///               SnackBar(content: Text('Row \$index double tapped!')),
+///             );
+///           },
+///           onColumnReorder: (columnId, newOrder) {
+///             setState(() {
+///               _columns = BasicTableColumn.reorderColumn(_columns, columnId, newOrder);
+///             });
+///           },
+///           onColumnSortById: (columnId, sortState) {
+///             _sortManager.setSortState(columnId, sortState);
+///             _applySorting();
+///           },
+///           sortManager: _sortManager, // Pass the sort manager
+///         ),
+///       ),
+///     );
+///   }
+/// }
+/// ```
 class BasicTable extends StatefulWidget {
   /// 컬럼 정의 Map (컬럼 ID → 컬럼 정보)
   final Map<String, BasicTableColumn> columns;
@@ -49,6 +219,62 @@ class BasicTable extends StatefulWidget {
   /// ID 기반 정렬 상태 관리자 (권장)
   final ColumnSortManager? sortManager;
 
+  /// Creates a [BasicTable] widget.
+  ///
+  /// [columns] is a required [Map] where keys are unique column IDs (String)
+  /// and values are [BasicTableColumn] objects defining each column's properties
+  /// like name, order, minWidth, etc. This Map-based approach allows for
+  /// flexible column management and reordering.
+  ///
+  /// [rows] is a required [List] of [BasicTableRow] objects, where each
+  /// [BasicTableRow] represents a row of data in the table. Each [BasicTableRow]
+  /// contains a Map of [BasicTableCell] objects, keyed by column ID.
+  ///
+  /// [theme] is an optional [BasicTableThemeData] object to customize the
+  /// appearance of the table, including header, data rows, checkboxes,
+  /// scrollbars, borders, and tooltips. If not provided, a default theme is used.
+  ///
+  /// [selectedRows] is an optional [Set] of row indices (int) that are currently
+  /// selected. This is used for managing row selection state externally.
+  ///
+  /// [onRowSelectionChanged] is an optional callback function that is invoked
+  /// when the selection state of a single row changes (e.g., when a row's
+  /// checkbox is toggled). It provides the row's index and its new selection state.
+  ///
+  /// [onSelectAllChanged] is an optional callback function that is invoked
+  /// when the header checkbox (select all/deselect all) is toggled. It provides
+  /// a boolean indicating whether all rows should be selected (`true`) or deselected (`false`).
+  ///
+  /// [onRowTap] is an optional callback function that is invoked when a table
+  /// row is tapped. It provides the index of the tapped row.
+  ///
+  /// [onRowDoubleTap] is an optional callback function that is invoked when a
+  /// table row is double-tapped. It provides the index of the double-tapped row.
+  ///
+  /// [onRowSecondaryTap] is an optional callback function that is invoked when a
+  /// table row receives a secondary tap (e.g., right-click on desktop). It provides
+  /// the index of the secondary-tapped row.
+  ///
+  /// [doubleClickTime] defines the maximum duration between two taps for them
+  /// to be considered a double-tap. Defaults to 300 milliseconds.
+  ///
+  /// [onColumnReorder] is an optional callback function that is invoked when
+  /// a column is reordered by dragging its header. It provides the `columnId`
+  /// of the reordered column and its `newOrder` (visible index).
+  ///
+  /// [onColumnSort] is a deprecated callback for column sorting, providing
+  /// the `visibleColumnIndex` and `sortState`. Use [onColumnSortById] instead.
+  ///
+  /// [columnSortStates] is a deprecated parameter for managing sorting state
+  /// based on visible column index. Use [sortManager] instead.
+  ///
+  /// [onColumnSortById] is the recommended callback for column sorting,
+  /// providing the `columnId` and `sortState`. This is preferred over
+  /// [onColumnSort] as it is ID-based and more robust to column reordering.
+  ///
+  /// [sortManager] is an optional [ColumnSortManager] instance to externally
+  /// manage and synchronize the sorting state of columns. If provided, it will
+  /// be used as the source of truth for sorting.
   const BasicTable({
     super.key,
     required this.columns,

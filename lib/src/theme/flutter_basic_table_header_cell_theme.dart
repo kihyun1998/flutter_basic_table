@@ -1,24 +1,66 @@
 import 'package:flutter/material.dart';
 
-/// 헤더 셀의 테마
+/// Defines the theme for the header cells within the [BasicTable].
 class BasicTableHeaderCellTheme {
+  /// The height of the header row.
+  /// Defaults to 50.0.
   final double height;
+
+  /// The background color of the header cells.
+  /// Defaults to `Colors.white`.
   final Color? backgroundColor;
+
+  /// The text style for the header cell titles.
+  /// Defaults to `TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.black)`.
   final TextStyle? textStyle;
+
+  /// The padding around the content within the header cells.
+  /// Defaults to `EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0)`.
   final EdgeInsets? padding;
+
+  /// The border applied to each header cell.
+  /// Defaults to `BorderSide(color: Colors.grey, width: 2.0)`.
   final BorderSide? border;
+
+  /// The color of the sort icons displayed in sortable header cells.
+  /// Defaults to `Colors.blue`.
   final Color? sortIconColor;
+
+  /// Whether column reordering is enabled for the table headers.
+  /// Defaults to `false`.
   final bool enableReorder;
+
+  /// Whether column sorting is enabled for the table headers.
+  /// Defaults to `false`.
   final bool enableSorting;
+
+  /// Whether drag handles are shown on reorderable column headers.
+  /// Defaults to `true`.
   final bool showDragHandles;
 
+  /// The icon to display for ascending sort order.
+  /// Defaults to `Icons.keyboard_arrow_up`.
   final IconData? ascendingIcon;
+
+  /// The icon to display for descending sort order.
+  /// Defaults to `Icons.keyboard_arrow_down`.
   final IconData? descendingIcon;
+
+  /// The size of the sort icons.
+  /// Defaults to 18.0.
   final double? sortIconSize;
 
+  /// The splash color for ink effects when a header cell is tapped.
+  /// If `null`, the Material default splash color is used.
   final Color? splashColor;
+
+  /// The highlight color for ink effects when a header cell is pressed.
+  /// If `null`, the Material default highlight color is used.
   final Color? highlightColor;
 
+  /// Creates a [BasicTableHeaderCellTheme] instance.
+  ///
+  /// All parameters have default values.
   const BasicTableHeaderCellTheme({
     this.height = 50.0,
     this.backgroundColor = Colors.white,
@@ -40,6 +82,8 @@ class BasicTableHeaderCellTheme {
     this.highlightColor,
   });
 
+  /// Creates a copy of this [BasicTableHeaderCellTheme] with the given fields replaced
+  /// with new values.
   BasicTableHeaderCellTheme copyWith({
     double? height,
     Color? backgroundColor,
@@ -95,7 +139,7 @@ class BasicTableHeaderCellTheme {
   }
 
   @override
-  int get hashCode {
+  int get hashCode() {
     return Object.hash(
       height,
       backgroundColor,
