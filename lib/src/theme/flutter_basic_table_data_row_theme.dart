@@ -67,30 +67,4 @@ class BasicTableDataRowTheme {
       highlightColor: highlightColor ?? this.highlightColor,
     );
   }
-
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-    return other is BasicTableDataRowTheme &&
-        other.height == height &&
-        other.backgroundColor == backgroundColor &&
-        other.textStyle == textStyle &&
-        other.padding == padding &&
-        other.border == border &&
-        other.splashColor == splashColor &&
-        other.highlightColor == highlightColor;
-  }
-
-  @override
-  int get hashCode() {
-    return Object.hash(
-      height,
-      backgroundColor,
-      textStyle,
-      padding,
-      border,
-      splashColor,
-      highlightColor,
-    );
-  }
 }

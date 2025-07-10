@@ -117,44 +117,4 @@ class BasicTableHeaderCellTheme {
       highlightColor: highlightColor ?? this.highlightColor,
     );
   }
-
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-    return other is BasicTableHeaderCellTheme &&
-        other.height == height &&
-        other.backgroundColor == backgroundColor &&
-        other.textStyle == textStyle &&
-        other.padding == padding &&
-        other.border == border &&
-        other.sortIconColor == sortIconColor &&
-        other.enableReorder == enableReorder &&
-        other.enableSorting == enableSorting &&
-        other.showDragHandles == showDragHandles &&
-        other.ascendingIcon == ascendingIcon &&
-        other.descendingIcon == descendingIcon &&
-        other.sortIconSize == sortIconSize &&
-        other.splashColor == splashColor &&
-        other.highlightColor == highlightColor;
-  }
-
-  @override
-  int get hashCode() {
-    return Object.hash(
-      height,
-      backgroundColor,
-      textStyle,
-      padding,
-      border,
-      sortIconColor,
-      enableReorder,
-      enableSorting,
-      showDragHandles,
-      ascendingIcon,
-      descendingIcon,
-      sortIconSize,
-      splashColor,
-      highlightColor,
-    );
-  }
 }

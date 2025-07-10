@@ -39,19 +39,4 @@ class BasicTableBorderTheme {
       cellBorder: cellBorder ?? this.cellBorder,
     );
   }
-
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-    return other is BasicTableBorderTheme &&
-        other.tableBorder == tableBorder &&
-        other.headerBorder == headerBorder &&
-        other.rowBorder == rowBorder &&
-        other.cellBorder == cellBorder;
-  }
-
-  @override
-  int get hashCode {
-    return Object.hash(tableBorder, headerBorder, rowBorder, cellBorder);
-  }
 }

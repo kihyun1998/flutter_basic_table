@@ -106,40 +106,4 @@ class BasicTableTooltipTheme {
       preferredPosition: preferredPosition ?? this.preferredPosition,
     );
   }
-
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-    return other is BasicTableTooltipTheme &&
-        other.backgroundColor == backgroundColor &&
-        other.textColor == textColor &&
-        other.fontSize == fontSize &&
-        other.fontWeight == fontWeight &&
-        other.padding == padding &&
-        other.margin == margin &&
-        other.borderRadius == borderRadius &&
-        other.boxShadow == boxShadow &&
-        other.verticalOffset == verticalOffset &&
-        other.waitDuration == waitDuration &&
-        other.showDuration == showDuration &&
-        other.preferredPosition == preferredPosition;
-  }
-
-  @override
-  int get hashCode() {
-    return Object.hash(
-      backgroundColor,
-      textColor,
-      fontSize,
-      fontWeight,
-      padding,
-      margin,
-      borderRadius,
-      boxShadow,
-      verticalOffset,
-      waitDuration,
-      showDuration,
-      preferredPosition,
-    );
-  }
 }

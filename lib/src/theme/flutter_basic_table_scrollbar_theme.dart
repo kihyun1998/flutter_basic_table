@@ -72,32 +72,4 @@ class BasicTableScrollbarTheme {
       trackColor: trackColor ?? this.trackColor,
     );
   }
-
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-    return other is BasicTableScrollbarTheme &&
-        other.showHorizontal == showHorizontal &&
-        other.showVertical == showVertical &&
-        other.hoverOnly == hoverOnly &&
-        other.opacity == opacity &&
-        other.animationDuration == animationDuration &&
-        other.width == width &&
-        other.color == color &&
-        other.trackColor == trackColor;
-  }
-
-  @override
-  int get hashCode() {
-    return Object.hash(
-      showHorizontal,
-      showVertical,
-      hoverOnly,
-      opacity,
-      animationDuration,
-      width,
-      color,
-      trackColor,
-    );
-  }
 }

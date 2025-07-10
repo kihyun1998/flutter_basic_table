@@ -46,6 +46,10 @@ class BasicTableData extends StatelessWidget {
 
   /// An optional callback function that is invoked when a table row is double-tapped.
   /// It provides the index of the double-tapped row.
+  final void Function(int index)? onRowDoubleTap;
+
+  /// An optional callback function that is invoked when a table row is secondary-tapped.
+  /// It provides the index of the secondary-tapped row.
   final void Function(int index)? onRowSecondaryTap;
 
   /// The maximum duration between two taps for them to be considered a double-tap.

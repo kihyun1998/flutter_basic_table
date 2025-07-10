@@ -102,30 +102,4 @@ class BasicTableThemeData {
       tooltipTheme: tooltipTheme ?? this.tooltipTheme,
     );
   }
-
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-    return other is BasicTableThemeData &&
-        other.headerTheme == headerTheme &&
-        other.dataRowTheme == dataRowTheme &&
-        other.checkboxTheme == checkboxTheme &&
-        other.selectionTheme == selectionTheme &&
-        other.scrollbarTheme == scrollbarTheme &&
-        other.borderTheme == borderTheme &&
-        other.tooltipTheme == tooltipTheme;
-  }
-
-  @override
-  int get hashCode {
-    return Object.hash(
-      headerTheme,
-      dataRowTheme,
-      checkboxTheme,
-      selectionTheme,
-      scrollbarTheme,
-      borderTheme,
-      tooltipTheme,
-    );
-  }
 }

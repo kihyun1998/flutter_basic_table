@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 /// A widget that synchronizes multiple [ScrollController]s.
 ///
 /// This is particularly useful for scenarios where different scrollable widgets

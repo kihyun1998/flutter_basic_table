@@ -50,20 +50,4 @@ class BasicTableCheckboxCellTheme {
       checkColor: checkColor ?? this.checkColor,
     );
   }
-
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-    return other is BasicTableCheckboxCellTheme &&
-        other.enabled == enabled &&
-        other.columnWidth == columnWidth &&
-        other.padding == padding &&
-        other.activeColor == activeColor &&
-        other.checkColor == checkColor;
-  }
-
-  @override
-  int get hashCode {
-    return Object.hash(enabled, columnWidth, padding, activeColor, checkColor);
-  }
 }

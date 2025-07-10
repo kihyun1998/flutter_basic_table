@@ -29,17 +29,4 @@ class BasicTableSelectionTheme {
       hoverRowColor: hoverRowColor ?? this.hoverRowColor,
     );
   }
-
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-    return other is BasicTableSelectionTheme &&
-        other.selectedRowColor == selectedRowColor &&
-        other.hoverRowColor == hoverRowColor;
-  }
-
-  @override
-  int get hashCode() {
-    return Object.hash(selectedRowColor, hoverRowColor);
-  }
 }
