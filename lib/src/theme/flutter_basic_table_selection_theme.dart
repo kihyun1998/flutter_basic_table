@@ -6,16 +6,9 @@ class BasicTableSelectionTheme {
   final Color? hoverRowColor;
 
   const BasicTableSelectionTheme({
-    this.selectedRowColor,
-    this.hoverRowColor,
+    this.selectedRowColor = const Color(0x1A2196F3),
+    this.hoverRowColor = const Color(0x0D9E9E9E),
   });
-
-  factory BasicTableSelectionTheme.defaultTheme() {
-    return BasicTableSelectionTheme(
-      selectedRowColor: Colors.blue.withOpacity(0.1),
-      hoverRowColor: Colors.grey.withOpacity(0.05),
-    );
-  }
 
   BasicTableSelectionTheme copyWith({
     Color? selectedRowColor,

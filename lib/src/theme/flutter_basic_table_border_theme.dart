@@ -8,20 +8,11 @@ class BasicTableBorderTheme {
   final BorderSide? cellBorder;
 
   const BasicTableBorderTheme({
-    this.tableBorder,
-    this.headerBorder,
-    this.rowBorder,
-    this.cellBorder,
+    this.tableBorder = const BorderSide(color: Colors.black, width: 0.5),
+    this.headerBorder = const BorderSide(color: Colors.grey, width: 2.0),
+    this.rowBorder = const BorderSide(color: Colors.grey, width: 0.3),
+    this.cellBorder = BorderSide.none,
   });
-
-  factory BasicTableBorderTheme.defaultTheme() {
-    return const BasicTableBorderTheme(
-      tableBorder: BorderSide(color: Colors.black, width: 0.5),
-      headerBorder: BorderSide(color: Colors.grey, width: 2.0),
-      rowBorder: BorderSide(color: Colors.grey, width: 0.3),
-      cellBorder: BorderSide.none,
-    );
-  }
 
   BasicTableBorderTheme copyWith({
     BorderSide? tableBorder,

@@ -11,26 +11,14 @@ class BasicTableDataRowTheme {
   final Color? highlightColor;
 
   const BasicTableDataRowTheme({
-    required this.height,
-    this.backgroundColor,
-    this.textStyle,
-    this.padding,
-    this.border,
+    this.height = 45.0,
+    this.backgroundColor = Colors.white,
+    this.textStyle = const TextStyle(fontSize: 13, color: Colors.black),
+    this.padding = const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+    this.border = const BorderSide(color: Colors.grey, width: 0.3),
     this.splashColor,
     this.highlightColor,
   });
-
-  factory BasicTableDataRowTheme.defaultTheme() {
-    return const BasicTableDataRowTheme(
-      height: 45.0,
-      backgroundColor: Colors.white,
-      textStyle: TextStyle(fontSize: 13, color: Colors.black),
-      padding: EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
-      border: BorderSide(color: Colors.grey, width: 0.3),
-      splashColor: null,
-      highlightColor: null,
-    );
-  }
 
   BasicTableDataRowTheme copyWith({
     double? height,

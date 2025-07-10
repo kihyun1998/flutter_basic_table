@@ -9,22 +9,12 @@ class BasicTableCheckboxCellTheme {
   final Color? checkColor;
 
   const BasicTableCheckboxCellTheme({
-    required this.enabled,
-    required this.columnWidth,
-    this.padding,
+    this.enabled = false,
+    this.columnWidth = 60.0,
+    this.padding = const EdgeInsets.all(8.0),
     this.activeColor,
     this.checkColor,
   });
-
-  factory BasicTableCheckboxCellTheme.defaultTheme() {
-    return const BasicTableCheckboxCellTheme(
-      enabled: false,
-      columnWidth: 60.0,
-      padding: EdgeInsets.all(8.0),
-      activeColor: null, // Material 기본값 사용
-      checkColor: null, // Material 기본값 사용
-    );
-  }
 
   BasicTableCheckboxCellTheme copyWith({
     bool? enabled,

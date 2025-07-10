@@ -17,27 +17,14 @@ class BasicTableThemeData {
   final BasicTableTooltipTheme tooltipTheme;
 
   const BasicTableThemeData({
-    required this.headerTheme,
-    required this.dataRowTheme,
-    required this.checkboxTheme,
-    required this.selectionTheme,
-    required this.scrollbarTheme,
-    required this.borderTheme,
-    required this.tooltipTheme,
+    this.headerTheme = const BasicTableHeaderCellTheme(),
+    this.dataRowTheme = const BasicTableDataRowTheme(),
+    this.checkboxTheme = const BasicTableCheckboxCellTheme(),
+    this.selectionTheme = const BasicTableSelectionTheme(),
+    this.scrollbarTheme = const BasicTableScrollbarTheme(),
+    this.borderTheme = const BasicTableBorderTheme(),
+    this.tooltipTheme = const BasicTableTooltipTheme(),
   });
-
-  /// 기본 테마 생성
-  factory BasicTableThemeData.defaultTheme() {
-    return BasicTableThemeData(
-      headerTheme: BasicTableHeaderCellTheme.defaultTheme(),
-      dataRowTheme: BasicTableDataRowTheme.defaultTheme(),
-      checkboxTheme: BasicTableCheckboxCellTheme.defaultTheme(),
-      selectionTheme: BasicTableSelectionTheme.defaultTheme(),
-      scrollbarTheme: BasicTableScrollbarTheme.defaultTheme(),
-      borderTheme: BasicTableBorderTheme.defaultTheme(),
-      tooltipTheme: BasicTableTooltipTheme.defaultTheme(),
-    );
-  }
 
   /// 부분적 변경을 위한 copyWith
   BasicTableThemeData copyWith({

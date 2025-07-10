@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_basic_table/flutter_basic_table.dart';
-import 'package:flutter_basic_table/src/theme/flutter_basic_table_tooltip_theme.dart';
 
 /// CustomTooltip 위젯 - Flutter Tooltip의 편한 wrapper
 class CustomTooltip extends StatelessWidget {
@@ -36,7 +35,7 @@ class CustomTooltip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // 테마 기본값 가져오기
-    final effectiveTheme = theme ?? BasicTableTooltipTheme.defaultTheme();
+    final effectiveTheme = theme ?? BasicTableTooltipTheme();
 
     // 개별 속성이 있으면 우선 적용, 없으면 테마 사용
     final effectiveBackgroundColor =

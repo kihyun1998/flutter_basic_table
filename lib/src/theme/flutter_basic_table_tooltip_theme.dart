@@ -17,43 +17,25 @@ class BasicTableTooltipTheme {
   final TooltipPosition preferredPosition;
 
   const BasicTableTooltipTheme({
-    this.backgroundColor,
-    this.textColor,
-    this.fontSize,
-    this.fontWeight,
-    this.padding,
-    this.margin,
-    this.borderRadius,
-    this.boxShadow,
-    this.verticalOffset,
-    this.waitDuration,
-    this.showDuration,
+    this.backgroundColor = Colors.black87,
+    this.textColor = Colors.white,
+    this.fontSize = 12.0,
+    this.fontWeight = FontWeight.normal,
+    this.padding = const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0),
+    this.margin = const EdgeInsets.all(0),
+    this.borderRadius = const BorderRadius.all(Radius.circular(4.0)),
+    this.boxShadow = const [
+      BoxShadow(
+        color: Colors.black26,
+        blurRadius: 4.0,
+        offset: Offset(0, 2),
+      ),
+    ],
+    this.verticalOffset = 24.0,
+    this.waitDuration = const Duration(milliseconds: 500),
+    this.showDuration = const Duration(milliseconds: 1500),
     this.preferredPosition = TooltipPosition.auto,
   });
-
-  /// 기본 모노톤 테마
-  factory BasicTableTooltipTheme.defaultTheme() {
-    return BasicTableTooltipTheme(
-      backgroundColor: Colors.black87,
-      textColor: Colors.white,
-      fontSize: 12.0,
-      fontWeight: FontWeight.normal,
-      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0),
-      margin: const EdgeInsets.all(0),
-      borderRadius: BorderRadius.circular(4.0),
-      boxShadow: [
-        BoxShadow(
-          color: Colors.black26,
-          blurRadius: 4.0,
-          offset: const Offset(0, 2),
-        ),
-      ],
-      verticalOffset: 24.0,
-      waitDuration: const Duration(milliseconds: 500),
-      showDuration: const Duration(milliseconds: 1500),
-      preferredPosition: TooltipPosition.auto,
-    );
-  }
 
   BasicTableTooltipTheme copyWith({
     Color? backgroundColor,

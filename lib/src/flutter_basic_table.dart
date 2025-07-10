@@ -70,6 +70,8 @@ class BasicTable extends StatefulWidget {
         assert(rows.length > 0, 'rows cannot be empty');
 
   /// 하위 호환성을 위한 생성자 (기존 List<BasicTableColumn> 지원)
+  @Deprecated(
+      'Use the default constructor with a Map<String, BasicTableColumn> instead. This will be removed in a future version.')
   factory BasicTable.fromColumnList({
     required List<BasicTableColumn> columns,
     required List<BasicTableRow> rows,
@@ -115,6 +117,8 @@ class BasicTable extends StatefulWidget {
   }
 
   /// 기존 String 데이터 지원 (완전히 새로운 API)
+  @Deprecated(
+      'Use the default constructor. Convert your data to a List<BasicTableRow> using `BasicTableRow.fromStrings` before passing it to the widget. This will be removed in a future version.')
   factory BasicTable.fromStringData({
     required Map<String, BasicTableColumn> columns,
     required List<Map<String, String>> data,
@@ -175,7 +179,7 @@ class _BasicTableState extends State<BasicTable> {
 
   /// 현재 사용할 테마 (제공된 테마 또는 기본 테마)
   BasicTableThemeData get _currentTheme =>
-      widget.theme ?? BasicTableThemeData.defaultTheme();
+      widget.theme ?? BasicTableThemeData();
 
   /// order 기준으로 정렬된 컬럼 리스트 (캐싱됨)
   List<BasicTableColumn> get _sortedColumns {

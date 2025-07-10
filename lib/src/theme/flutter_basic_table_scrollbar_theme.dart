@@ -12,28 +12,15 @@ class BasicTableScrollbarTheme {
   final Color? trackColor;
 
   const BasicTableScrollbarTheme({
-    required this.showHorizontal,
-    required this.showVertical,
-    required this.hoverOnly,
-    required this.opacity,
-    required this.animationDuration,
-    required this.width,
+    this.showHorizontal = true,
+    this.showVertical = true,
+    this.hoverOnly = true,
+    this.opacity = 0.8,
+    this.animationDuration = const Duration(milliseconds: 200),
+    this.width = 16.0,
     this.color,
     this.trackColor,
   });
-
-  factory BasicTableScrollbarTheme.defaultTheme() {
-    return BasicTableScrollbarTheme(
-      showHorizontal: true,
-      showVertical: true,
-      hoverOnly: true,
-      opacity: 0.8,
-      animationDuration: const Duration(milliseconds: 200),
-      width: 16.0,
-      color: Colors.black.withOpacity(0.5),
-      trackColor: Colors.black.withOpacity(0.1),
-    );
-  }
 
   BasicTableScrollbarTheme copyWith({
     bool? showHorizontal,

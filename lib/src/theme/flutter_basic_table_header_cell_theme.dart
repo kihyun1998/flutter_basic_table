@@ -20,44 +20,25 @@ class BasicTableHeaderCellTheme {
   final Color? highlightColor;
 
   const BasicTableHeaderCellTheme({
-    required this.height,
-    this.backgroundColor,
-    this.textStyle,
-    this.padding,
-    this.border,
-    this.sortIconColor,
-    required this.enableReorder,
-    required this.enableSorting,
-    required this.showDragHandles,
-    this.ascendingIcon,
-    this.descendingIcon,
-    this.sortIconSize,
+    this.height = 50.0,
+    this.backgroundColor = Colors.white,
+    this.textStyle = const TextStyle(
+      fontWeight: FontWeight.bold,
+      fontSize: 14,
+      color: Colors.black,
+    ),
+    this.padding = const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+    this.border = const BorderSide(color: Colors.grey, width: 2.0),
+    this.sortIconColor = Colors.blue,
+    this.enableReorder = false,
+    this.enableSorting = false,
+    this.showDragHandles = true,
+    this.ascendingIcon = Icons.keyboard_arrow_up,
+    this.descendingIcon = Icons.keyboard_arrow_down,
+    this.sortIconSize = 18.0,
     this.splashColor,
     this.highlightColor,
   });
-
-  factory BasicTableHeaderCellTheme.defaultTheme() {
-    return const BasicTableHeaderCellTheme(
-      height: 50.0,
-      backgroundColor: Colors.white,
-      textStyle: TextStyle(
-        fontWeight: FontWeight.bold,
-        fontSize: 14,
-        color: Colors.black,
-      ),
-      padding: EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
-      border: BorderSide(color: Colors.grey, width: 2.0),
-      sortIconColor: Colors.blue,
-      enableReorder: false,
-      enableSorting: false,
-      showDragHandles: true,
-      ascendingIcon: Icons.keyboard_arrow_up,
-      descendingIcon: Icons.keyboard_arrow_down,
-      sortIconSize: 18.0,
-      splashColor: null,
-      highlightColor: null,
-    );
-  }
 
   BasicTableHeaderCellTheme copyWith({
     double? height,
